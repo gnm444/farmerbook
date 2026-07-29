@@ -25,6 +25,8 @@ export interface FarmerProfile {
   experienceYears?: number;
   joinedLabel: string;
   isFollowing?: boolean;
+  avatarPath?: string;
+  avatarUrl?: string;
 }
 
 export interface FarmerPost {
@@ -38,6 +40,8 @@ export interface FarmerPost {
   commentCount: number;
   helpfulByViewer?: boolean;
   imageVariant?: "tomato" | "grapes" | "irrigation";
+  imageUrl?: string;
+  author?: FarmerProfile;
 }
 
 export interface Comment {
@@ -46,6 +50,7 @@ export interface Comment {
   authorId: string;
   body: string;
   createdLabel: string;
+  author?: FarmerProfile;
 }
 
 export interface Conversation {
@@ -54,6 +59,7 @@ export interface Conversation {
   lastMessage: string;
   updatedLabel: string;
   unread: number;
+  otherProfile?: FarmerProfile;
 }
 
 export interface Message {

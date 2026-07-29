@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import { ProductHeader } from "@/components/product-header";
 import { SettingsNav } from "@/components/settings-nav";
 import { ProfileSettingsForm } from "@/features/profiles/profile-settings-form";
+import { loadCurrentProfile } from "@/features/profiles/queries";
 
 export const metadata: Metadata = { title: "Profile settings" };
 
-export default function ProfileSettingsPage() {
+export default async function ProfileSettingsPage() {
+  const profile = await loadCurrentProfile();
+
   return (
     <div className="product-page">
       <ProductHeader
@@ -15,7 +18,7 @@ export default function ProfileSettingsPage() {
       />
       <div className="settings-layout">
         <SettingsNav current="profile" />
-        <ProfileSettingsForm />
+        <ProfileSettingsForm profile={profile} />
       </div>
     </div>
   );

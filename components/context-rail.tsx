@@ -2,17 +2,23 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Avatar, VerifiedBadge } from "@/components/ui";
 import { getProfile } from "@/lib/demo-data";
+import { isSupabaseConfigured } from "@/lib/env";
 
 export function ContextRail() {
-  const suggestions = [getProfile("suresh"), getProfile("priya")];
+  const demo = !isSupabaseConfigured();
+  const suggestions = demo ? [getProfile("suresh"), getProfile("priya")] : [];
 
   return (
     <aside className="context-rail" aria-label="Community context">
       <section className="card context-card">
         <h2>People to learn from</h2>
-        {suggestions.map((profile) => (
+        {suggestions.length ? suggestions.map((profile) => (
           <div className="suggestion" key={profile.id}>
-            <Avatar initials={profile.initials} size="small" />
+            <Avatar
+              initials={profile.initials}
+              imageUrl={profile.avatarUrl}
+              size="small"
+            />
             <div className="suggestion__copy">
               <strong>
                 {profile.fullName}{" "}
@@ -29,18 +35,30 @@ export function ContextRail() {
               View
             </Link>
           </div>
-        ))}
+        )) : (
+          <p className="muted">
+            New suggestions will appear as the pilot community grows.
+          </p>
+        )}
       </section>
       <section className="card context-card">
         <h2>This week in your network</h2>
-        <div className="network-stat">
-          <strong>12</strong>
-          <span>useful answers shared by nearby farmers</span>
-        </div>
-        <div className="network-stat">
-          <strong>7</strong>
-          <span>new people joined the Maharashtra pilot</span>
-        </div>
+        {demo ? (
+          <>
+            <div className="network-stat">
+              <strong>12</strong>
+              <span>useful answers shared by nearby farmers</span>
+            </div>
+            <div className="network-stat">
+              <strong>7</strong>
+              <span>new people joined the Maharashtra pilot</span>
+            </div>
+          </>
+        ) : (
+          <p className="muted">
+            Your feed and network update as participants share and connect.
+          </p>
+        )}
         <Link className="button button--ghost button--small" href="/network">
           See your network <ArrowRight size={15} aria-hidden="true" />
         </Link>

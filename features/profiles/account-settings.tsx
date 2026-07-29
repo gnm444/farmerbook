@@ -3,12 +3,17 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { AlertTriangle } from "lucide-react";
-import { deleteAccountAction } from "./account-actions";
+import { logoutAction } from "@/features/auth/actions";
+import {
+  deleteAccountAction,
+  requestCurrentPasswordResetAction,
+} from "./account-actions";
 
 export function AccountSettings() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function deleteAccount() {
@@ -20,6 +25,19 @@ export function AccountSettings() {
         return;
       }
       setDeleted(true);
+    });
+  }
+
+  function requestPasswordReset() {
+    setError("");
+    setNotice("");
+    startTransition(async () => {
+      const result = await requestCurrentPasswordResetAction();
+      if (!result.ok) {
+        setError(result.message ?? "A reset email could not be sent.");
+        return;
+      }
+      setNotice("Password reset instructions have been requested.");
     });
   }
 
@@ -49,13 +67,22 @@ export function AccountSettings() {
         <h2>Password and sessions</h2>
         <p>Reset your password or sign out of the current browser.</p>
         <div className="form-row">
-          <button className="button button--secondary" type="button">
+          <button
+            className="button button--secondary"
+            type="button"
+            disabled={isPending}
+            onClick={requestPasswordReset}
+          >
             Send password reset
           </button>
-          <button className="button button--ghost" type="button">
-            Sign out
-          </button>
+          <form action={logoutAction}>
+            <button className="button button--ghost" type="submit">
+              Sign out
+            </button>
+          </form>
         </div>
+        {notice ? <p className="form-success">{notice}</p> : null}
+        {error ? <p className="form-error">{error}</p> : null}
       </section>
       <section className="card settings-card danger-zone">
         <h2>Delete your account</h2>

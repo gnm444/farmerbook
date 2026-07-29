@@ -1,17 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight } from "lucide-react";
+import type { FarmerProfile, ParticipantType } from "@/lib/types";
+import { saveProfileAction } from "./actions";
 
-export function OnboardingForm() {
+export function OnboardingForm({
+  initialProfile,
+}: {
+  initialProfile: FarmerProfile;
+}) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [crops, setCrops] = useState(["Tomato"]);
+  const [crops, setCrops] = useState(
+    initialProfile.crops.length ? initialProfile.crops : ["Tomato"],
+  );
+  const [details, setDetails] = useState({
+    fullName: initialProfile.fullName,
+    handle: initialProfile.handle,
+    participantType: initialProfile.participantType,
+    district: initialProfile.district,
+    state: initialProfile.state,
+    bio: initialProfile.bio,
+    experienceYears: initialProfile.experienceYears ?? 0,
+    preferredLanguage: "en" as "en" | "hi" | "mr",
+  });
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
 
   function finish(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    router.push("/feed");
+    setError("");
+    startTransition(async () => {
+      const result = await saveProfileAction({ ...details, crops });
+      if (!result.ok) {
+        setError(result.message ?? "Your profile could not be saved.");
+        return;
+      }
+      router.push("/feed");
+      router.refresh();
+    });
   }
 
   return (
@@ -29,7 +58,13 @@ export function OnboardingForm() {
                 className="input"
                 id="full-name"
                 name="fullName"
-                defaultValue="Meera Kulkarni"
+                value={details.fullName}
+                onChange={(event) =>
+                  setDetails((current) => ({
+                    ...current,
+                    fullName: event.target.value,
+                  }))
+                }
                 required
               />
             </div>
@@ -39,7 +74,13 @@ export function OnboardingForm() {
                 className="input"
                 id="handle"
                 name="handle"
-                defaultValue="meera_kulkarni"
+                value={details.handle}
+                onChange={(event) =>
+                  setDetails((current) => ({
+                    ...current,
+                    handle: event.target.value,
+                  }))
+                }
                 pattern="[a-z0-9_]{3,30}"
                 required
               />
@@ -48,7 +89,17 @@ export function OnboardingForm() {
           </div>
           <div className="field">
             <label htmlFor="participant-type">How do you participate in agriculture?</label>
-            <select className="select" id="participant-type" defaultValue="farmer">
+            <select
+              className="select"
+              id="participant-type"
+              value={details.participantType}
+              onChange={(event) =>
+                setDetails((current) => ({
+                  ...current,
+                  participantType: event.target.value as ParticipantType,
+                }))
+              }
+            >
               <option value="farmer">Farmer</option>
               <option value="agronomist">Agronomist</option>
               <option value="fpo">FPO representative</option>
@@ -60,11 +111,33 @@ export function OnboardingForm() {
           <div className="form-row">
             <div className="field">
               <label htmlFor="district">District</label>
-              <input className="input" id="district" defaultValue="Nashik" required />
+              <input
+                className="input"
+                id="district"
+                value={details.district}
+                onChange={(event) =>
+                  setDetails((current) => ({
+                    ...current,
+                    district: event.target.value,
+                  }))
+                }
+                required
+              />
             </div>
             <div className="field">
               <label htmlFor="state">State</label>
-              <input className="input" id="state" defaultValue="Maharashtra" required />
+              <input
+                className="input"
+                id="state"
+                value={details.state}
+                onChange={(event) =>
+                  setDetails((current) => ({
+                    ...current,
+                    state: event.target.value,
+                  }))
+                }
+                required
+              />
             </div>
           </div>
           <button className="button button--full" type="button" onClick={() => setStep(2)}>
@@ -105,7 +178,13 @@ export function OnboardingForm() {
               className="textarea"
               id="bio"
               maxLength={500}
-              defaultValue="Second-generation farmer learning protected cultivation and sharing practical notes from our family farm."
+              value={details.bio}
+              onChange={(event) =>
+                setDetails((current) => ({
+                  ...current,
+                  bio: event.target.value,
+                }))
+              }
             />
           </div>
           <div className="form-row">
@@ -117,12 +196,28 @@ export function OnboardingForm() {
                 type="number"
                 min={0}
                 max={80}
-                defaultValue={8}
+                value={details.experienceYears}
+                onChange={(event) =>
+                  setDetails((current) => ({
+                    ...current,
+                    experienceYears: Number(event.target.value),
+                  }))
+                }
               />
             </div>
             <div className="field">
               <label htmlFor="language">Interface language</label>
-              <select className="select" id="language" defaultValue="en">
+              <select
+                className="select"
+                id="language"
+                value={details.preferredLanguage}
+                onChange={(event) =>
+                  setDetails((current) => ({
+                    ...current,
+                    preferredLanguage: event.target.value as "en" | "hi" | "mr",
+                  }))
+                }
+              >
                 <option value="en">English</option>
                 <option value="hi">हिन्दी</option>
                 <option value="mr">मराठी (pilot translation pending)</option>
@@ -137,10 +232,15 @@ export function OnboardingForm() {
             >
               Back
             </button>
-            <button className="button" type="submit" disabled={!crops.length}>
-              Finish profile
+            <button
+              className="button"
+              type="submit"
+              disabled={!crops.length || isPending}
+            >
+              {isPending ? "Saving…" : "Finish profile"}
             </button>
           </div>
+          {error ? <p className="form-error">{error}</p> : null}
         </>
       )}
     </form>

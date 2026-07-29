@@ -1,17 +1,38 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { MoreHorizontal, Search, Send } from "lucide-react";
 import { Avatar, VerifiedBadge } from "@/components/ui";
+import type {
+  Conversation,
+  FarmerProfile,
+  Message,
+} from "@/lib/types";
 import {
-  conversations as initialConversations,
-  currentUserId,
-  getProfile,
-  messages as initialMessages,
-} from "@/lib/demo-data";
-import type { Conversation, Message } from "@/lib/types";
+  sendMessageAction,
+  startConversationAction,
+} from "./actions";
 
-export function MessagesClient({ requestedProfileId }: { requestedProfileId?: string }) {
+export function MessagesClient({
+  requestedProfileId,
+  initialConversationId,
+  currentProfile,
+  initialConversations,
+  initialMessages,
+  profiles,
+}: {
+  requestedProfileId?: string;
+  initialConversationId?: string;
+  currentProfile: FarmerProfile;
+  initialConversations: Conversation[];
+  initialMessages: Message[];
+  profiles: FarmerProfile[];
+}) {
+  const profileDirectory = useMemo(
+    () => new Map(profiles.map((profile) => [profile.id, profile])),
+    [profiles],
+  );
   const preparedConversations = useMemo(() => {
     if (
       !requestedProfileId ||
@@ -21,47 +42,91 @@ export function MessagesClient({ requestedProfileId }: { requestedProfileId?: st
     ) {
       return initialConversations;
     }
-    const requested = getProfile(requestedProfileId);
+    const requested = profileDirectory.get(requestedProfileId);
+    if (!requested) return initialConversations;
     return [
       {
-        id: `conversation-${requested.id}`,
+        id: `new-${requested.id}`,
         otherProfileId: requested.id,
+        otherProfile: requested,
         lastMessage: "Start a useful conversation.",
         updatedLabel: "New",
         unread: 0,
       },
       ...initialConversations,
     ];
-  }, [requestedProfileId]);
+  }, [initialConversations, profileDirectory, requestedProfileId]);
 
   const requestedConversation = preparedConversations.find(
     (conversation) => conversation.otherProfileId === requestedProfileId,
   );
   const [selectedId, setSelectedId] = useState(
-    requestedConversation?.id ?? preparedConversations[0].id,
+    initialConversationId ??
+      requestedConversation?.id ??
+      preparedConversations[0]?.id ??
+      "",
   );
   const [conversations, setConversations] =
     useState<Conversation[]>(preparedConversations);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [body, setBody] = useState("");
+  const [search, setSearch] = useState("");
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
 
   const selected =
     conversations.find((conversation) => conversation.id === selectedId) ??
     conversations[0];
-  const otherProfile = getProfile(selected.otherProfileId);
+  const otherProfile = selected
+    ? selected.otherProfile ??
+      profileDirectory.get(selected.otherProfileId)
+    : undefined;
   const visibleMessages = messages.filter(
-    (message) => message.conversationId === selected.id,
+    (message) => message.conversationId === selected?.id,
   );
+  const visibleConversations = conversations.filter((conversation) => {
+    const profile =
+      conversation.otherProfile ??
+      profileDirectory.get(conversation.otherProfileId);
+    return profile?.fullName.toLowerCase().includes(search.toLowerCase());
+  });
 
-  function sendMessage(event: React.FormEvent<HTMLFormElement>) {
+  async function sendMessage(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanBody = body.trim();
-    if (!cleanBody) return;
+    if (!cleanBody || !selected || !otherProfile) return;
+
+    setSending(true);
+    setError("");
+    let conversationId = selected.id;
+    if (conversationId.startsWith("new-")) {
+      const conversationResult = await startConversationAction(
+        selected.otherProfileId,
+      );
+      if (!conversationResult.ok) {
+        setError(
+          conversationResult.message ?? "The conversation could not be started.",
+        );
+        setSending(false);
+        return;
+      }
+      conversationId = conversationResult.conversationId;
+    }
+
+    const result = await sendMessageAction({
+      conversationId,
+      body: cleanBody,
+    });
+    if (!result.ok) {
+      setError(result.message ?? "The message could not be sent.");
+      setSending(false);
+      return;
+    }
 
     const newMessage: Message = {
       id: `message-${Date.now()}`,
-      conversationId: selected.id,
-      senderId: currentUserId,
+      conversationId,
+      senderId: currentProfile.id,
       body: cleanBody,
       createdLabel: "Now",
     };
@@ -71,6 +136,7 @@ export function MessagesClient({ requestedProfileId }: { requestedProfileId?: st
         conversation.id === selected.id
           ? {
               ...conversation,
+              id: conversationId,
               lastMessage: cleanBody,
               updatedLabel: "Now",
               unread: 0,
@@ -78,7 +144,23 @@ export function MessagesClient({ requestedProfileId }: { requestedProfileId?: st
           : conversation,
       ),
     );
+    setSelectedId(conversationId);
     setBody("");
+    setSending(false);
+  }
+
+  if (!selected || !otherProfile) {
+    return (
+      <section className="card empty-state">
+        <div>
+          <h2>No conversations yet</h2>
+          <p>Find a participant and start a focused one-to-one conversation.</p>
+          <Link className="button" href="/discover">
+            Discover people
+          </Link>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -95,11 +177,16 @@ export function MessagesClient({ requestedProfileId }: { requestedProfileId?: st
               className="input"
               id="conversation-search"
               placeholder="Search conversations"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
             />
           </div>
         </div>
-        {conversations.map((conversation) => {
-          const profile = getProfile(conversation.otherProfileId);
+        {visibleConversations.map((conversation) => {
+          const profile =
+            conversation.otherProfile ??
+            profileDirectory.get(conversation.otherProfileId);
+          if (!profile) return null;
           return (
             <button
               className="conversation-item"
@@ -119,7 +206,11 @@ export function MessagesClient({ requestedProfileId }: { requestedProfileId?: st
                 );
               }}
             >
-              <Avatar initials={profile.initials} size="small" />
+              <Avatar
+                initials={profile.initials}
+                imageUrl={profile.avatarUrl}
+                size="small"
+              />
               <span className="conversation-copy">
                 <span className="conversation-line">
                   <strong>{profile.fullName}</strong>
@@ -140,7 +231,11 @@ export function MessagesClient({ requestedProfileId }: { requestedProfileId?: st
       </aside>
       <div className="message-panel">
         <header className="message-head">
-          <Avatar initials={otherProfile.initials} size="small" />
+          <Avatar
+            initials={otherProfile.initials}
+            imageUrl={otherProfile.avatarUrl}
+            size="small"
+          />
           <div className="person-row__copy">
             <div className="person-name">
               {otherProfile.fullName}{" "}
@@ -159,7 +254,7 @@ export function MessagesClient({ requestedProfileId }: { requestedProfileId?: st
             visibleMessages.map((message) => (
               <div
                 className={`message-bubble ${
-                  message.senderId === currentUserId
+                message.senderId === currentProfile.id
                     ? "message-bubble--own"
                     : ""
                 }`}
@@ -193,10 +288,17 @@ export function MessagesClient({ requestedProfileId }: { requestedProfileId?: st
             placeholder={`Message ${otherProfile.fullName}`}
             value={body}
           />
-          <button className="button" type="submit" aria-label="Send message">
-            <Send size={17} aria-hidden="true" /> Send
+          <button
+            className="button"
+            type="submit"
+            aria-label="Send message"
+            disabled={sending}
+          >
+            <Send size={17} aria-hidden="true" />{" "}
+            {sending ? "Sending…" : "Send"}
           </button>
         </form>
+        {error ? <p className="form-error">{error}</p> : null}
       </div>
     </section>
   );

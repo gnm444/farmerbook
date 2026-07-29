@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import {
   Ban,
@@ -12,6 +12,13 @@ import {
 import { Avatar, VerifiedBadge } from "@/components/ui";
 import type { FarmerPost, FarmerProfile } from "@/lib/types";
 import { PostCard } from "@/features/posts/post-card";
+import {
+  removePostAction,
+  toggleHelpfulAction,
+  updatePostAction,
+} from "@/features/posts/actions";
+import { createReportAction } from "@/features/moderation/actions";
+import { setBlockAction, setFollowAction } from "@/features/network/actions";
 
 export function ProfileView({
   profile,
@@ -26,6 +33,105 @@ export function ProfileView({
   const [blocked, setBlocked] = useState(false);
   const [reported, setReported] = useState(false);
   const [posts, setPosts] = useState(profilePosts);
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  function updateFollow() {
+    const active = !following;
+    setError("");
+    startTransition(async () => {
+      const result = await setFollowAction({
+        profileId: profile.id,
+        active,
+      });
+      if (!result.ok) {
+        setError(result.message ?? "Follow could not be updated.");
+        return;
+      }
+      setFollowing(active);
+    });
+  }
+
+  function updateBlock() {
+    const active = !blocked;
+    setError("");
+    startTransition(async () => {
+      const result = await setBlockAction(profile.id, active);
+      if (!result.ok) {
+        setError(result.message ?? "Block could not be updated.");
+        return;
+      }
+      setBlocked(active);
+    });
+  }
+
+  function reportProfile() {
+    setError("");
+    startTransition(async () => {
+      const result = await createReportAction({
+        targetType: "profile",
+        targetId: profile.id,
+        reason: "unsafe",
+        details: "Reported from the participant profile for moderator review.",
+      });
+      if (!result.ok) {
+        setError(result.message ?? "Report could not be sent.");
+        return;
+      }
+      setReported(true);
+    });
+  }
+
+  function toggleHelpful(postId: string) {
+    setError("");
+    startTransition(async () => {
+      const result = await toggleHelpfulAction(postId);
+      if (!result.ok) {
+        setError(result.message ?? "Helpful could not be updated.");
+        return;
+      }
+      setPosts((current) =>
+        current.map((item) =>
+          item.id === postId
+            ? {
+                ...item,
+                helpfulByViewer: !item.helpfulByViewer,
+                helpfulCount:
+                  item.helpfulCount + (item.helpfulByViewer ? -1 : 1),
+              }
+            : item,
+        ),
+      );
+    });
+  }
+
+  async function updatePost(
+    postId: string,
+    body: string,
+    category: FarmerPost["category"],
+  ) {
+    const result = await updatePostAction({ postId, body, category });
+    if (!result.ok) {
+      setError(result.message ?? "The post could not be updated.");
+      return false;
+    }
+    setPosts((current) =>
+      current.map((post) =>
+        post.id === postId ? { ...post, body, category } : post,
+      ),
+    );
+    return true;
+  }
+
+  async function removePost(postId: string) {
+    const result = await removePostAction(postId);
+    if (!result.ok) {
+      setError(result.message ?? "The post could not be removed.");
+      return false;
+    }
+    setPosts((current) => current.filter((post) => post.id !== postId));
+    return true;
+  }
 
   return (
     <>
@@ -33,7 +139,11 @@ export function ProfileView({
         <div className="profile-cover" />
         <div className="profile-main">
           <div className="profile-identity">
-            <Avatar initials={profile.initials} size="large" />
+            <Avatar
+              initials={profile.initials}
+              imageUrl={profile.avatarUrl}
+              size="large"
+            />
             <h1>
               {profile.fullName}{" "}
               {profile.verified ? <VerifiedBadge label="Verified participant" /> : null}
@@ -86,8 +196,9 @@ export function ProfileView({
                 <button
                   className={`button ${following ? "button--secondary" : ""}`}
                   type="button"
+                  disabled={isPending}
                   aria-pressed={following}
-                  onClick={() => setFollowing((current) => !current)}
+                  onClick={updateFollow}
                 >
                   {following ? "Following" : "Follow"}
                 </button>
@@ -97,18 +208,20 @@ export function ProfileView({
                 <button
                   className="icon-button"
                   type="button"
+                  disabled={isPending}
                   aria-label={blocked ? "Unblock participant" : "Block participant"}
                   aria-pressed={blocked}
-                  onClick={() => setBlocked((current) => !current)}
+                  onClick={updateBlock}
                 >
                   <Ban size={19} aria-hidden="true" />
                 </button>
                 <button
                   className="icon-button"
                   type="button"
+                  disabled={isPending}
                   aria-label={reported ? "Participant reported" : "Report participant"}
                   aria-pressed={reported}
-                  onClick={() => setReported(true)}
+                  onClick={reportProfile}
                 >
                   <Flag size={19} aria-hidden="true" />
                 </button>
@@ -116,6 +229,7 @@ export function ProfileView({
             )}
           </div>
         </div>
+        {error ? <p className="form-error">{error}</p> : null}
       </section>
       {blocked ? (
         <section className="card empty-state">
@@ -141,21 +255,10 @@ export function ProfileView({
                 <PostCard
                   key={post.id}
                   post={post}
-                  onToggleHelpful={(id) =>
-                    setPosts((current) =>
-                      current.map((item) =>
-                        item.id === id
-                          ? {
-                              ...item,
-                              helpfulByViewer: !item.helpfulByViewer,
-                              helpfulCount:
-                                item.helpfulCount +
-                                (item.helpfulByViewer ? -1 : 1),
-                            }
-                          : item,
-                      ),
-                    )
-                  }
+                  canManage={isOwnProfile}
+                  onToggleHelpful={toggleHelpful}
+                  onUpdatePost={updatePost}
+                  onRemovePost={removePost}
                 />
               ))
             ) : (

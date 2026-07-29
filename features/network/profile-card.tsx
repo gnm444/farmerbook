@@ -8,16 +8,18 @@ import type { FarmerProfile } from "@/lib/types";
 export function ProfileCard({
   profile,
   following,
+  pending = false,
   onToggleFollow,
 }: {
   profile: FarmerProfile;
   following: boolean;
+  pending?: boolean;
   onToggleFollow: (profileId: string) => void;
 }) {
   return (
     <article className="card profile-card">
       <div className="profile-card__top">
-        <Avatar initials={profile.initials} />
+        <Avatar initials={profile.initials} imageUrl={profile.avatarUrl} />
         <span className="badge badge--green">{profile.roleLabel}</span>
       </div>
       <h2>
@@ -47,10 +49,11 @@ export function ProfileCard({
             following ? "button--secondary" : ""
           } button--small`}
           type="button"
+          disabled={pending}
           aria-pressed={following}
           onClick={() => onToggleFollow(profile.id)}
         >
-          {following ? "Following" : "Follow"}
+          {pending ? "Saving…" : following ? "Following" : "Follow"}
         </button>
         <Link
           className="button button--ghost button--small"

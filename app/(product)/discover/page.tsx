@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ProductHeader } from "@/components/product-header";
 import { DiscoverClient } from "@/features/network/discover-client";
+import { loadDiscoverProfiles } from "@/features/profiles/queries";
 
 export const metadata: Metadata = { title: "Discover people" };
 
@@ -15,6 +16,7 @@ export default async function DiscoverPage({
   }>;
 }) {
   const filters = await searchParams;
+  const profiles = await loadDiscoverProfiles();
 
   return (
     <div className="product-page">
@@ -28,6 +30,7 @@ export default async function DiscoverPage({
         initialCrop={filters.crop}
         initialType={filters.type}
         initialDistrict={filters.district}
+        profiles={profiles}
       />
     </div>
   );

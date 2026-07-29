@@ -1,6 +1,7 @@
 "use server";
 
 import { requireUser } from "@/features/auth/require-user";
+import { recordProductEvent } from "@/features/analytics/events";
 import { createClient } from "@/lib/supabase/server";
 import { messageSchema } from "./schemas";
 
@@ -22,6 +23,10 @@ export async function startConversationAction(otherUserId: string) {
     "get_or_create_direct_conversation",
     { other_user_id: otherUserId },
   );
+
+  if (!error) {
+    await recordProductEvent(user.id, "conversation_started");
+  }
 
   return error
     ? { ok: false as const, message: error.message }
@@ -45,6 +50,10 @@ export async function sendMessageAction(input: unknown) {
     sender_id: user.id,
     body: parsed.data.body,
   });
+
+  if (!error) {
+    await recordProductEvent(user.id, "message_sent");
+  }
 
   return error
     ? { ok: false as const, message: error.message }

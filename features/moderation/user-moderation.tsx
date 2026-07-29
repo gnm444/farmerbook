@@ -46,7 +46,11 @@ export function UserModeration({ profile }: { profile: FarmerProfile }) {
     <div className="admin-grid">
       <section className="card settings-card">
         <div className="person-row">
-          <Avatar initials={profile.initials} size="large" />
+          <Avatar
+            initials={profile.initials}
+            imageUrl={profile.avatarUrl}
+            size="large"
+          />
           <div className="person-row__copy">
             <h2 style={{ margin: 0 }}>
               {profile.fullName}{" "}

@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "@/features/auth/require-admin";
 import { requireUser } from "@/features/auth/require-user";
+import { recordProductEvent } from "@/features/analytics/events";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -29,6 +30,13 @@ export async function createReportAction(input: unknown) {
     reason: parsed.data.reason,
     details: parsed.data.details,
   });
+
+  if (!error) {
+    await recordProductEvent(user.id, "content_reported", {
+      targetType: parsed.data.targetType,
+      reason: parsed.data.reason,
+    });
+  }
 
   return error
     ? { ok: false as const, message: error.message }

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { currentUserId, posts, profiles } from "@/lib/demo-data";
 import { ProfileView } from "@/features/profiles/profile-view";
+import {
+  loadCurrentProfile,
+  loadProfileByHandle,
+} from "@/features/profiles/queries";
+import { loadPostsByAuthor } from "@/features/posts/queries";
 
 export async function generateMetadata({
   params,
@@ -9,8 +13,7 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const { handle } = await params;
-  const profile = profiles.find((item) => item.handle === handle);
-  return { title: profile?.fullName ?? "Farmer profile" };
+  return { title: `@${handle}` };
 }
 
 export default async function FarmerProfilePage({
@@ -19,15 +22,19 @@ export default async function FarmerProfilePage({
   params: Promise<{ handle: string }>;
 }) {
   const { handle } = await params;
-  const profile = profiles.find((item) => item.handle === handle);
+  const [profile, currentUser] = await Promise.all([
+    loadProfileByHandle(handle),
+    loadCurrentProfile(),
+  ]);
   if (!profile) notFound();
+  const profilePosts = await loadPostsByAuthor(profile.id);
 
   return (
     <div className="product-page">
       <ProfileView
         profile={profile}
-        profilePosts={posts.filter((post) => post.authorId === profile.id)}
-        isOwnProfile={profile.id === currentUserId}
+        profilePosts={profilePosts}
+        isOwnProfile={profile.id === currentUser.id}
       />
     </div>
   );

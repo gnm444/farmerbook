@@ -279,6 +279,8 @@ begin
     coalesce(nullif(new.raw_user_meta_data ->> 'full_name', ''), 'New participant')
   )
   on conflict (id) do nothing;
+  insert into public.product_events (user_id, event_name)
+  values (new.id, 'signup_completed');
   return new;
 end;
 $$;
@@ -512,8 +514,13 @@ using (user_id = (select auth.uid()));
 create policy "participants view relevant follows"
 on public.follows for select to authenticated
 using (
-  (follower_id = (select auth.uid()) or followed_id = (select auth.uid()))
-  and not public.is_blocked(follower_id, followed_id)
+  public.is_admin()
+  or (
+    public.is_active_user(follower_id)
+    and public.is_active_user(followed_id)
+    and not public.is_blocked((select auth.uid()), follower_id)
+    and not public.is_blocked((select auth.uid()), followed_id)
+  )
 );
 create policy "participants create own follows"
 on public.follows for insert to authenticated

@@ -11,10 +11,13 @@ export type ActiveUser = {
     handle: string;
     fullName: string;
     status: string;
+    onboardingComplete: boolean;
   };
 };
 
-export async function requireUser(): Promise<ActiveUser> {
+export async function requireUser(
+  options: { allowIncomplete?: boolean } = {},
+): Promise<ActiveUser> {
   if (!isSupabaseConfigured()) {
     const profile = getProfile(currentUserId);
     return {
@@ -24,6 +27,7 @@ export async function requireUser(): Promise<ActiveUser> {
         handle: profile.handle,
         fullName: profile.fullName,
         status: "active",
+        onboardingComplete: true,
       },
     };
   }
@@ -38,12 +42,15 @@ export async function requireUser(): Promise<ActiveUser> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("handle, full_name, status")
+    .select("handle, full_name, status, onboarding_complete")
     .eq("id", user.id)
     .single();
 
   if (!profile || profile.status !== "active") {
     redirect(profile ? "/login?error=Account%20is%20not%20active" : "/onboarding");
+  }
+  if (!options.allowIncomplete && !profile.onboarding_complete) {
+    redirect("/onboarding");
   }
 
   return {
@@ -54,6 +61,7 @@ export async function requireUser(): Promise<ActiveUser> {
       handle: profile.handle,
       fullName: profile.full_name,
       status: profile.status,
+      onboardingComplete: profile.onboarding_complete,
     },
   };
 }

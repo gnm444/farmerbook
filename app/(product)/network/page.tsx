@@ -3,10 +3,13 @@ import Link from "next/link";
 import { UserPlus } from "lucide-react";
 import { ProductHeader } from "@/components/product-header";
 import { NetworkClient } from "@/features/network/network-client";
+import { loadNetworkProfiles } from "@/features/profiles/queries";
 
 export const metadata: Metadata = { title: "Your network" };
 
-export default function NetworkPage() {
+export default async function NetworkPage() {
+  const network = await loadNetworkProfiles();
+
   return (
     <div className="product-page">
       <ProductHeader
@@ -19,7 +22,10 @@ export default function NetworkPage() {
           </Link>
         }
       />
-      <NetworkClient />
+      <NetworkClient
+        initialFollowing={network.following}
+        followers={network.followers}
+      />
     </div>
   );
 }

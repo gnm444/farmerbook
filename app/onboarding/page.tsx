@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Brand } from "@/components/ui";
 import { OnboardingForm } from "@/features/profiles/onboarding-form";
+import { loadCurrentProfile } from "@/features/profiles/queries";
 
 export const metadata: Metadata = { title: "Complete your profile" };
 
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  const profile = await loadCurrentProfile({ allowIncomplete: true });
+
   return (
     <main className="auth-page">
       <aside className="auth-aside">
@@ -26,7 +29,7 @@ export default function OnboardingPage() {
         <div className="auth-card" style={{ width: "min(620px, 100%)" }}>
           <h2>Complete your profile</h2>
           <p>Required fields take about two minutes.</p>
-          <OnboardingForm />
+          <OnboardingForm initialProfile={profile} />
         </div>
       </section>
     </main>

@@ -1,55 +1,123 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import { Avatar } from "@/components/ui";
+import { getProfile } from "@/lib/demo-data";
+import type { Comment, FarmerPost, FarmerProfile } from "@/lib/types";
 import {
-  comments as initialComments,
-  currentUserId,
-  getProfile,
-} from "@/lib/demo-data";
-import type { Comment, FarmerPost } from "@/lib/types";
+  createCommentAction,
+  removePostAction,
+  toggleHelpfulAction,
+  updatePostAction,
+} from "./actions";
 import { PostCard } from "./post-card";
 
-export function PostDetailClient({ initialPost }: { initialPost: FarmerPost }) {
+export function PostDetailClient({
+  initialPost,
+  initialComments,
+  currentUser,
+}: {
+  initialPost: FarmerPost;
+  initialComments: Comment[];
+  currentUser: FarmerProfile;
+}) {
   const [post, setPost] = useState(initialPost);
-  const [comments, setComments] = useState(
-    initialComments.filter((comment) => comment.postId === initialPost.id),
-  );
+  const router = useRouter();
+  const [comments, setComments] = useState(initialComments);
   const [body, setBody] = useState("");
-  const currentUser = getProfile(currentUserId);
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
 
   function addComment(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanBody = body.trim();
     if (!cleanBody) return;
-    const newComment: Comment = {
-      id: `comment-${Date.now()}`,
-      postId: post.id,
-      authorId: currentUserId,
-      body: cleanBody,
-      createdLabel: "Just now",
-    };
-    setComments((current) => [...current, newComment]);
+    setError("");
+    startTransition(async () => {
+      const result = await createCommentAction({
+        postId: post.id,
+        body: cleanBody,
+      });
+      if (!result.ok) {
+        setError(result.message ?? "Your answer could not be posted.");
+        return;
+      }
+      const newComment: Comment = {
+        id: `comment-${Date.now()}`,
+        postId: post.id,
+        authorId: currentUser.id,
+        author: currentUser,
+        body: cleanBody,
+        createdLabel: "Just now",
+      };
+      setComments((current) => [...current, newComment]);
+      setPost((current) => ({
+        ...current,
+        commentCount: current.commentCount + 1,
+      }));
+      setBody("");
+    });
+  }
+
+  function toggleHelpful() {
+    startTransition(async () => {
+      const result = await toggleHelpfulAction(post.id);
+      if (!result.ok) {
+        setError(result.message ?? "Helpful could not be updated.");
+        return;
+      }
+      setPost((current) => ({
+        ...current,
+        helpfulByViewer: !current.helpfulByViewer,
+        helpfulCount:
+          current.helpfulCount + (current.helpfulByViewer ? -1 : 1),
+      }));
+    });
+  }
+
+  async function updatePost(
+    postId: string,
+    nextBody: string,
+    nextCategory: FarmerPost["category"],
+  ) {
+    const result = await updatePostAction({
+      postId,
+      body: nextBody,
+      category: nextCategory,
+    });
+    if (!result.ok) {
+      setError(result.message ?? "The post could not be updated.");
+      return false;
+    }
     setPost((current) => ({
       ...current,
-      commentCount: current.commentCount + 1,
+      body: nextBody,
+      category: nextCategory,
     }));
-    setBody("");
+    return true;
+  }
+
+  async function removePost(postId: string) {
+    const result = await removePostAction(postId);
+    if (!result.ok) {
+      setError(result.message ?? "The post could not be removed.");
+      return false;
+    }
+    router.push("/feed");
+    router.refresh();
+    return true;
   }
 
   return (
     <>
       <PostCard
         post={post}
-        onToggleHelpful={() =>
-          setPost((current) => ({
-            ...current,
-            helpfulByViewer: !current.helpfulByViewer,
-            helpfulCount:
-              current.helpfulCount + (current.helpfulByViewer ? -1 : 1),
-          }))
-        }
+        canManage={post.authorId === currentUser.id}
+        onToggleHelpful={toggleHelpful}
+        onUpdatePost={updatePost}
+        onRemovePost={removePost}
       />
       <section className="card settings-card" aria-labelledby="comments-title">
         <h2 id="comments-title">Community answers</h2>
@@ -57,7 +125,11 @@ export function PostDetailClient({ initialPost }: { initialPost: FarmerPost }) {
           Add practical context and explain the limits of your own experience.
         </p>
         <form className="composer-main" onSubmit={addComment}>
-          <Avatar initials={currentUser.initials} size="small" />
+          <Avatar
+            initials={currentUser.initials}
+            imageUrl={currentUser.avatarUrl}
+            size="small"
+          />
           <div className="field" style={{ flex: 1 }}>
             <label className="sr-only" htmlFor="comment-body">
               Add a comment
@@ -72,16 +144,26 @@ export function PostDetailClient({ initialPost }: { initialPost: FarmerPost }) {
               style={{ minHeight: 82 }}
             />
           </div>
-          <button className="button" type="submit" aria-label="Post comment">
+          <button
+            className="button"
+            type="submit"
+            aria-label="Post comment"
+            disabled={isPending}
+          >
             <Send size={17} aria-hidden="true" />
           </button>
         </form>
+        {error ? <p className="form-error">{error}</p> : null}
         <div style={{ marginTop: 22 }}>
           {comments.map((comment) => {
-            const author = getProfile(comment.authorId);
+            const author = comment.author ?? getProfile(comment.authorId);
             return (
               <article className="list-row" key={comment.id}>
-                <Avatar initials={author.initials} size="small" />
+                <Avatar
+                  initials={author.initials}
+                  imageUrl={author.avatarUrl}
+                  size="small"
+                />
                 <div className="list-row__copy">
                   <strong>{author.fullName}</strong>
                   <p style={{ margin: "5px 0 2px" }}>{comment.body}</p>

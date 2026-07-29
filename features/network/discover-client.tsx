@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Search } from "lucide-react";
-import { profiles } from "@/lib/demo-data";
+import type { FarmerProfile } from "@/lib/types";
+import { setFollowAction } from "./actions";
 import { ProfileCard } from "./profile-card";
 
 export function DiscoverClient({
@@ -10,11 +11,13 @@ export function DiscoverClient({
   initialCrop = "",
   initialType = "",
   initialDistrict = "",
+  profiles,
 }: {
   initialSearch?: string;
   initialCrop?: string;
   initialType?: string;
   initialDistrict?: string;
+  profiles: FarmerProfile[];
 }) {
   const [search, setSearch] = useState(initialSearch);
   const [crop, setCrop] = useState(initialCrop);
@@ -23,6 +26,23 @@ export function DiscoverClient({
   const [following, setFollowing] = useState(
     () => new Set(profiles.filter((profile) => profile.isFollowing).map((p) => p.id)),
   );
+  const [error, setError] = useState("");
+  const [pendingProfileId, setPendingProfileId] = useState("");
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (crop) params.set("crop", crop);
+    if (type) params.set("type", type);
+    if (district) params.set("district", district);
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      query ? `/discover?${query}` : "/discover",
+    );
+  }, [crop, district, search, type]);
 
   const results = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -43,14 +63,25 @@ export function DiscoverClient({
       )
       .filter((profile) => !type || profile.participantType === type)
       .filter((profile) => !district || profile.district === district);
-  }, [crop, district, search, type]);
+  }, [crop, district, profiles, search, type]);
 
   function toggleFollow(profileId: string) {
-    setFollowing((current) => {
-      const next = new Set(current);
-      if (next.has(profileId)) next.delete(profileId);
-      else next.add(profileId);
-      return next;
+    const active = !following.has(profileId);
+    setError("");
+    setPendingProfileId(profileId);
+    startTransition(async () => {
+      const result = await setFollowAction({ profileId, active });
+      setPendingProfileId("");
+      if (!result.ok) {
+        setError(result.message ?? "Follow could not be updated.");
+        return;
+      }
+      setFollowing((current) => {
+        const next = new Set(current);
+        if (active) next.add(profileId);
+        else next.delete(profileId);
+        return next;
+      });
     });
   }
 
@@ -124,6 +155,7 @@ export function DiscoverClient({
       <p className="muted" style={{ margin: "0 0 16px", fontSize: ".84rem" }}>
         {results.length} {results.length === 1 ? "person" : "people"} found
       </p>
+      {error ? <p className="form-error">{error}</p> : null}
       {results.length ? (
         <section className="people-grid" aria-label="People">
           {results.map((profile) => (
@@ -131,6 +163,7 @@ export function DiscoverClient({
               key={profile.id}
               profile={profile}
               following={following.has(profile.id)}
+              pending={pendingProfileId === profile.id}
               onToggleFollow={toggleFollow}
             />
           ))}

@@ -7,8 +7,12 @@ import { reports as initialReports } from "@/lib/demo-data";
 import type { ModerationReport } from "@/lib/types";
 import { moderateReportAction } from "./actions";
 
-export function ReportQueue() {
-  const [reports, setReports] = useState(initialReports);
+export function ReportQueue({
+  reports: providedReports = initialReports,
+}: {
+  reports?: ModerationReport[];
+}) {
+  const [reports, setReports] = useState(providedReports);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const pending = reports.filter((report) => report.status === "pending");
@@ -75,22 +79,27 @@ export function ReportQueue() {
                 >
                   Dismiss
                 </button>
-                <button
-                  className="button button--small"
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => updateReport(report, "actioned", "hide")}
-                >
-                  Hide target
-                </button>
-                <button
-                  className="button button--danger button--small"
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => updateReport(report, "actioned", "suspend")}
-                >
-                  Suspend account
-                </button>
+                {report.targetType !== "profile" ? (
+                  <button
+                    className="button button--small"
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => updateReport(report, "actioned", "hide")}
+                  >
+                    Hide target
+                  </button>
+                ) : (
+                  <button
+                    className="button button--danger button--small"
+                    type="button"
+                    disabled={isPending}
+                    onClick={() =>
+                      updateReport(report, "actioned", "suspend")
+                    }
+                  >
+                    Suspend account
+                  </button>
+                )}
               </div>
             </article>
           ))

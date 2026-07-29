@@ -11,33 +11,40 @@ import {
   UsersRound,
 } from "lucide-react";
 import { Avatar, Brand, DemoBanner } from "@/components/ui";
-import { getProfile, currentUserId } from "@/lib/demo-data";
+import type { FarmerProfile } from "@/lib/types";
 
-const navItems = [
-  { href: "/feed", label: "Feed", icon: Home },
-  { href: "/discover", label: "Discover", icon: Search },
-  { href: "/network", label: "Network", icon: UsersRound },
-  { href: "/messages", label: "Messages", icon: MessageCircle },
-  { href: "/farmers/meera_kulkarni", label: "My Profile", icon: UserRound },
-];
-
-function activeFor(pathname: string, href: string) {
-  if (href === "/farmers/meera_kulkarni") {
+function activeFor(pathname: string, href: string, profileHref: string) {
+  if (href === profileHref) {
     return (
-      pathname.startsWith("/farmers/meera_kulkarni") ||
+      pathname.startsWith(profileHref) ||
       pathname.startsWith("/settings")
     );
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  currentUser,
+  demo,
+}: {
+  children: React.ReactNode;
+  currentUser: FarmerProfile;
+  demo: boolean;
+}) {
   const pathname = usePathname();
-  const currentUser = getProfile(currentUserId);
+  const profileHref = `/farmers/${currentUser.handle}`;
+  const navItems = [
+    { href: "/feed", label: "Feed", icon: Home },
+    { href: "/discover", label: "Discover", icon: Search },
+    { href: "/network", label: "Network", icon: UsersRound },
+    { href: "/messages", label: "Messages", icon: MessageCircle },
+    { href: profileHref, label: "My Profile", icon: UserRound },
+  ];
 
   return (
     <>
-      <DemoBanner />
+      <DemoBanner visible={demo} />
       <div className="app-shell">
         <aside className="app-rail">
           <Link
@@ -52,7 +59,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                aria-current={activeFor(pathname, href) ? "page" : undefined}
+                aria-current={
+                  activeFor(pathname, href, profileHref) ? "page" : undefined
+                }
               >
                 <Icon size={20} aria-hidden="true" />
                 {label}
@@ -60,7 +69,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
           <div className="rail-profile">
-            <Avatar initials={currentUser.initials} size="small" />
+            <Avatar
+              initials={currentUser.initials}
+              imageUrl={currentUser.avatarUrl}
+              size="small"
+            />
             <div className="rail-profile__copy">
               <strong>{currentUser.fullName}</strong>
               <span>@{currentUser.handle}</span>
@@ -88,7 +101,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               key={href}
               href={href}
-              aria-current={activeFor(pathname, href) ? "page" : undefined}
+              aria-current={
+                activeFor(pathname, href, profileHref) ? "page" : undefined
+              }
             >
               <Icon size={21} aria-hidden="true" />
               {label}

@@ -30,7 +30,7 @@ npm run check
 npm run test:e2e
 ```
 
-The main quality gate runs ESLint, TypeScript, 22 unit and schema checks, and a
+The main quality gate runs ESLint, TypeScript, unit and schema checks, and a
 production build. Playwright covers the desktop and mobile demonstration
 journeys.
 

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { ContextRail } from "@/components/context-rail";
 import { ProductHeader } from "@/components/product-header";
-import { getPost } from "@/lib/demo-data";
 import { PostDetailClient } from "@/features/posts/post-detail-client";
+import { loadPostBundle } from "@/features/posts/queries";
+import { loadCurrentProfile } from "@/features/profiles/queries";
 
 export const metadata: Metadata = { title: "Post discussion" };
 
@@ -14,6 +16,11 @@ export default async function PostDetailPage({
   params: Promise<{ postId: string }>;
 }) {
   const { postId } = await params;
+  const [bundle, currentUser] = await Promise.all([
+    loadPostBundle(postId),
+    loadCurrentProfile(),
+  ]);
+  if (!bundle) notFound();
 
   return (
     <div className="product-page">
@@ -29,7 +36,11 @@ export default async function PostDetailPage({
       />
       <div className="feed-layout">
         <section className="feed-column">
-          <PostDetailClient initialPost={getPost(postId)} />
+          <PostDetailClient
+            initialPost={bundle.post}
+            initialComments={bundle.comments}
+            currentUser={currentUser}
+          />
         </section>
         <ContextRail />
       </div>

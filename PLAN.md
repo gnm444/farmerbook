@@ -83,7 +83,7 @@ The MVP is a responsive website, not a native mobile application. It deliberatel
 
 ## Outcomes & Retrospective
 
-The implementation now provides the Grounded Utility responsive application, a complete fictional demonstration across the public, farmer, and administrator journeys, protected Supabase server actions, one forward-only migration with RLS and storage policies, seed data, CI, and automated unit/schema checks. `npm run check` passes with 22 tests and a production Vinext/Cloudflare build. A generated 1200×630 FarmerBook social card is wired into request-host-aware metadata.
+The implementation now provides the Grounded Utility responsive application, a complete fictional demonstration across the public, farmer, and administrator journeys, configured-mode Supabase queries and protected server actions, one forward-only migration with RLS and storage policies, seed data, CI, and automated unit/schema checks. Configured environments persist profile setup, image-backed posts, social relationships, direct messages, safety reports, moderation decisions, account controls, and bounded product events. `npm run check` passes with a production Vinext/Cloudflare build. A generated 1200×630 FarmerBook social card is wired into request-host-aware metadata.
 
 The remaining work is operational rather than hidden application scope: connect a real Supabase staging project, run the committed migration and live RLS/browser suite, configure transactional email and recoverable backups, complete five farmer usability sessions, and name the pilot moderator. Email suitability remains the largest product risk.
 
