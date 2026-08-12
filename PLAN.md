@@ -10,6 +10,14 @@ After this plan is completed, an invited farmer can register in a phone browser,
 
 The MVP is a responsive website, not a native mobile application. It deliberately excludes phone OTP, video, payments, algorithmic recommendations, and other expensive infrastructure. The complete product scope and interaction design are recorded in `docs/MVP_PRODUCT_DESIGN.md`; the essentials needed to execute the build are repeated here so this plan remains usable on its own.
 
+The current unimplemented Featured Farmer addendum extends that product with a
+public editorial collection. An administrator will be able to research farmers
+whose significant work is documented on the Web, build claim-level cited
+stories, and publish them at `/featured-farmers`. Readers will see the reason
+each farmer was selected, sourced impact, confirmed owned social accounts,
+fact-check and correction information, without being told that the subject is a
+FarmerBook member or verified participant.
+
 ## Progress
 
 - [x] (2026-07-29 02:02Z) Confirmed that `/Users/ngonapa/Downloads/farmerbook` is an empty, non-Git directory.
@@ -40,6 +48,9 @@ The MVP is a responsive website, not a native mobile application. It deliberatel
 - [x] (2026-08-11 11:07 IST) Product owner approved Brave Search API for FB-REQ-014 name-only Farmer discovery. Implemented the fail-closed adapter, administrator quota reservation, provider/storage provenance, private `Not verified` sample/Workflow path, and secure configuration contract; no contact is derived and no consent or delivery work is created.
 - [x] (2026-08-11 11:13 IST) Verified the Brave integration with repository-wide ESLint, TypeScript, 88 Vitest files/416 tests, and a complete Vinext/Cloudflare build. Docker remained unavailable; eligible plan/secret setup, clean database/RLS rehearsal, staging, production flags, deployment, real searches, and contact remain open.
 - [x] (2026-08-11 20:04 IST) Product owner rejected Brave before account creation and requested a Google-like alternative. Verified from current official documentation that Google Custom Search is closed to new customers and ends on 2027-01-01; recorded Tavily as the proposed free-tier replacement. Existing Brave code remains disabled pending explicit replacement approval.
+- [x] (2026-08-12) Researched the product owner's correction from personally-known intake to sourced Featured Farmer editorial stories; updated `research.md`, `docs/REQUIREMENTS.md`, this plan, the implementation log and structured-development state without changing application or production code.
+- [x] (2026-08-12) Product owner explicitly approved the Featured Farmer editorial profiles correction addendum and authorized implementation.
+- [ ] Implement and verify the approved Featured Farmer editorial plan; stop before any provider account, real-person research, publication, production mutation or deployment.
 - [ ] Continue product-owner intake one focused question at a time and update `docs/REQUIREMENTS.md`, this plan, `implementation-log.md`, and `.structured-dev-state` at every stopping point.
 - [ ] Finish the LinkedIn developer app and Supabase provider after Chrome file-upload permission is enabled for the required app logo.
 - [ ] Product owner chooses the pilot region, crop focus, local language, pilot invitation method, and moderator.
@@ -77,6 +88,10 @@ The MVP is a responsive website, not a native mobile application. It deliberatel
   Evidence: `lib/i18n/en.ts` and `hi.ts` are unused, the root document is fixed to English, profile queries do not load the saved preference, and nearly all user-facing strings remain hard-coded English.
 - Observation: The produce-listing schema cannot represent agricultural companies or non-produce offers without false fields and imagery.
   Evidence: `produce_listings` requires crop, variety, harvest, grade, produce unit, and delivery fields; unknown listing crops receive tomato imagery.
+- Observation: The locally implemented Known Farmer path cannot be repaired by changing labels because personal relationship is enforced in its Zod schema and PostgreSQL RPC, and its build action creates an outreach prospect plus member-style sample.
+  Evidence: `features/profile-agent/known-farmer-schemas.ts`, `supabase/migrations/20260812140000_known_farmer_intake.sql`, and `features/profile-agent/known-farmer-actions.ts` each encode that model. The corrected requirement needs a separate editorial domain.
+- Observation: Google does not offer a suitable new retained whole-Web Search API for this product, but safe Web research remains possible through operator-opened Google queries and selected destination pages; official YouTube API candidate discovery can be reused.
+  Evidence: Current Google Custom Search documentation says new customers are ineligible and existing customers must migrate by 2027-01-01; the existing helpers already avoid fetching Google and bound official YouTube results.
 
 ## Decision Log
 
@@ -86,6 +101,16 @@ The MVP is a responsive website, not a native mobile application. It deliberatel
 - Decision: Reject Brave before external account creation and evaluate Tavily as the replacement; do not start a new Google Custom Search integration.
   Rationale: The product owner rejected Brave. Google's direct Custom Search JSON API is closed to new customers and scheduled to stop on 2027-01-01; Vertex AI Search does not provide the same simple full-Web result contract. Tavily offers a no-card free pilot tier and bounded search results, but still requires explicit approval and output-retention/legal review before implementation or production use.
   Date/Author: 2026-08-11 / Product owner and Codex
+
+- Decision: Replace the public objective of Known Farmer Intake with a separate Featured Farmer editorial domain; do not convert researched people into unclaimed member profiles.
+  Rationale: The product owner clarified that selection is based on significant documented work, not a personal relationship. Editorial articles can publish sourced impact, owned social links, media rights, corrections and fact-check dates without implying FarmerBook membership, verification, consent or endorsement.
+  Date/Author: 2026-08-12 / Product owner and Codex
+- Decision: Require two non-social professional publisher domains, one authoritative or independent source, two sourced significance claims, and one confirmed Farmer-owned social account before editorial review readiness.
+  Rationale: A deterministic source threshold makes “significant work” auditable and prevents search rank, follower count, one promotional source or AI judgment from becoming the selection criterion.
+  Date/Author: 2026-08-12 / Codex, awaiting plan approval
+- Decision: Publish unclaimed Featured Farmer pages as `Article` content about a person, not as FarmerBook `ProfilePage` member content.
+  Rationale: The article is authored by FarmerBook from third-party public evidence. Separate URLs, disclosure and metadata prevent connection, activity, marketplace and verification semantics from being attributed to a person who has not joined FarmerBook.
+  Date/Author: 2026-08-12 / Codex, awaiting plan approval
 
 - Decision: Build a responsive web application only.
   Rationale: The user explicitly wants a web interface and an inexpensive AI-first prototype. A native application would duplicate UI work and introduce store-release overhead before product demand is validated.
@@ -181,31 +206,45 @@ The remaining work is operational rather than hidden application scope: connect 
 
 The 2026-08-09 agriculture-ecosystem milestone is currently research and planning only. Three subagents produced independent read-only audits, the local baseline passes, and the detailed implementation/rollback program is recorded below. No company, taxonomy, resumable-onboarding, or 23-locale product code should be described as complete until the addendum is explicitly approved and its behavioral gates pass.
 
+The 2026-08-12 Featured Farmer correction is at the research-and-planning
+checkpoint. The new outcome, source standard, editorial data model, public
+experience, safety boundary, validation and rollback program are documented in
+this plan and `research.md`. No Featured Farmer feature code, migration,
+real-person research, public article or production state has been created. The
+previous Known Farmer implementation remains default-disabled and must not be
+presented as satisfying the corrected requirement.
+
 At the end of each milestone, add a short entry here covering what is demonstrably working, remaining gaps, measured effort, and any scope decision that should affect later milestones.
 
 ## Context and Orientation
 
-The repository root is `/Users/ngonapa/Downloads/farmerbook`. It currently contains only `README.md`, this plan, and `docs/MVP_PRODUCT_DESIGN.md`. There is no application or Git history yet.
-
-The planned application uses the Next.js “App Router,” a file-based routing system in which folders below `src/app` define browser routes. A “server action” is an asynchronous function that executes on the Next.js server and is called by a form or browser component; server actions will validate protected writes. Supabase is the hosted backend. It supplies email authentication, a PostgreSQL relational database, and image storage.
+The repository root is `/Users/ngonapa/Downloads/farmerbook`. It is an existing
+Next.js 16 TypeScript application with a Git history, root-level `app`,
+`components`, `features` and `lib` folders, Vitest tests under `tests`, Playwright
+tests under `e2e`, and ordered PostgreSQL migrations and pgTAP tests under
+`supabase`. Next.js “App Router” is the file-based routing system in which
+folders below `app` define browser routes. A “server action” is an asynchronous
+server function called by a form or browser component; server actions validate
+and authorize writes. Supabase is the hosted backend and supplies authentication,
+PostgreSQL and image storage.
 
 “Row Level Security,” abbreviated RLS, is PostgreSQL authorization attached to a table. RLS policies decide which rows the current authenticated user may select, insert, change, or delete. RLS is mandatory because browser-side checks alone are not security.
 
-After initialization, the important locations will be:
+The important locations are:
 
-- `src/app`: pages, layouts, route handlers, and server actions.
-- `src/components`: reusable interface elements.
-- `src/features`: feature-specific queries, validation schemas, and components.
-- `src/lib/supabase/client.ts`: browser Supabase client.
-- `src/lib/supabase/server.ts`: cookie-aware server Supabase client.
-- `src/lib/auth/require-user.ts`: server helper that rejects unauthenticated or inactive users.
-- `src/lib/auth/require-admin.ts`: server helper that verifies protected administrator metadata.
-- `src/proxy.ts`: request-time session refresh and redirects for protected routes.
-- `src/i18n`: English and selected pilot-language dictionaries.
-- `src/types/database.ts`: generated TypeScript representation of the database.
+- `app`: pages, layouts and route handlers.
+- `components`: reusable interface elements.
+- `features`: feature-specific server actions, queries, schemas and components.
+- `lib/supabase/client.ts`: browser Supabase client.
+- `lib/supabase/server.ts`: cookie-aware server Supabase client.
+- `features/auth/require-user.ts`: server helper that rejects unauthenticated users.
+- `features/auth/require-admin.ts`: server helper that verifies protected administrator metadata.
+- `proxy.ts`: request-time session refresh and redirects for protected routes.
+- `lib/i18n`: locale registry, translators and English/Hindi/Marathi catalogs.
+- `lib/types.ts`: shared application data types.
 - `supabase/migrations`: ordered SQL migrations containing tables, indexes, functions, and RLS policies.
 - `supabase/seed.sql`: clearly labeled fictional pilot data for local development.
-- `tests`: unit and browser-level tests.
+- `tests`: unit, schema and component tests; `e2e` contains browser journeys.
 - `.github/workflows/ci.yml`: automated lint, type, test, and build checks.
 
 The route and data requirements are:
@@ -4162,6 +4201,15 @@ administrator can see every role, its schedule, last outcome and recent runs at
       project refs without guessing, and prove the staged dry-run, backup/
       restore, configured synthetic journeys, processor secret, and release
       controls before requesting the exact production mutation approval.
+- [x] (2026-08-12 IST) Deployed the frozen default-off production artifact as
+      Worker version `d3dddcf8-139a-4361-8f21-47b91ec9ce89` at 100% traffic,
+      preserving the live `kdmt…` database, registered users and both custom
+      domains. All post-deploy health, core-page and security-header checks
+      passed; rollback target is `9c41aa57-d038-498f-b9ac-16cb954ef717`.
+- [ ] Transfer or grant the approved Gmail account reviewed access to the
+      existing `kdmt…` production Supabase organization. Do not point the live
+      Worker at the newly created `sxo…` project because that would hide the
+      existing users and data.
 
 ### Surprises & Discoveries
 
@@ -4716,3 +4764,399 @@ current Google interface permits automated link collection into FarmerBook's
 stored cited-profile database. It uses the official YouTube Data API with a
 separate quota/retention/attribution boundary and requires a Farmer-approved
 owned social link before public publication.
+
+## Featured Farmer editorial profiles correction addendum (approved)
+
+This addendum supersedes the user-facing objective and downstream architecture
+of the preceding Known Farmer Intake section. That implementation remains
+disabled and is not production work. The useful research/provider controls are
+retained, but a personal FarmerBook relationship and member-profile claim flow
+are explicitly removed from the new path.
+
+### Outcome
+
+After this plan is implemented, a FarmerBook administrator can research a named
+farmer through Web Search, official YouTube discovery and other permitted public
+sources; document why that farmer's work is significant; create a source-bound
+editorial story; review it; and explicitly publish it to a beautiful public
+Featured Farmers collection. Every published story has at least one confirmed
+Farmer-owned social link, claim-level citations, a fact-check date, media-rights
+metadata or a designed no-photo fallback, and a correction/removal route.
+
+The output is a FarmerBook editorial article, not a FarmerBook account. It does
+not create followers, activity, reviews, listings, buyer enquiries, verification
+claims, contact consent, outreach work or an implication that the subject is a
+member or endorses FarmerBook.
+
+```text
+/admin/featured-farmers
+  -> subject name + location/farming hints + significance hypothesis
+  -> open/copy Web Search query families
+  -> official bounded YouTube candidate search
+  -> select sources and classify quality/association
+  -> author claim rows; each claim must cite selected source(s)
+  -> generate/edit bounded story sections from approved claims only
+  -> rights check + social-account check + editorial review
+  -> explicit publish RPC creates public snapshot
+        |
+        +--> /featured-farmers
+        +--> /featured-farmers/[slug]
+              -> editorial disclosure, story, impact, social, sources,
+                 fact-check date and correction/removal link
+```
+
+### 1. Add a forward-only editorial data domain
+
+**File:** `supabase/migrations/20260812150000_featured_farmer_profiles.sql`
+
+Keep `20260812140000_known_farmer_intake.sql` unchanged and default-disabled.
+Create new private-first tables:
+
+- `featured_farmer_research`: creator, name, public location/farming hints,
+  authored locale, bounded significance hypothesis, state, revision,
+  idempotency keys, created/updated timestamps and private retention metadata;
+- `featured_farmer_sources`: research id, canonical HTTPS URL, source kind,
+  publisher/title/publication date, bounded private excerpt/hash, discovery
+  method/query hash/provider ID, association, quality classification,
+  selected/rejected decision, reviewed-by/time, refresh/expiry and revision;
+- `featured_farmer_drafts`: research id, canonical slug, headline, deck,
+  why-featured statement, ordered bounded story-section JSON, category slugs,
+  authored locale, editorial limitations, reviewer/state/revision timestamps;
+- `featured_farmer_claims`: draft id, bounded claim type, statement, optional
+  display label/value/context, display order and review state;
+- `featured_farmer_claim_sources`: claim/source join with an optional bounded
+  support note;
+- `featured_farmer_social_links`: draft id, platform, canonical owned account
+  URL, confirming source, ownership-basis note, reviewer/time and display order;
+- `featured_farmer_media`: optional stored asset reference, alt text, credit,
+  rights basis, source/permission reference and approval timestamp;
+- `featured_farmer_publications`: immutable public snapshot JSON, slug,
+  publication/revision/fact-check dates, publisher/reviewer and withdrawn state;
+- `featured_farmer_events`: immutable bounded admin audit events; and
+- a YouTube search ledger for this new research id, reusing the existing project
+  quota ceiling rather than creating a separate provider allowance.
+
+Use database checks for bounded text/JSON sizes, supported locales/source kinds,
+unique canonical URLs/slugs, rights bases, valid state transitions and exact
+social profile URLs. Enable RLS and revoke all private-table access from
+`public`, `anon` and ordinary `authenticated`. Only `is_admin()` RPCs may mutate
+research/drafts; candidate save/build internals are service-role only. Anonymous
+read access is through a narrow view/RPC that returns current, non-withdrawn
+publication snapshots and no private excerpts, queries, hashes or audit data.
+
+Add a separate `featured_farmer_profiles` database release control. It defaults
+false and is independent of `outreach_agent`; no editorial function may create
+rows in outreach, consent, invitation, member profile, verification, messaging,
+listing or enquiry tables.
+
+Publication readiness is deterministic:
+
+```sql
+selected professional sources on distinct hosts >= 2
+and authoritative-or-independent source count >= 1
+and approved significance claims >= 2
+and every published claim has >= 1 selected source
+and confirmed owned social links >= 1
+and media is absent or rights-approved
+and editorial reviewer/fact-check timestamp are present
+```
+
+`publish_featured_farmer` must lock the draft, re-evaluate all gates, check the
+expected revision and slug, create one immutable snapshot idempotently and emit
+an audit event. `withdraw_featured_farmer` makes public reads fail immediately
+without deleting the audit/source record. A later republish creates a new
+snapshot revision rather than mutating old published evidence invisibly.
+
+### 2. Define strict editorial and research schemas
+
+**Files:**
+
+- `features/featured-farmers/schemas.ts` (new)
+- `features/featured-farmers/source-policy.ts` (new)
+- `features/profile-agent/social-link-policy.ts`
+- `lib/feature-flags.ts`
+- `.env.example`
+
+Define shared Zod contracts matching the database bounds. The core draft shape
+should be structured rather than generated HTML:
+
+```ts
+const featuredFarmerDraftSchema = z.object({
+  fullName: safeText(2, 100),
+  slug: safeSlug,
+  locale: z.enum(SUPPORTED_LOCALES),
+  location: z.object({ district: safeText(2, 100).optional(), state: indiaState.optional() }),
+  headline: safeText(8, 180),
+  deck: safeText(20, 360),
+  whyFeatured: safeText(40, 900),
+  sections: z.array(z.object({
+    kind: z.enum(["origin", "work", "impact", "community", "lessons"]),
+    heading: safeText(2, 120),
+    body: safeText(40, 2_500),
+    claimIds: z.array(z.uuid()).min(1).max(12),
+  })).min(3).max(7),
+  categorySlugs: z.array(categorySlug).max(8),
+});
+```
+
+Source quality values are `official_record`, `institutional_reference`,
+`independent_reporting`, `first_party`, `owned_social_profile` and
+`third_party_coverage`. Discovery method stays separate from evidence quality:
+`manual_google_review`, `youtube_data_api` or `operator_supplied` initially.
+
+Reuse the existing account-URL parser so posts, reels, groups, watch URLs and
+third-party channels cannot become owned social links. Extend it only if tests
+show a currently supported official account URL is incorrectly rejected. A
+confirmed social URL is a link, not an OAuth verification claim.
+
+Add `ENABLE_FEATURED_FARMER_PROFILES`, server-only and default false. Do not add
+a Tavily/Brave key in this tranche. Tavily remains a future discovery-adapter
+decision and must fit the same source/provenance contract.
+
+### 3. Generalize the existing Web Search and YouTube helpers
+
+**Files:**
+
+- `features/featured-farmers/web-research.ts` (new)
+- `features/profile-agent/google-research-link.ts`
+- `features/profile-agent/youtube-search.ts`
+- `features/featured-farmers/youtube-search.ts` (thin editorial adapter if
+  necessary)
+
+Extract neutral bounded helpers without breaking disabled old imports. Build
+separate query families for identity/farming, significance, institutions,
+social presence and current/conflicting information. Return query text and a
+normal Google Search URL only; do not fetch Google, accept its snippets as
+evidence or store result-page content.
+
+```ts
+type ResearchQuery = {
+  purpose: "identity" | "significance" | "institutions" | "social" | "current";
+  query: string;
+  url: string;
+};
+
+export function buildFeaturedFarmerResearchQueries(input: ResearchHints): ResearchQuery[];
+```
+
+Reuse the official YouTube Data API request, timeout, response limit, canonical
+URLs and text-only candidates. Reserve quota in the database before calling the
+provider and treat every result as pending. Channel results may be classified
+owned only after manual review; video results default to coverage. Keep API keys,
+raw responses, thumbnails, statistics, transcripts and media out of storage.
+
+### 4. Add source, claim, story and publication services
+
+**Files:**
+
+- `features/featured-farmers/actions.ts` (new)
+- `features/featured-farmers/queries.ts` (new)
+- `features/featured-farmers/story-builder.ts` (new)
+- `features/featured-farmers/publication.ts` (new)
+- `features/outreach/fetch-source.ts`
+- `lib/cloudflare-bindings.ts` only if the existing Workers AI binding is reused
+
+Implement administrator actions for: create research, search YouTube, add a
+reviewed destination, select/reject/classify a source, create/edit a claim,
+link/unlink claim sources, confirm/remove an owned social link, save media-rights
+metadata, build/update a story draft, mark review-ready, publish and withdraw.
+Every action requires admin authorization, feature/database gates, strict schema
+validation, expected revision and idempotency where it can create a row.
+
+For ordinary public websites, reuse the bounded SSRF-safe fetcher only where its
+source policy permits. Protected social pages remain no-fetch and require a
+reviewed description or transient sanitized screenshot extraction. Do not
+retain raw screenshots.
+
+The story builder may use the existing managed Workers AI binding to propose
+copy, but it receives only approved claims and bounded source excerpts, treats
+them as untrusted, and returns the strict structured schema. It must never
+invent a claim, number, URL, quote, award, organization or social account.
+After parsing, deterministically verify that every section's claim IDs exist and
+that every claim has selected sources; otherwise fall back to a conservative
+template. Generated output always remains a private editable draft.
+
+Do not call `create_outreach_prospect`, `generateAndSaveManagedProfileSample`,
+the approval Workflow or member onboarding. Optional claim-by-subject is only a
+link from the editorial story to a separately created, authenticated member
+profile after a future explicit flow.
+
+### 5. Build the administrator Featured Farmers newsroom
+
+**Files:**
+
+- `app/(product)/admin/featured-farmers/page.tsx` (new)
+- `app/(product)/admin/featured-farmers/[researchId]/page.tsx` (new)
+- `features/featured-farmers/editorial-console.tsx` (new)
+- `features/featured-farmers/source-review.tsx` (new)
+- `features/featured-farmers/story-editor.tsx` (new)
+- `app/(product)/admin/known-farmers/page.tsx`
+- `app/(product)/admin/outreach/page.tsx`
+- `app/globals.css`
+
+Replace “Stage 1 · relationship attestation” with a newsroom-style workspace:
+
+1. subject and significance hypothesis;
+2. five Web Search query cards plus official YouTube search;
+3. source cards with publisher/date/quality/association/decision;
+4. structured significance claims with visible source linkage;
+5. story-section editor and visual preview;
+6. owned social and media-rights checks;
+7. deterministic readiness checklist; and
+8. explicit publish/withdraw controls with revision-conflict feedback.
+
+Show missing evidence honestly. Never display search ranking or follower count
+as significance. Keep private excerpts and provider/debug data out of public
+previews. The old `/admin/known-farmers` page should redirect to
+`/admin/featured-farmers` with a one-time explanatory notice; do not expose a
+new personal-relationship form. Preserve disabled historical rows and remove
+the old route label from admin navigation.
+
+### 6. Build a beautiful public Featured Farmers collection
+
+**Files:**
+
+- `app/featured-farmers/page.tsx` (new)
+- `app/featured-farmers/[slug]/page.tsx` (new)
+- `features/featured-farmers/featured-farmer-card.tsx` (new)
+- `features/featured-farmers/featured-farmer-story.tsx` (new)
+- `components/public-header.tsx`
+- `components/public-footer.tsx`
+- `app/sitemap.ts`
+- `app/globals.css`
+- the English/Hindi/Marathi message catalogs for shared shell/disclosures
+
+The index uses the existing Deccan editorial palette, spacious typography,
+permissioned images or designed crop fallbacks, and one concise impact-led deck
+per farmer. The story page includes:
+
+- a visible “FarmerBook editorial profile” disclosure and fact-check date;
+- a large visual hero, name, headline, district/state and owned social buttons;
+- a “Why featured” block;
+- sourced impact facts with numbered citation links;
+- ordered long-form story sections;
+- agriculture focus chips and optional sourced milestone timeline;
+- selected interview/coverage links distinguished from owned accounts;
+- a complete numbered source list; and
+- a support-email `Suggest a correction, removal, or claim` link carrying only
+  the public story URL/slug, never private research data.
+
+If no rights-approved photo exists, render a deliberate branded fallback and no
+fake person image. Do not copy or hotlink images found through search. Omit all
+member-profile elements: verified/community badge, followers, following,
+connection, enquiry, current harvest, activity, reviews, identity card and
+marketplace CTAs.
+
+Generate canonical metadata and JSON-LD as an `Article` about a `Person`, with
+`sameAs` only for confirmed owned links, citations, publisher, published/
+modified dates and correction URL where applicable. Do not emit `ProfilePage`,
+interaction counts, FarmerBook verification, or membership semantics for an
+unclaimed subject. Add only published, non-withdrawn URLs to the sitemap.
+
+### 7. Tests and release evidence
+
+**Focused unit/component tests:**
+
+- Web Search query families are bounded and perform no fetch;
+- source kinds, quality and association are separate and validated;
+- two-domain/authoritative-source/two-claim significance readiness;
+- every displayed claim has selected source linkage;
+- owned social URLs reject posts/videos/groups/coverage and accept supported
+  account pages;
+- photo publication requires an approved rights basis while no-photo fallback
+  remains publishable;
+- story generation cannot introduce unknown claim IDs or URLs;
+- publication is admin-only, gate-controlled, revision-safe, idempotent and
+  immutable; withdrawal removes anonymous visibility;
+- ordinary users and anonymous callers cannot read research/excerpts/audits;
+- public views return only published snapshot fields;
+- public cards/story render disclosure, source list, social links, fact-check
+  date and correction path;
+- public pages contain no member, verification or commerce controls;
+- metadata uses `Article` about `Person`, not unclaimed `ProfilePage` semantics;
+- old admin route redirects and no relationship form remains user-facing; and
+- no editorial action creates prospect/contact/consent/invitation/member/
+  verification/message/listing/enquiry data.
+
+Run focused tests after each layer, then:
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+git diff --check
+supabase db reset
+supabase test db
+npm run test:e2e
+```
+
+Add desktop/mobile Playwright journeys for empty index, published index/story,
+admin research/readiness, no-photo fallback, 404/withdrawn story and citation/
+social/correction links. Capture and visually inspect representative desktop and
+mobile screenshots. Test keyboard navigation, headings, link names, focus,
+contrast, reduced motion and no horizontal overflow.
+
+No real farmer should be researched during automated tests; all fixtures must
+be unmistakably fictional and `noindex` unless they are isolated test-only data.
+
+### 8. Documentation, rollout and rollback
+
+**Files:** `README.md`, `docs/REQUIREMENTS.md`,
+`docs/PRODUCTION_RUNBOOK.md`, `implementation-log.md`, `.structured-dev-state`
+
+Document selection criteria, source hierarchy, social ownership, media rights,
+editorial disclosure, corrections/removal, annual fact-check cadence, privacy
+exclusions and the exact distinction between editorial stories and member
+profiles. Record the old Known Farmer flow as superseded and disabled.
+
+Before production: name the editorial/privacy owner; obtain policy/legal review
+for public living-person profiles and DPDP handling; approve the first named
+subjects; confirm rights for every image; rehearse the migration on staging;
+prove RLS/public-view boundaries; install the YouTube key only if that search is
+enabled; run configured synthetic staging journeys; and request separate
+approval for production migration, feature control, deployment and the first
+real publication.
+
+Rollback by disabling `featured_farmer_profiles` in the database first and
+`ENABLE_FEATURED_FARMER_PROFILES` in the Worker, which removes all public reads
+without deleting source/audit/history. Withdraw a disputed individual story
+immediately through the RPC. Restore the previous Worker if necessary and use a
+reviewed forward correction for schema defects; do not rewrite applied migration
+history or delete correction/audit evidence outside the privacy procedure.
+
+### Detailed implementation todo list
+
+- [ ] Add the forward-only private research, source, draft, claim, social,
+  media, publication, event and quota schema.
+- [ ] Add release control, RLS, grants, anonymous publication view/RPC and
+  executable pgTAP coverage.
+- [ ] Add strict editorial/source/claim/media/publication schemas.
+- [ ] Generalize bounded Web Search query families without Google fetching.
+- [ ] Reuse the official YouTube adapter under the editorial quota ledger.
+- [ ] Add source review, claim linkage and significance-readiness services.
+- [ ] Add structured story generation with deterministic claim/URL validation.
+- [ ] Add admin create/edit/review/publish/withdraw actions with idempotency and
+  revision checks.
+- [ ] Build `/admin/featured-farmers` and redirect the obsolete admin route.
+- [ ] Build `/featured-farmers` and `/featured-farmers/[slug]` with the Deccan
+  editorial design and rights-safe fallback art.
+- [ ] Add public citations, owned social links, fact-check disclosure and
+  correction/removal/claim path.
+- [ ] Add Article/Person metadata and published-only sitemap entries.
+- [ ] Add English/Hindi/Marathi shell and disclosure messages without
+  machine-translating sourced claims.
+- [ ] Add focused schema/action/migration/component/metadata tests.
+- [ ] Run TypeScript, ESLint, Vitest, build and diff gates continuously.
+- [ ] Run clean Supabase/pgTAP/RLS and desktop/mobile Playwright/visual/a11y
+  evidence.
+- [ ] Update requirements, runbook, implementation log and structured state.
+- [ ] Stop before provider account/key, real-person research, publication,
+  production migration/control, deployment or other production mutation.
+
+Plan revision note (2026-08-12): this replacement follows the product owner's
+clarification that eligibility is significant public work, not personal
+familiarity. The separate editorial domain avoids impersonating a member,
+retains the safe Web Search/YouTube/source controls, requires sourced significance
+and an owned social account, and makes publication, corrections and image rights
+explicit. The product owner approved this addendum on 2026-08-12.
