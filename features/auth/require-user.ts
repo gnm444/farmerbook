@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import { canPublishProduce } from "@/features/auth/capabilities";
 import { currentUserId, getProfile } from "@/lib/demo-data";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import type { AccountRole } from "@/lib/types";
 
 export type ActiveUser = {
   id: string;
@@ -12,13 +14,21 @@ export type ActiveUser = {
     fullName: string;
     status: string;
     onboardingComplete: boolean;
+    accountRole: AccountRole;
   };
 };
+
+export function isSellerRole(role: AccountRole) {
+  return canPublishProduce(role);
+}
 
 export async function requireUser(
   options: { allowIncomplete?: boolean } = {},
 ): Promise<ActiveUser> {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) {
+      throw new Error("FarmerBook authentication is not configured.");
+    }
     const profile = getProfile(currentUserId);
     return {
       id: currentUserId,
@@ -28,6 +38,7 @@ export async function requireUser(
         fullName: profile.fullName,
         status: "active",
         onboardingComplete: true,
+        accountRole: profile.accountRole,
       },
     };
   }
@@ -42,7 +53,7 @@ export async function requireUser(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("handle, full_name, status, onboarding_complete")
+    .select("handle, full_name, status, onboarding_complete, account_role")
     .eq("id", user.id)
     .single();
 
@@ -62,6 +73,7 @@ export async function requireUser(
       fullName: profile.full_name,
       status: profile.status,
       onboardingComplete: profile.onboarding_complete,
+      accountRole: profile.account_role as AccountRole,
     },
   };
 }

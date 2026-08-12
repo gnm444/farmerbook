@@ -7,7 +7,7 @@ import {
   posts as demoPosts,
 } from "@/lib/demo-data";
 import { createdLabel } from "@/lib/data-mappers";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import type {
   Comment,
@@ -108,7 +108,9 @@ async function hydratePosts(
 }
 
 export async function loadFeedPosts(): Promise<FarmerPost[]> {
-  if (!isSupabaseConfigured()) return demoPosts.map(demoPostWithAuthor);
+  if (!isSupabaseConfigured()) {
+    return isDemoMode() ? demoPosts.map(demoPostWithAuthor) : [];
+  }
 
   const user = await requireUser();
   const supabase = await createClient();
@@ -127,6 +129,7 @@ export async function loadPostsByAuthor(
   authorId: string,
 ): Promise<FarmerPost[]> {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) return [];
     return demoPosts
       .filter((post) => post.authorId === authorId)
       .map(demoPostWithAuthor);
@@ -151,6 +154,7 @@ export async function loadPostBundle(postId: string): Promise<{
   comments: Comment[];
 } | null> {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) return null;
     const post = getPost(postId);
     return {
       post: demoPostWithAuthor(post),

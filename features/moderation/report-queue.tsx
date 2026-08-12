@@ -110,10 +110,7 @@ export function ReportQueue({
                 <CheckCircle2 size={28} aria-hidden="true" />
               </div>
               <h2>Report queue is clear</h2>
-              <p>
-                Every pending report has a moderator decision in this
-                demonstration.
-              </p>
+              <p>There are no reports awaiting a moderator decision.</p>
             </div>
           </section>
         )}
@@ -125,10 +122,10 @@ export function ReportQueue({
             <strong>{pending.length}</strong>
             <span>reports awaiting a decision</span>
           </div>
-          <div className="network-stat">
-            <strong>24h</strong>
-            <span>maximum response time during the controlled pilot</span>
-          </div>
+          <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
+            Review priority is based on report severity and the information
+            available to moderators.
+          </p>
         </section>
         <section className="card context-card">
           <ShieldCheck size={24} aria-hidden="true" />

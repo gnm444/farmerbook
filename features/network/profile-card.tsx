@@ -19,7 +19,7 @@ export function ProfileCard({
   return (
     <article className="card profile-card">
       <div className="profile-card__top">
-        <Avatar initials={profile.initials} imageUrl={profile.avatarUrl} />
+        <Avatar initials={profile.initials} imageUrl={profile.avatarUrl} role={profile.accountRole} />
         <span className="badge badge--green">{profile.roleLabel}</span>
       </div>
       <h2>

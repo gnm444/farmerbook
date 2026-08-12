@@ -3,8 +3,14 @@ import Link from "next/link";
 import { AuthLayout } from "@/components/auth-layout";
 import { Brand } from "@/components/ui";
 import { loginAction } from "@/features/auth/actions";
+import { OAuthButtons } from "@/features/auth/oauth-buttons";
+import { publicAuthErrorMessage } from "@/features/auth/redirects";
+import { getServerI18n } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Sign in" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerI18n();
+  return { title: t("auth.signIn") };
+}
 
 export default async function LoginPage({
   searchParams,
@@ -12,31 +18,40 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+  const { t } = await getServerI18n();
+  const visibleError = error
+    ? publicAuthErrorMessage(error) ?? t("errors.generic")
+    : null;
 
   return (
     <AuthLayout>
       <div className="auth-card">
-        <Link href="/" className="brand" aria-label="FarmerBook home">
+        <Link href="/" className="brand" aria-label={t("navigation.homeAria")}>
           <Brand />
         </Link>
-        <h2>Welcome back</h2>
-        <p>Sign in to continue learning with your farming community.</p>
+        <h2>{t("auth.welcomeBack")}</h2>
+        <p>{t("auth.signInHelp")}</p>
+        {visibleError ? (
+          <div className="notice" role="alert">
+            {visibleError}
+          </div>
+        ) : null}
+        <OAuthButtons mode="login" />
         <form className="form-stack" action={loginAction}>
-          {error ? <div className="notice">{error}</div> : null}
           <div className="field">
-            <label htmlFor="email">Email address</label>
+            <label htmlFor="email">{t("auth.email")}</label>
             <input
               className="input"
               id="email"
               name="email"
               type="email"
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder={t("auth.emailPlaceholder")}
               required
             />
           </div>
           <div className="field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t("auth.password")}</label>
             <input
               className="input"
               id="password"
@@ -47,12 +62,18 @@ export default async function LoginPage({
             />
           </div>
           <button className="button button--full" type="submit">
-            Sign in
+            {t("auth.signIn")}
           </button>
         </form>
+        <p className="auth-terms-note">
+          {t("legal.consentBeforeTerms")}<Link href="/terms">{t("legal.terms")}</Link>
+          {t("legal.consentBetweenTermsPrivacy")}<Link href="/privacy">{t("legal.privacy")}</Link>
+          {t("legal.consentBetweenPrivacyRules")}<Link href="/community-rules">{t("legal.communityRules")}</Link>
+          {t("legal.consentAfterRules")}
+        </p>
         <div className="auth-links">
-          <Link href="/signup">Request pilot access</Link>
-          <Link href="/forgot-password">Forgot password?</Link>
+          <Link href="/signup">{t("auth.requestPilot")}</Link>
+          <Link href="/forgot-password">{t("auth.forgotPassword")}</Link>
         </div>
       </div>
     </AuthLayout>

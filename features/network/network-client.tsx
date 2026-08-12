@@ -69,7 +69,7 @@ export function NetworkClient({
           aria-selected={tab === "followers"}
           onClick={() => setTab("followers")}
         >
-          Followers (128)
+          Followers ({followers.length})
         </button>
       </div>
       {error ? <p className="form-error">{error}</p> : null}
@@ -79,6 +79,7 @@ export function NetworkClient({
             <Avatar
               initials={profile.initials}
               imageUrl={profile.avatarUrl}
+              role={profile.accountRole}
             />
             <div className="list-row__copy">
               <strong>

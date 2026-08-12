@@ -6,6 +6,10 @@ update public.profiles
 set
   full_name = 'Local Demo Farmer',
   participant_type = 'farmer',
+  account_role = 'farmer',
+  farming_method = 'conventional',
+  preferred_language = 'en',
+  preferred_locale = 'en-IN',
   district = 'Nashik',
   state = 'Maharashtra',
   crops = array['Tomato', 'Onion'],

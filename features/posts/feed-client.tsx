@@ -12,14 +12,19 @@ import {
 } from "./actions";
 import { PostCard } from "./post-card";
 import { removePostImage, uploadPostImage } from "./uploads";
+import { useTranslations } from "@/components/locale-provider";
 
 export function FeedClient({
   currentUser,
+  demoMode = false,
   initialPosts,
 }: {
   currentUser: FarmerProfile;
+  demoMode?: boolean;
   initialPosts: FarmerPost[];
 }) {
+  const t = useTranslations("feed");
+  const common = useTranslations("common");
   const [posts, setPosts] = useState(initialPosts);
   const [body, setBody] = useState("");
   const [category, setCategory] = useState<PostCategory>("question");
@@ -37,7 +42,26 @@ export function FeedClient({
     event.preventDefault();
     const cleanBody = body.trim();
     if (!cleanBody) {
-      setToast("Write something before sharing.");
+      setToast(t("writeBeforeShare"));
+      return;
+    }
+
+    if (demoMode) {
+      const newPost: FarmerPost = {
+        id: `demo-new-post-${Date.now()}`,
+        authorId: currentUser.id,
+        author: currentUser,
+        body: cleanBody,
+        category,
+        crops: currentUser.crops.slice(0, 1),
+        createdLabel: t("justNow"),
+        helpfulCount: 0,
+        commentCount: 0,
+      };
+      setPosts((current) => [newPost, ...current]);
+      setBody("");
+      setImageFile(null);
+      setToast(t("updateShared"));
       return;
     }
 
@@ -49,12 +73,8 @@ export function FeedClient({
           const upload = await uploadPostImage(imageFile);
           imagePath = upload.path;
           imageUrl = upload.url;
-        } catch (uploadError) {
-          setToast(
-            uploadError instanceof Error
-              ? uploadError.message
-              : "The image could not be uploaded.",
-          );
+        } catch {
+          setToast(t("uploadFailed"));
           return;
         }
       }
@@ -66,7 +86,7 @@ export function FeedClient({
       });
       if (!result.ok) {
         if (imagePath) await removePostImage(imagePath);
-        setToast(result.message ?? "The update could not be shared.");
+        setToast(t("shareFailed"));
         return;
       }
 
@@ -77,7 +97,7 @@ export function FeedClient({
         body: cleanBody,
         category,
         crops: currentUser.crops.slice(0, 1),
-        createdLabel: "Just now",
+        createdLabel: t("justNow"),
         helpfulCount: 0,
         commentCount: 0,
         imageUrl,
@@ -85,7 +105,7 @@ export function FeedClient({
       setPosts((current) => [newPost, ...current]);
       setBody("");
       setImageFile(null);
-      setToast("Your update is now at the top of the feed.");
+      setToast(t("updateShared"));
     });
   }
 
@@ -93,7 +113,7 @@ export function FeedClient({
     startTransition(async () => {
       const result = await toggleHelpfulAction(id);
       if (!result.ok) {
-        setToast(result.message ?? "Helpful could not be updated.");
+        setToast(t("helpfulFailed"));
         return;
       }
       setPosts((current) =>
@@ -122,7 +142,7 @@ export function FeedClient({
       category: nextCategory,
     });
     if (!result.ok) {
-      setToast(result.message ?? "The post could not be updated.");
+      setToast(t("updateFailed"));
       return false;
     }
     setPosts((current) =>
@@ -132,18 +152,18 @@ export function FeedClient({
           : post,
       ),
     );
-    setToast("Post updated.");
+    setToast(t("postUpdated"));
     return true;
   }
 
   async function removePost(id: string) {
     const result = await removePostAction(id);
     if (!result.ok) {
-      setToast(result.message ?? "The post could not be removed.");
+      setToast(t("removeFailed"));
       return false;
     }
     setPosts((current) => current.filter((post) => post.id !== id));
-    setToast("Post removed.");
+    setToast(t("postRemoved"));
     return true;
   }
 
@@ -154,17 +174,18 @@ export function FeedClient({
           <Avatar
             initials={currentUser.initials}
             imageUrl={currentUser.avatarUrl}
+            role={currentUser.accountRole}
           />
           <div className="field" style={{ flex: 1 }}>
             <label className="sr-only" htmlFor="new-post">
-              What are you learning on the farm?
+              {t("prompt")}
             </label>
             <textarea
               className="textarea"
               id="new-post"
               maxLength={2000}
               onChange={(event) => setBody(event.target.value)}
-              placeholder="What are you learning on the farm?"
+              placeholder={t("prompt")}
               value={body}
             />
           </div>
@@ -172,7 +193,7 @@ export function FeedClient({
         <div className="composer-actions">
           <div className="composer-options">
             <label className="sr-only" htmlFor="post-category">
-              Post category
+              {t("category")}
             </label>
             <select
               className="select"
@@ -183,13 +204,13 @@ export function FeedClient({
               }
               style={{ width: "auto", minHeight: 42 }}
             >
-              <option value="question">Question</option>
-              <option value="discussion">Discussion</option>
-              <option value="opportunity">Opportunity</option>
+              <option value="question">{t("question")}</option>
+              <option value="discussion">{t("discussion")}</option>
+              <option value="opportunity">{t("opportunity")}</option>
             </select>
             <label className="button button--ghost button--small">
               <ImagePlus size={17} aria-hidden="true" />
-              {imageFile ? imageFile.name : "Add image"}
+              {imageFile ? imageFile.name : t("addImage")}
               <input
                 className="sr-only"
                 type="file"
@@ -202,7 +223,7 @@ export function FeedClient({
           </div>
           <button className="button" type="submit" disabled={isPending}>
             <Send size={17} aria-hidden="true" />
-            {isPending ? "Saving…" : "Share update"}
+            {isPending ? common("saving") : t("shareUpdate")}
           </button>
         </div>
       </form>

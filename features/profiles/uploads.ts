@@ -5,12 +5,14 @@ import { createClient } from "@/lib/supabase/client";
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-export async function uploadAvatar(file: File) {
+async function uploadProfileImage(file: File, kind: "avatar" | "cover") {
   if (!allowedTypes.has(file.type)) {
     throw new Error("Choose a JPEG, PNG or WebP image.");
   }
   if (file.size > 5 * 1024 * 1024) {
-    throw new Error("Avatar images must be 5 MB or smaller.");
+    throw new Error(
+      `${kind === "avatar" ? "Avatar" : "Background"} images must be 5 MB or smaller.`,
+    );
   }
   if (!getPublicSupabaseConfig()) {
     return { path: undefined, url: URL.createObjectURL(file) };
@@ -20,14 +22,16 @@ export async function uploadAvatar(file: File) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Sign in before uploading an avatar.");
+  if (!user) throw new Error("Sign in before uploading a profile image.");
 
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const path = `${user.id}/avatar-${crypto.randomUUID()}.${extension}`;
+  const path = `${user.id}/${kind}-${crypto.randomUUID()}.${extension}`;
   const { error } = await supabase.storage
     .from("avatars")
     .upload(path, file, { cacheControl: "3600", upsert: false });
-  if (error) throw new Error(error.message);
+  if (error) {
+    throw new Error("The profile image could not be uploaded. Please try again.");
+  }
 
   const { data } = await supabase.storage
     .from("avatars")
@@ -35,8 +39,18 @@ export async function uploadAvatar(file: File) {
   return { path, url: data?.signedUrl };
 }
 
-export async function removeAvatar(path: string) {
+export function uploadAvatar(file: File) {
+  return uploadProfileImage(file, "avatar");
+}
+
+export function uploadProfileCover(file: File) {
+  return uploadProfileImage(file, "cover");
+}
+
+export async function removeProfileImage(path: string) {
   if (!getPublicSupabaseConfig()) return;
   const supabase = createClient();
   await supabase.storage.from("avatars").remove([path]);
 }
+
+export const removeAvatar = removeProfileImage;

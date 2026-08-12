@@ -1,12 +1,12 @@
 import { requireAdmin } from "@/features/auth/require-admin";
 import { reports as demoReports } from "@/lib/demo-data";
 import { createdLabel } from "@/lib/data-mappers";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import type { ModerationReport } from "@/lib/types";
 
 export async function loadPendingReports(): Promise<ModerationReport[]> {
-  if (!isSupabaseConfigured()) return demoReports;
+  if (!isSupabaseConfigured()) return isDemoMode() ? demoReports : [];
 
   await requireAdmin();
   const supabase = await createClient();

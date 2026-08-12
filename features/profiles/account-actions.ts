@@ -20,7 +20,10 @@ export async function deleteAccountAction() {
     .eq("author_id", user.id);
 
   if (postError) {
-    return { ok: false as const, message: postError.message };
+    return {
+      ok: false as const,
+      message: "The account could not be deactivated. Please try again.",
+    };
   }
 
   const { error: commentError } = await supabase
@@ -29,7 +32,10 @@ export async function deleteAccountAction() {
     .eq("author_id", user.id);
 
   if (commentError) {
-    return { ok: false as const, message: commentError.message };
+    return {
+      ok: false as const,
+      message: "The account could not be deactivated. Please try again.",
+    };
   }
 
   const { error: profileError } = await supabase
@@ -38,7 +44,10 @@ export async function deleteAccountAction() {
     .eq("id", user.id);
 
   if (profileError) {
-    return { ok: false as const, message: profileError.message };
+    return {
+      ok: false as const,
+      message: "The account could not be deactivated. Please try again.",
+    };
   }
 
   await recordProductEvent(user.id, "account_deleted");
@@ -60,6 +69,9 @@ export async function requestCurrentPasswordResetAction() {
   });
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "A password reset email could not be sent. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }

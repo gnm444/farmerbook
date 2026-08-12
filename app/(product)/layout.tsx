@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { loadCurrentProfile } from "@/features/profiles/queries";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/env";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export default async function ProductLayout({
   children,
@@ -9,7 +10,15 @@ export default async function ProductLayout({
 }) {
   const currentUser = await loadCurrentProfile();
   return (
-    <AppShell currentUser={currentUser} demo={!isSupabaseConfigured()}>
+    <AppShell
+      currentUser={currentUser}
+      demo={isDemoMode()}
+      extendedLocalesEnabled={isFeatureEnabled("ENABLE_EXTENDED_LOCALES")}
+      incSourcingEnabled={
+        isFeatureEnabled("ENABLE_AGRI_BUSINESSES") &&
+        isFeatureEnabled("ENABLE_INC_SOURCING")
+      }
+    >
       {children}
     </AppShell>
   );

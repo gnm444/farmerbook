@@ -49,6 +49,7 @@ export function UserModeration({ profile }: { profile: FarmerProfile }) {
           <Avatar
             initials={profile.initials}
             imageUrl={profile.avatarUrl}
+            role={profile.accountRole}
             size="large"
           />
           <div className="person-row__copy">

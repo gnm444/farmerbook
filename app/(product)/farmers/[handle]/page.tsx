@@ -6,6 +6,8 @@ import {
   loadProfileByHandle,
 } from "@/features/profiles/queries";
 import { loadPostsByAuthor } from "@/features/posts/queries";
+import { loadPublicListings } from "@/features/marketplace/queries";
+import { loadReviewsForSeller } from "@/features/reviews/queries";
 
 export async function generateMetadata({
   params,
@@ -22,18 +24,24 @@ export default async function FarmerProfilePage({
   params: Promise<{ handle: string }>;
 }) {
   const { handle } = await params;
-  const [profile, currentUser] = await Promise.all([
+  const [profile, currentUser, listings] = await Promise.all([
     loadProfileByHandle(handle),
     loadCurrentProfile(),
+    loadPublicListings(),
   ]);
   if (!profile) notFound();
-  const profilePosts = await loadPostsByAuthor(profile.id);
+  const [profilePosts, reviews] = await Promise.all([
+    loadPostsByAuthor(profile.id),
+    loadReviewsForSeller(profile.id),
+  ]);
 
   return (
     <div className="product-page">
       <ProfileView
         profile={profile}
         profilePosts={profilePosts}
+        profileListings={listings.filter((listing) => listing.sellerId === profile.id)}
+        reviews={reviews}
         isOwnProfile={profile.id === currentUser.id}
       />
     </div>

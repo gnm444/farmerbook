@@ -8,8 +8,11 @@ import {
   deleteAccountAction,
   requestCurrentPasswordResetAction,
 } from "./account-actions";
+import { useTranslations } from "@/components/locale-provider";
 
 export function AccountSettings() {
+  const t = useTranslations("settings");
+  const common = useTranslations("common");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [error, setError] = useState("");
@@ -21,7 +24,7 @@ export function AccountSettings() {
     startTransition(async () => {
       const result = await deleteAccountAction();
       if (!result.ok) {
-        setError(result.message ?? "Account deletion could not be completed.");
+        setError(t("deletionFailed"));
         return;
       }
       setDeleted(true);
@@ -34,10 +37,10 @@ export function AccountSettings() {
     startTransition(async () => {
       const result = await requestCurrentPasswordResetAction();
       if (!result.ok) {
-        setError(result.message ?? "A reset email could not be sent.");
+        setError(t("resetFailed"));
         return;
       }
-      setNotice("Password reset instructions have been requested.");
+      setNotice(t("resetRequested"));
     });
   }
 
@@ -48,13 +51,10 @@ export function AccountSettings() {
           <div className="empty-state__icon">
             <AlertTriangle size={27} aria-hidden="true" />
           </div>
-          <h2>Demonstration account removed</h2>
-          <p>
-            In a configured pilot this immediately hides the profile and content,
-            signs the participant out and schedules authentication deletion.
-          </p>
+          <h2>{t("deactivated")}</h2>
+          <p>{t("deactivatedBody")}</p>
           <Link className="button" href="/">
-            Return to the public site
+            {t("returnPublic")}
           </Link>
         </div>
       </section>
@@ -64,8 +64,8 @@ export function AccountSettings() {
   return (
     <div>
       <section className="card settings-card">
-        <h2>Password and sessions</h2>
-        <p>Reset your password or sign out of the current browser.</p>
+        <h2>{t("passwordSessions")}</h2>
+        <p>{t("passwordSessionsHelp")}</p>
         <div className="form-row">
           <button
             className="button button--secondary"
@@ -73,11 +73,11 @@ export function AccountSettings() {
             disabled={isPending}
             onClick={requestPasswordReset}
           >
-            Send password reset
+            {t("sendReset")}
           </button>
           <form action={logoutAction}>
             <button className="button button--ghost" type="submit">
-              Sign out
+              {t("signOut")}
             </button>
           </form>
         </div>
@@ -85,27 +85,23 @@ export function AccountSettings() {
         {error ? <p className="form-error">{error}</p> : null}
       </section>
       <section className="card settings-card danger-zone">
-        <h2>Delete your account</h2>
-        <p>
-          Deletion removes your public presence, hides your posts and signs you
-          out. This cannot be undone after the reviewed retention period.
-        </p>
+        <h2>{t("deactivateTitle")}</h2>
+        <p>{t("deactivateBody")}</p>
         {!confirmingDelete ? (
           <button
             className="button button--danger"
             type="button"
             onClick={() => setConfirmingDelete(true)}
           >
-            Delete account
+            {t("deactivate")}
           </button>
         ) : (
           <div className="notice">
             <AlertTriangle size={19} aria-hidden="true" />
             <div>
-              <strong>Confirm permanent deletion</strong>
+              <strong>{t("confirmDeactivate")}</strong>
               <p style={{ margin: "4px 0 12px" }}>
-                This demonstration performs the final state transition without
-                deleting external data.
+                {t("confirmDeactivateBody")}
               </p>
               <div className="report-actions">
                 <button
@@ -114,14 +110,14 @@ export function AccountSettings() {
                   disabled={isPending}
                   onClick={deleteAccount}
                 >
-                  {isPending ? "Deleting…" : "Yes, delete my account"}
+                  {isPending ? t("deactivating") : t("yesDeactivate")}
                 </button>
                 <button
                   className="button button--secondary button--small"
                   type="button"
                   onClick={() => setConfirmingDelete(false)}
                 >
-                  Cancel
+                  {common("cancel")}
                 </button>
               </div>
               {error ? <p className="form-error">{error}</p> : null}

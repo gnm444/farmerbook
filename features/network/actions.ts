@@ -26,6 +26,9 @@ export async function setFollowAction(input: unknown) {
         .upsert({
           follower_id: user.id,
           followed_id: parsed.data.profileId,
+        }, {
+          onConflict: "follower_id,followed_id",
+          ignoreDuplicates: true,
         })
     : supabase
         .from("follows")
@@ -39,7 +42,10 @@ export async function setFollowAction(input: unknown) {
   }
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The follow setting could not be changed. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }
 
@@ -54,10 +60,16 @@ export async function setBlockAction(profileId: string, active: boolean) {
 
   const supabase = await createClient();
   const query = active
-    ? supabase.from("blocks").upsert({
-        blocker_id: user.id,
-        blocked_id: profileId,
-      })
+    ? supabase.from("blocks").upsert(
+        {
+          blocker_id: user.id,
+          blocked_id: profileId,
+        },
+        {
+          onConflict: "blocker_id,blocked_id",
+          ignoreDuplicates: true,
+        },
+      )
     : supabase
         .from("blocks")
         .delete()
@@ -66,6 +78,9 @@ export async function setBlockAction(profileId: string, active: boolean) {
   const { error } = await query;
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The block setting could not be changed. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }

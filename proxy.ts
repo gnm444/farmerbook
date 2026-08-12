@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 
 const publicPrefixes = [
   "/",
@@ -8,7 +8,19 @@ const publicPrefixes = [
   "/signup",
   "/forgot-password",
   "/auth",
+  "/invite",
+  "/join",
+  "/confirm-email",
+  "/unsubscribe",
+  "/api/health",
+  "/api/outreach",
+  "/marketplace",
+  "/companies",
+  "/offers",
+  "/profile",
+  "/store",
   "/community-rules",
+  "/data-deletion",
   "/privacy",
   "/terms",
 ];
@@ -21,6 +33,12 @@ function isPublicPath(pathname: string) {
 
 export async function proxy(request: NextRequest) {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode() && !isPublicPath(request.nextUrl.pathname)) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.searchParams.set("error", "Sign-in is temporarily unavailable.");
+      return NextResponse.redirect(loginUrl);
+    }
     return NextResponse.next({ request });
   }
 

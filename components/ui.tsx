@@ -1,13 +1,16 @@
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Sprout } from "lucide-react";
+import type { AccountRole } from "@/lib/types";
 
 export function Avatar({
   initials,
   size,
   imageUrl,
+  role,
 }: {
   initials: string;
   size?: "small" | "large";
   imageUrl?: string;
+  role?: AccountRole;
 }) {
   return (
     <span
@@ -23,7 +26,11 @@ export function Avatar({
           : undefined
       }
     >
-      {imageUrl ? "" : initials}
+      {imageUrl ? null : role === "farmer" ? (
+        <Sprout aria-label="Default Farmer profile icon" />
+      ) : (
+        initials
+      )}
     </span>
   );
 }
@@ -36,12 +43,18 @@ export function VerifiedBadge({ label = "Verified" }: { label?: string }) {
   );
 }
 
-export function DemoBanner({ visible = true }: { visible?: boolean }) {
+export function DemoBanner({
+  visible = true,
+  label = "Demonstration mode · Explore every journey with fictional pilot data",
+}: {
+  visible?: boolean;
+  label?: string;
+}) {
   if (!visible) return null;
 
   return (
     <div className="demo-banner" role="status">
-      Demonstration mode · Explore every journey with fictional pilot data
+      {label}
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import { redirect } from "next/navigation";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export async function requireAdmin() {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) {
+      throw new Error("FarmerBook administration is not configured.");
+    }
     return { id: "demo-admin", demo: true };
   }
 

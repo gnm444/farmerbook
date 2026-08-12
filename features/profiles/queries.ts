@@ -5,12 +5,22 @@ import {
   profiles as demoProfiles,
 } from "@/lib/demo-data";
 import { mapProfile, type ProfileRow } from "@/lib/data-mappers";
-import { isSupabaseConfigured } from "@/lib/env";
+import { throwDataUnavailable } from "@/lib/data-errors";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
-import type { FarmerProfile } from "@/lib/types";
+import type {
+  CategoryRelationship,
+  FarmerProfile,
+  ProfileCategoryAffinity,
+} from "@/lib/types";
+import { trustedOAuthAvatarForUser } from "./oauth-avatar";
 
 const profileColumns =
-  "id, handle, full_name, participant_type, district, state, crops, bio, verification_status, experience_years, avatar_path, created_at";
+  "id, handle, full_name, participant_type, account_role, district, state, crops, bio, verification_status, experience_years, farming_method, website_url, linkedin_url, instagram_url, facebook_url, youtube_url, avatar_path, cover_path, public_profile_enabled, created_at";
+
+function isMissingAffinitySchema(error: { code?: string } | null) {
+  return error?.code === "PGRST205" || error?.code === "42P01";
+}
 
 async function hydrateProfiles(
   rows: ProfileRow[],
@@ -18,35 +28,113 @@ async function hydrateProfiles(
     followers?: number;
     following?: number;
     isFollowing?: boolean;
+    avatarUrl?: string;
+    avatarSource?: "oauth" | "uploaded";
+    categoryAffinities?: ProfileCategoryAffinity[];
   } = () => ({}),
 ) {
   if (!rows.length) return [];
   const supabase = await createClient();
   const avatarUrls = new Map<string, string>();
+  const coverUrls = new Map<string, string>();
+  const affinitiesByProfile = new Map<string, ProfileCategoryAffinity[]>();
+
+  const { data: affinityRows, error: affinityError } = await supabase
+    .from("profile_category_affinities")
+    .select("profile_id, category_slug, relationship, is_primary")
+    .in("profile_id", rows.map((row) => row.id));
+  if (affinityError && !isMissingAffinitySchema(affinityError)) {
+    throw new Error("Agriculture profile details are temporarily unavailable.");
+  }
+  for (const affinity of affinityRows ?? []) {
+    const profileId = affinity.profile_id as string;
+    affinitiesByProfile.set(profileId, [
+      ...(affinitiesByProfile.get(profileId) ?? []),
+      {
+        categorySlug: affinity.category_slug as string,
+        relationship: affinity.relationship as CategoryRelationship,
+        isPrimary: Boolean(affinity.is_primary),
+      },
+    ]);
+  }
 
   await Promise.all(
-    rows
-      .filter((row) => row.avatar_path)
-      .map(async (row) => {
-        const { data } = await supabase.storage
-          .from("avatars")
-          .createSignedUrl(row.avatar_path as string, 60 * 60);
-        if (data?.signedUrl) avatarUrls.set(row.id, data.signedUrl);
-      }),
-  );
-
-  return rows.map((row) =>
-    mapProfile(row, {
-      ...optionsFor(row),
-      avatarUrl: avatarUrls.get(row.id),
+    rows.flatMap((row) => {
+      const media: Promise<void>[] = [];
+      if (row.avatar_path) {
+        media.push(
+          supabase.storage
+            .from("avatars")
+            .createSignedUrl(row.avatar_path, 60 * 60)
+            .then(({ data }) => {
+              if (data?.signedUrl) avatarUrls.set(row.id, data.signedUrl);
+            }),
+        );
+      }
+      if (row.cover_path) {
+        media.push(
+          supabase.storage
+            .from("avatars")
+            .createSignedUrl(row.cover_path, 60 * 60)
+            .then(({ data }) => {
+              if (data?.signedUrl) coverUrls.set(row.id, data.signedUrl);
+            }),
+        );
+      }
+      return media;
     }),
   );
+
+  return rows.map((row) => {
+    const options = optionsFor(row);
+    const uploadedAvatar = avatarUrls.get(row.id);
+    return mapProfile(row, {
+      ...options,
+      avatarUrl: uploadedAvatar ?? options.avatarUrl,
+      avatarSource: uploadedAvatar ? "uploaded" : options.avatarSource,
+      coverUrl: coverUrls.get(row.id),
+      categoryAffinities: affinitiesByProfile.get(row.id) ?? [],
+    });
+  });
+}
+
+export async function loadPublicFarmerProfile(handle: string) {
+  if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) return null;
+    return (
+      demoProfiles.find(
+        (profile) =>
+          profile.handle === handle &&
+          profile.accountRole === "farmer" &&
+          profile.publicProfileEnabled,
+      ) ?? null
+    );
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(profileColumns)
+    .eq("handle", handle)
+    .eq("account_role", "farmer")
+    .eq("public_profile_enabled", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Public Farmer profile query failed:", error.message);
+    return null;
+  }
+  if (!data) return null;
+
+  const [profile] = await hydrateProfiles([data as ProfileRow]);
+  return profile ?? null;
 }
 
 export async function loadCurrentProfile(
   options: { allowIncomplete?: boolean } = {},
 ): Promise<FarmerProfile> {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) throwDataUnavailable("profiles.current");
     return getProfile(currentUserId);
   }
 
@@ -62,7 +150,17 @@ export async function loadCurrentProfile(
     throw new Error(error?.message ?? "Your FarmerBook profile was not found.");
   }
 
-  const [profile] = await hydrateProfiles([data as ProfileRow]);
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  const oauthAvatar =
+    !(data as ProfileRow).avatar_path && authUser
+      ? trustedOAuthAvatarForUser(authUser)
+      : undefined;
+  const [profile] = await hydrateProfiles([data as ProfileRow], () => ({
+    avatarUrl: oauthAvatar?.url,
+    avatarSource: oauthAvatar ? "oauth" : undefined,
+  }));
   return profile;
 }
 
@@ -71,6 +169,7 @@ export async function loadProfilesByIds(
 ): Promise<FarmerProfile[]> {
   if (!ids.length) return [];
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) return [];
     const selected = new Set(ids);
     return demoProfiles.filter((profile) => selected.has(profile.id));
   }
@@ -86,7 +185,7 @@ export async function loadProfilesByIds(
 }
 
 export async function loadDiscoverProfiles(): Promise<FarmerProfile[]> {
-  if (!isSupabaseConfigured()) return demoProfiles;
+  if (!isSupabaseConfigured()) return isDemoMode() ? demoProfiles : [];
 
   const user = await requireUser();
   const supabase = await createClient();
@@ -120,6 +219,7 @@ export async function loadDiscoverProfiles(): Promise<FarmerProfile[]> {
 
 export async function loadNetworkProfiles() {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) return { following: [], followers: [] };
     return {
       following: demoProfiles.filter((profile) =>
         ["ramesh", "anjali", "vikram"].includes(profile.id),
@@ -162,6 +262,7 @@ export async function loadNetworkProfiles() {
 
 export async function loadProfileByHandle(handle: string) {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) return null;
     return (
       demoProfiles.find((profile) => profile.handle === handle) ?? null
     );

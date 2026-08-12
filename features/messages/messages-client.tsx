@@ -209,6 +209,7 @@ export function MessagesClient({
               <Avatar
                 initials={profile.initials}
                 imageUrl={profile.avatarUrl}
+                role={profile.accountRole}
                 size="small"
               />
               <span className="conversation-copy">
@@ -234,6 +235,7 @@ export function MessagesClient({
           <Avatar
             initials={otherProfile.initials}
             imageUrl={otherProfile.avatarUrl}
+            role={otherProfile.accountRole}
             size="small"
           />
           <div className="person-row__copy">

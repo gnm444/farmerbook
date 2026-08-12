@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/test-results/
 
 # next.js
 /.next/
@@ -40,5 +41,7 @@ next-env.d.ts
 *.tsbuildinfo
 /dist/
 /.wrangler/
+/supabase/.branches/
+/supabase/.temp/
 /outputs/
 /work/

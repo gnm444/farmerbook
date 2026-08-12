@@ -5,12 +5,21 @@ import Link from "next/link";
 import {
   Ban,
   CalendarDays,
+  ExternalLink,
   Flag,
   MapPin,
   MessageCircle,
+  PackageSearch,
+  Store,
 } from "lucide-react";
 import { Avatar, VerifiedBadge } from "@/components/ui";
-import type { FarmerPost, FarmerProfile } from "@/lib/types";
+import { ListingImage } from "@/features/marketplace/listing-image";
+import type {
+  FarmerPost,
+  FarmerProfile,
+  MarketReview,
+  ProduceListing,
+} from "@/lib/types";
 import { PostCard } from "@/features/posts/post-card";
 import {
   removePostAction,
@@ -19,14 +28,20 @@ import {
 } from "@/features/posts/actions";
 import { createReportAction } from "@/features/moderation/actions";
 import { setBlockAction, setFollowAction } from "@/features/network/actions";
+import { ReviewList } from "@/features/reviews/review-list";
+import { ShareProfileButton } from "./share-profile-button";
 
 export function ProfileView({
   profile,
   profilePosts,
+  profileListings,
+  reviews,
   isOwnProfile,
 }: {
   profile: FarmerProfile;
   profilePosts: FarmerPost[];
+  profileListings: ProduceListing[];
+  reviews: MarketReview[];
   isOwnProfile: boolean;
 }) {
   const [following, setFollowing] = useState(Boolean(profile.isFollowing));
@@ -35,6 +50,8 @@ export function ProfileView({
   const [posts, setPosts] = useState(profilePosts);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const isSeller =
+    profile.accountRole === "farmer" || profile.accountRole === "wholesaler";
 
   function updateFollow() {
     const active = !following;
@@ -136,12 +153,16 @@ export function ProfileView({
   return (
     <>
       <section className="card profile-hero">
-        <div className="profile-cover" />
+        <div
+          className="profile-cover"
+          style={profile.coverUrl ? { backgroundImage: `url("${profile.coverUrl}")` } : undefined}
+        />
         <div className="profile-main">
           <div className="profile-identity">
             <Avatar
               initials={profile.initials}
               imageUrl={profile.avatarUrl}
+              role={profile.accountRole}
               size="large"
             />
             <h1>
@@ -165,11 +186,31 @@ export function ProfileView({
               ) : null}
             </div>
             <div className="profile-card__crops" style={{ marginTop: 15 }}>
+              {profile.farmingMethod ? (
+                <span className="badge badge--amber">
+                  {profile.farmingMethod} farming
+                </span>
+              ) : null}
               {profile.crops.map((crop) => (
                 <span className="badge badge--green" key={crop}>
                   {crop}
                 </span>
               ))}
+            </div>
+            <div className="social-link-row">
+              {Object.entries(profile.socialLinks).some(([, url]) => Boolean(url)) ? Object.entries(profile.socialLinks).map(([network, url]) =>
+                url ? (
+                  <a
+                    href={url}
+                    key={network}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink size={14} aria-hidden="true" />
+                    {network}
+                  </a>
+                ) : null,
+              ) : <span className="form-helper">No social links have been added yet.</span>}
             </div>
             <div className="profile-stats">
               <div>
@@ -188,9 +229,18 @@ export function ProfileView({
           </div>
           <div className="profile-actions">
             {isOwnProfile ? (
-              <Link className="button" href="/settings/profile">
-                Edit profile
-              </Link>
+              <>
+                <Link className="button" href="/settings/profile">
+                  Edit profile
+                </Link>
+                {profile.publicProfileEnabled ? (
+                  <ShareProfileButton
+                    handle={profile.handle}
+                    fullName={profile.fullName}
+                    label="Share public profile"
+                  />
+                ) : null}
+              </>
             ) : (
               <>
                 <button
@@ -245,8 +295,59 @@ export function ProfileView({
           </div>
         </section>
       ) : (
-        <div className="feed-layout">
-          <section className="feed-column" aria-label={`${profile.fullName} posts`}>
+        <>
+          {isSeller ? (
+          <section className="card profile-storefront">
+            <div className="profile-storefront__head">
+              <div>
+                <p className="eyebrow">Seller storefront</p>
+                <h2>Available from {isOwnProfile ? "you" : profile.fullName}</h2>
+                <p>
+                  Current harvest lots buyers can review and enquire about
+                  directly.
+                </p>
+              </div>
+              <Link
+                className="button button--secondary"
+                href={isOwnProfile ? "/business" : `/store/${profile.handle}`}
+              >
+                <Store size={17} aria-hidden="true" />
+                {isOwnProfile ? "Manage storefront" : "View public storefront"}
+              </Link>
+            </div>
+            {profileListings.length ? (
+              <div className="profile-listing-strip">
+                {profileListings.slice(0, 3).map((listing) => (
+                  <Link key={listing.id} href={`/marketplace/${listing.id}`}>
+                    <ListingImage
+                      className="listing-photo profile-listing-strip__photo"
+                      variant={listing.imageVariant}
+                    />
+                    <span>
+                      <strong>{listing.title}</strong>
+                      <small>
+                        {listing.quantity} {listing.unit} · ₹{listing.price}/{listing.priceUnit}
+                      </small>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="profile-storefront__empty">
+                <PackageSearch size={22} aria-hidden="true" />
+                <span>
+                  <strong>No active produce listings</strong>
+                  <small>New harvest availability will appear here.</small>
+                </span>
+              </div>
+            )}
+          </section>
+          ) : null}
+
+          {isSeller ? <ReviewList reviews={reviews} /> : null}
+
+          <div className="feed-layout">
+            <section className="feed-column" aria-label={`${profile.fullName} posts`}>
             <h2 style={{ fontSize: "1.1rem", margin: "0 0 14px" }}>
               Recent field updates
             </h2>
@@ -271,8 +372,9 @@ export function ProfileView({
                 </div>
               </section>
             )}
-          </section>
-        </div>
+            </section>
+          </div>
+        </>
       )}
     </>
   );

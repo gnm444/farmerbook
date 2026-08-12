@@ -1,48 +1,24 @@
 import type { Metadata } from "next";
 import { PolicyLayout } from "@/components/policy-layout";
+import { getServerTranslations } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Community rules" };
+export async function generateMetadata(): Promise<Metadata> { const { t } = await getServerTranslations("legal"); return { title: t("rulesTitle") }; }
 
-export default function CommunityRulesPage() {
+export default async function CommunityRulesPage() {
+  const { t } = await getServerTranslations("legal");
   return (
     <PolicyLayout
-      eyebrow="Pilot safety"
-      title="Community rules"
-      updated="29 July 2026"
+      eyebrow={t("rulesEyebrow")}
+      title={t("rulesTitle")}
+      updated={t("updatedAugust9")}
     >
-      <p className="placeholder-note">
-        Founder review required before the real pilot. These draft rules support
-        product testing and are not a substitute for local legal review.
-      </p>
-      <h2>Share experience honestly</h2>
-      <p>
-        Explain what you observed, what you tried and the limits of your
-        experience. Do not present unverified advice as a guaranteed cure,
-        official instruction or substitute for a qualified professional.
-      </p>
-      <h2>Respect every participant</h2>
-      <p>
-        Harassment, threats, discriminatory language, unwanted sexual content
-        and repeated unwanted contact are not allowed. Disagree with an idea
-        without attacking the person.
-      </p>
-      <h2>Keep private information private</h2>
-      <p>
-        Do not publish exact farm coordinates, identity documents, financial
-        details or another person’s private messages. Ask permission before
-        sharing someone else’s photo or phone number.
-      </p>
-      <h2>No scams or unsafe promotions</h2>
-      <p>
-        Misleading financial offers, counterfeit inputs, unrelated advertising,
-        impersonation and instructions that create an immediate safety risk may
-        be removed and the account suspended.
-      </p>
-      <h2>Use report and block tools</h2>
-      <p>
-        Report content when a moderator should review it. Block a participant
-        when you need to stop mutual visibility and new messages immediately.
-      </p>
+      <p className="placeholder-note">{t("rulesGate")}</p>
+      <h2>{t("rulesHonestyTitle")}</h2><p>{t("rulesHonestyBody")}</p>
+      <h2>{t("rulesRespectTitle")}</h2><p>{t("rulesRespectBody")}</p>
+      <h2>{t("rulesPrivacyTitle")}</h2><p>{t("rulesPrivacyBody")}</p>
+      <h2>{t("rulesScamsTitle")}</h2><p>{t("rulesScamsBody")}</p>
+      <h2>{t("rulesOutreachTitle")}</h2><p>{t("rulesOutreachBody")}</p>
+      <h2>{t("rulesToolsTitle")}</h2><p>{t("rulesToolsBody")}</p>
     </PolicyLayout>
   );
 }

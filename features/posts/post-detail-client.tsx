@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
+import { useTranslations } from "@/components/locale-provider";
 import { Avatar } from "@/components/ui";
 import { getProfile } from "@/lib/demo-data";
 import type { Comment, FarmerPost, FarmerProfile } from "@/lib/types";
@@ -23,6 +24,7 @@ export function PostDetailClient({
   initialComments: Comment[];
   currentUser: FarmerProfile;
 }) {
+  const t = useTranslations("feed");
   const [post, setPost] = useState(initialPost);
   const router = useRouter();
   const [comments, setComments] = useState(initialComments);
@@ -41,7 +43,7 @@ export function PostDetailClient({
         body: cleanBody,
       });
       if (!result.ok) {
-        setError(result.message ?? "Your answer could not be posted.");
+        setError(t("answerFailed"));
         return;
       }
       const newComment: Comment = {
@@ -50,7 +52,7 @@ export function PostDetailClient({
         authorId: currentUser.id,
         author: currentUser,
         body: cleanBody,
-        createdLabel: "Just now",
+        createdLabel: t("justNow"),
       };
       setComments((current) => [...current, newComment]);
       setPost((current) => ({
@@ -65,7 +67,7 @@ export function PostDetailClient({
     startTransition(async () => {
       const result = await toggleHelpfulAction(post.id);
       if (!result.ok) {
-        setError(result.message ?? "Helpful could not be updated.");
+        setError(t("helpfulFailed"));
         return;
       }
       setPost((current) => ({
@@ -88,7 +90,7 @@ export function PostDetailClient({
       category: nextCategory,
     });
     if (!result.ok) {
-      setError(result.message ?? "The post could not be updated.");
+      setError(t("updateFailed"));
       return false;
     }
     setPost((current) => ({
@@ -102,7 +104,7 @@ export function PostDetailClient({
   async function removePost(postId: string) {
     const result = await removePostAction(postId);
     if (!result.ok) {
-      setError(result.message ?? "The post could not be removed.");
+      setError(t("removeFailed"));
       return false;
     }
     router.push("/feed");
@@ -120,26 +122,26 @@ export function PostDetailClient({
         onRemovePost={removePost}
       />
       <section className="card settings-card" aria-labelledby="comments-title">
-        <h2 id="comments-title">Community answers</h2>
-        <p>
-          Add practical context and explain the limits of your own experience.
-        </p>
+        <h2 id="comments-title">{t("answers")}</h2>
+        <p>{t("answersHelp")}</p>
         <form className="composer-main" onSubmit={addComment}>
           <Avatar
             initials={currentUser.initials}
             imageUrl={currentUser.avatarUrl}
+            role={currentUser.accountRole}
             size="small"
           />
           <div className="field" style={{ flex: 1 }}>
             <label className="sr-only" htmlFor="comment-body">
-              Add a comment
+              {t("addComment")}
             </label>
             <textarea
               className="textarea"
               id="comment-body"
               maxLength={500}
               onChange={(event) => setBody(event.target.value)}
-              placeholder="Share a helpful answer or ask for more detail…"
+              placeholder={t("commentPlaceholder")}
+              dir="auto"
               value={body}
               style={{ minHeight: 82 }}
             />
@@ -147,7 +149,7 @@ export function PostDetailClient({
           <button
             className="button"
             type="submit"
-            aria-label="Post comment"
+            aria-label={t("postComment")}
             disabled={isPending}
           >
             <Send size={17} aria-hidden="true" />
@@ -162,11 +164,12 @@ export function PostDetailClient({
                 <Avatar
                   initials={author.initials}
                   imageUrl={author.avatarUrl}
+                  role={author.accountRole}
                   size="small"
                 />
                 <div className="list-row__copy">
                   <strong>{author.fullName}</strong>
-                  <p style={{ margin: "5px 0 2px" }}>{comment.body}</p>
+                  <p style={{ margin: "5px 0 2px" }} dir="auto">{comment.body}</p>
                   <span>{comment.createdLabel}</span>
                 </div>
               </article>

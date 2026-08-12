@@ -3,49 +3,72 @@ import Link from "next/link";
 import { AuthLayout } from "@/components/auth-layout";
 import { Brand } from "@/components/ui";
 import { signupAction } from "@/features/auth/actions";
+import { OAuthButtons } from "@/features/auth/oauth-buttons";
+import { getServerI18n } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Join the pilot" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerI18n();
+  return { title: t("auth.joinTitle") };
+}
 
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; checkEmail?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    checkEmail?: string;
+    invite?: "invited" | "invalid" | "unavailable";
+  }>;
 }) {
-  const { error, checkEmail } = await searchParams;
+  const { error, checkEmail, invite } = await searchParams;
+  const { t } = await getServerI18n();
 
   return (
     <AuthLayout>
       <div className="auth-card">
-        <Link href="/" className="brand" aria-label="FarmerBook home">
+        <Link href="/" className="brand" aria-label={t("navigation.homeAria")}>
           <Brand />
         </Link>
-        <h2>Join the pilot</h2>
-        <p>
-          Create your account, then tell the community about your crops and
-          experience.
-        </p>
+        <h2>{t("auth.joinTitle")}</h2>
+        <p>{t("auth.joinHelp")}</p>
+        {invite === "invited" ? (
+          <div className="notice notice--success">
+            {t("auth.inviteReady")}
+          </div>
+        ) : null}
+        {invite === "invalid" ? (
+          <div className="notice">
+            {t("auth.inviteInvalid")}
+          </div>
+        ) : null}
+        {invite === "unavailable" ? (
+          <div className="notice">
+            {t("auth.inviteUnavailable")}
+          </div>
+        ) : null}
         {checkEmail ? (
           <div className="notice notice--success">
-            Check your email to verify the account. You can sign in after
-            verification.
+            {t("auth.checkEmailDetail")}
           </div>
         ) : (
-          <form className="form-stack" action={signupAction}>
-            {error ? <div className="notice">{error}</div> : null}
+          <>
+            {error ? <div className="notice">{t("errors.generic")}</div> : null}
+            <OAuthButtons mode="signup" />
+            <form className="form-stack" action={signupAction}>
             <div className="field">
-              <label htmlFor="email">Email address</label>
+              <label htmlFor="email">{t("auth.email")}</label>
               <input
                 className="input"
                 id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
-                placeholder="you@example.com"
+                placeholder={t("auth.emailPlaceholder")}
                 required
               />
             </div>
             <div className="field">
-              <label htmlFor="password">Create a password</label>
+              <label htmlFor="password">{t("auth.createPassword")}</label>
               <input
                 className="input"
                 id="password"
@@ -55,24 +78,26 @@ export default async function SignupPage({
                 minLength={8}
                 required
               />
-              <p className="form-helper">Use at least 8 characters.</p>
+              <p className="form-helper">{t("auth.passwordHelp")}</p>
             </div>
             <label className="form-check">
               <input name="acceptedTerms" type="checkbox" required />
               <span>
-                I agree to the <Link href="/terms">terms</Link>,{" "}
-                <Link href="/privacy">privacy notice</Link> and{" "}
-                <Link href="/community-rules">community rules</Link>.
+                {t("legal.consentBeforeTerms")}<Link href="/terms">{t("legal.terms")}</Link>
+                {t("legal.consentBetweenTermsPrivacy")}<Link href="/privacy">{t("legal.privacy")}</Link>
+                {t("legal.consentBetweenPrivacyRules")}<Link href="/community-rules">{t("legal.communityRules")}</Link>
+                {t("legal.consentAfterRules")}
               </span>
             </label>
             <button className="button button--full" type="submit">
-              Create account
+              {t("auth.signUp")}
             </button>
-          </form>
+            </form>
+          </>
         )}
         <div className="auth-links">
-          <span>Already invited?</span>
-          <Link href="/login">Sign in</Link>
+          <span>{t("auth.alreadyInvited")}</span>
+          <Link href="/login">{t("auth.signIn")}</Link>
         </div>
       </div>
     </AuthLayout>

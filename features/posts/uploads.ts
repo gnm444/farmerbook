@@ -31,7 +31,9 @@ export async function uploadPostImage(file: File) {
   const { error } = await supabase.storage
     .from("post-images")
     .upload(path, file, { cacheControl: "3600", upsert: false });
-  if (error) throw new Error(error.message);
+  if (error) {
+    throw new Error("The post image could not be uploaded. Please try again.");
+  }
 
   const { data } = await supabase.storage
     .from("post-images")

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { SearchX } from "lucide-react";
+import { getServerTranslations } from "@/lib/i18n";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const { t } = await getServerTranslations("errors");
   return (
     <main className="container" style={{ padding: "100px 0" }}>
       <section className="card empty-state">
@@ -9,13 +11,10 @@ export default function NotFound() {
           <div className="empty-state__icon">
             <SearchX size={28} aria-hidden="true" />
           </div>
-          <h1>We could not find that page</h1>
-          <p>
-            The profile or discussion may have been removed, hidden by a block,
-            or the address may be incorrect.
-          </p>
+          <h1>{t("notFoundTitle")}</h1>
+          <p>{t("notFoundHelp")}</p>
           <Link className="button" href="/feed">
-            Return to the feed
+            {t("returnFeed")}
           </Link>
         </div>
       </section>

@@ -3,8 +3,12 @@ import Link from "next/link";
 import { AuthLayout } from "@/components/auth-layout";
 import { Brand } from "@/components/ui";
 import { requestPasswordResetAction } from "@/features/auth/actions";
+import { getServerI18n } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Reset password" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerI18n();
+  return { title: t("auth.resetTitle") };
+}
 
 export default async function ForgotPasswordPage({
   searchParams,
@@ -12,27 +16,25 @@ export default async function ForgotPasswordPage({
   searchParams: Promise<{ error?: string; sent?: string }>;
 }) {
   const { error, sent } = await searchParams;
+  const { t } = await getServerI18n();
 
   return (
     <AuthLayout>
       <div className="auth-card">
-        <Link href="/" className="brand" aria-label="FarmerBook home">
+        <Link href="/" className="brand" aria-label={t("navigation.homeAria")}>
           <Brand />
         </Link>
-        <h2>Reset your password</h2>
-        <p>
-          Enter the email used for FarmerBook. We’ll send a secure reset link if
-          the account exists.
-        </p>
+        <h2>{t("auth.resetTitle")}</h2>
+        <p>{t("auth.resetHelp")}</p>
         {sent ? (
           <div className="notice notice--success">
-            If an account matches that address, a reset email is on its way.
+            {t("auth.resetSent")}
           </div>
         ) : (
           <form className="form-stack" action={requestPasswordResetAction}>
-            {error ? <div className="notice">{error}</div> : null}
+            {error ? <div className="notice">{t("errors.generic")}</div> : null}
             <div className="field">
-              <label htmlFor="email">Email address</label>
+              <label htmlFor="email">{t("auth.email")}</label>
               <input
                 className="input"
                 id="email"
@@ -43,12 +45,12 @@ export default async function ForgotPasswordPage({
               />
             </div>
             <button className="button button--full" type="submit">
-              Send reset link
+              {t("auth.sendReset")}
             </button>
           </form>
         )}
         <div className="auth-links">
-          <Link href="/login">Back to sign in</Link>
+          <Link href="/login">{t("auth.backSignIn")}</Link>
         </div>
       </div>
     </AuthLayout>

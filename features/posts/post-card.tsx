@@ -14,12 +14,8 @@ import { Avatar, VerifiedBadge } from "@/components/ui";
 import { createReportAction } from "@/features/moderation/actions";
 import { getProfile } from "@/lib/demo-data";
 import type { FarmerPost } from "@/lib/types";
-
-const categoryLabel = {
-  discussion: "Discussion",
-  question: "Question",
-  opportunity: "Opportunity",
-} as const;
+import { useLocale, useTranslations } from "@/components/locale-provider";
+import { formatNumber } from "@/lib/i18n/format";
 
 export function PostCard({
   post,
@@ -38,6 +34,8 @@ export function PostCard({
   ) => Promise<boolean>;
   onRemovePost?: (id: string) => Promise<boolean>;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("feed");
   const author = getProfile(post.authorId);
   const [reported, setReported] = useState(false);
   const [shared, setShared] = useState(false);
@@ -57,7 +55,7 @@ export function PostCard({
       details: "Reported from the post card for moderator review.",
     });
     if (!result.ok) {
-      setReportError(result.message ?? "Report could not be sent.");
+      setReportError(t("reportFailed"));
       return;
     }
     setReported(true);
@@ -67,7 +65,7 @@ export function PostCard({
     const url = `${window.location.origin}/posts/${post.id}`;
     if (navigator.share) {
       await navigator.share({
-        title: `${displayedAuthor.fullName} on FarmerBook`,
+        title: t("shareTitle", { name: displayedAuthor.fullName }),
         text: post.body,
         url,
       });
@@ -91,7 +89,7 @@ export function PostCard({
   }
 
   async function removePost() {
-    if (!onRemovePost || !window.confirm("Remove this post from FarmerBook?")) {
+    if (!onRemovePost || !window.confirm(t("removeConfirm"))) {
       return;
     }
     setManaging(true);
@@ -105,6 +103,7 @@ export function PostCard({
         <Avatar
           initials={displayedAuthor.initials}
           imageUrl={displayedAuthor.avatarUrl}
+          role={displayedAuthor.accountRole}
         />
         <div className="person-row__copy">
           <div className="person-name">
@@ -117,7 +116,13 @@ export function PostCard({
             {displayedAuthor.verified ? <VerifiedBadge /> : null}
           </div>
           <div className="person-meta">
-            {displayedAuthor.roleLabel} · {displayedAuthor.district},{" "}
+            {displayedAuthor.accountRole === "farmer"
+              ? t("farmer")
+              : displayedAuthor.accountRole === "customer"
+                ? t("customer")
+                : displayedAuthor.accountRole === "wholesaler"
+                  ? t("wholesaler")
+                  : t("inc")} · {displayedAuthor.district},{" "}
             {displayedAuthor.state} ·{" "}
             {post.createdLabel}
           </div>
@@ -134,13 +139,13 @@ export function PostCard({
             post.category === "question" ? "badge--amber" : "badge--green"
           }`}
         >
-          {categoryLabel[post.category]}
+          {t(post.category)}
         </span>
       </div>
       {editing ? (
         <form className="form-stack" onSubmit={saveEdit}>
           <label className="field">
-            <span className="field-label">Post text</span>
+            <span className="field-label">{t("postText")}</span>
             <textarea
               className="textarea"
               value={draftBody}
@@ -149,7 +154,7 @@ export function PostCard({
             />
           </label>
           <label className="field">
-            <span className="field-label">Category</span>
+            <span className="field-label">{t("category")}</span>
             <select
               className="select"
               value={draftCategory}
@@ -159,26 +164,26 @@ export function PostCard({
                 )
               }
             >
-              <option value="question">Question</option>
-              <option value="discussion">Discussion</option>
-              <option value="opportunity">Opportunity</option>
+              <option value="question">{t("question")}</option>
+              <option value="discussion">{t("discussion")}</option>
+              <option value="opportunity">{t("opportunity")}</option>
             </select>
           </label>
           <div className="report-actions">
             <button className="button button--small" disabled={managing}>
-              Save post
+              {t("savePost")}
             </button>
             <button
               className="button button--secondary button--small"
               type="button"
               onClick={() => setEditing(false)}
             >
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         </form>
       ) : (
-        <p className="post-body">{post.body}</p>
+        <p className="post-body" dir="auto">{post.body}</p>
       )}
       {post.imageUrl || post.imageVariant ? (
         <div
@@ -195,7 +200,7 @@ export function PostCard({
               : undefined
           }
           role="img"
-          aria-label={`${post.crops[0] ?? "Farm"} field update`}
+          aria-label={t("farmImageAlt", { crop: post.crops[0] ?? t("farmFallback") })}
         />
       ) : null}
       <div className="post-action-row">
@@ -210,15 +215,15 @@ export function PostCard({
             fill={post.helpfulByViewer ? "currentColor" : "none"}
             aria-hidden="true"
           />
-          {post.helpfulCount} Helpful
+          {t("helpful", { count: formatNumber(post.helpfulCount, locale) })}
         </button>
         <Link className="post-action" href={`/posts/${post.id}`}>
           <MessageCircle size={18} aria-hidden="true" />
-          {post.commentCount} comments
+          {t("comments", { count: formatNumber(post.commentCount, locale) })}
         </Link>
         <button className="post-action" type="button" onClick={sharePost}>
           <Share2 size={18} aria-hidden="true" />
-          {shared ? "Link copied" : "Share"}
+          {shared ? t("linkCopied") : t("share")}
         </button>
         <button
           className="post-action"
@@ -227,7 +232,7 @@ export function PostCard({
           onClick={reportPost}
         >
           <Flag size={18} aria-hidden="true" />
-          {reported ? "Report sent" : "Report"}
+          {reported ? t("reportSent") : t("report")}
         </button>
       </div>
       {canManage ? (
@@ -238,7 +243,7 @@ export function PostCard({
             disabled={managing}
             onClick={() => setEditing(true)}
           >
-            <Pencil size={15} aria-hidden="true" /> Edit
+            <Pencil size={15} aria-hidden="true" /> {t("edit")}
           </button>
           <button
             className="button button--ghost button--small"
@@ -246,7 +251,7 @@ export function PostCard({
             disabled={managing}
             onClick={removePost}
           >
-            <Trash2 size={15} aria-hidden="true" /> Remove
+            <Trash2 size={15} aria-hidden="true" /> {t("remove")}
           </button>
         </div>
       ) : null}

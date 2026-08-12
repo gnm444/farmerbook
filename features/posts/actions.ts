@@ -46,7 +46,10 @@ export async function createPostAction(input: unknown) {
   }
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The post could not be created. Please try again.",
+      }
     : { ok: true as const, demo: false, postId: data.id };
 }
 
@@ -73,7 +76,10 @@ export async function createCommentAction(input: unknown) {
   }
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The comment could not be created. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }
 
@@ -107,7 +113,10 @@ export async function toggleHelpfulAction(postId: string) {
   }
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "Helpful could not be updated. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }
 
@@ -132,7 +141,10 @@ export async function updatePostAction(input: unknown) {
     .eq("author_id", user.id);
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The post could not be updated. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }
 
@@ -148,6 +160,9 @@ export async function removePostAction(postId: string) {
     .eq("author_id", user.id);
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The post could not be removed. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }

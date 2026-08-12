@@ -9,7 +9,7 @@ import {
   messages as demoMessages,
 } from "@/lib/demo-data";
 import { createdLabel } from "@/lib/data-mappers";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation, FarmerProfile, Message } from "@/lib/types";
 
@@ -20,6 +20,7 @@ export async function loadMessagesData(requestedProfileId?: string): Promise<{
   profiles: FarmerProfile[];
 }> {
   if (!isSupabaseConfigured()) {
+    if (!isDemoMode()) throw new Error("FarmerBook messaging is not configured.");
     const profiles = [
       ...new Map(
         demoConversations.map((conversation) => {

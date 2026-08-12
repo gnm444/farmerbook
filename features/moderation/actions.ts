@@ -39,7 +39,10 @@ export async function createReportAction(input: unknown) {
   }
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The report could not be submitted. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }
 
@@ -65,7 +68,10 @@ export async function moderateReportAction(input: unknown) {
   });
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The moderation action could not be saved. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }
 
@@ -82,37 +88,19 @@ export async function moderateUserAction(input: unknown) {
 
   const supabase = createAdminClient();
   const { action, userId, note } = parsed.data;
-  const profileUpdate =
-    action === "verify"
-      ? { verification_status: "verified" }
-      : action === "reject"
-        ? { verification_status: "rejected" }
-        : action === "suspend"
-          ? { status: "suspended" }
-          : { status: "active" };
+  const { error } = await supabase.rpc("apply_moderation_action", {
+    report_id_input: null,
+    action_input: action === "restore" ? "unsuspend" : action,
+    target_id_input: userId,
+    target_type_input: "profile",
+    note_input: note || `Participant action: ${action}.`,
+    moderator_id_input: admin.id,
+  });
 
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .update({ ...profileUpdate, updated_at: new Date().toISOString() })
-    .eq("id", userId);
-
-  if (profileError) {
-    return { ok: false as const, message: profileError.message };
-  }
-
-  const auditAction =
-    action === "restore" ? "unsuspend" : action;
-  const { error: auditError } = await supabase
-    .from("moderation_actions")
-    .insert({
-      moderator_id: admin.id,
-      action: auditAction,
-      target_type: "profile",
-      target_id: userId,
-      note: note || `Participant action: ${action}.`,
-    });
-
-  return auditError
-    ? { ok: false as const, message: auditError.message }
+  return error
+    ? {
+        ok: false as const,
+        message: "The participant action could not be saved. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }

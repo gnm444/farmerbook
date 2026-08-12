@@ -29,7 +29,10 @@ export async function startConversationAction(otherUserId: string) {
   }
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The conversation could not be started. Please try again.",
+      }
     : { ok: true as const, demo: false, conversationId: data };
 }
 
@@ -56,6 +59,9 @@ export async function sendMessageAction(input: unknown) {
   }
 
   return error
-    ? { ok: false as const, message: error.message }
+    ? {
+        ok: false as const,
+        message: "The message could not be sent. Please try again.",
+      }
     : { ok: true as const, demo: false };
 }

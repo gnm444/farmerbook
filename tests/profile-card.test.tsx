@@ -15,7 +15,7 @@ describe("ProfileCard", () => {
     );
 
     expect(screen.getByText("Ramesh Patil")).toBeInTheDocument();
-    expect(screen.getByText(/Tomato farmer/)).toBeInTheDocument();
+    expect(screen.getByText(/Farmer/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Follow" }));
     expect(onToggleFollow).toHaveBeenCalledWith("ramesh");
   });
