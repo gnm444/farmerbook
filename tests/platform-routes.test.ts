@@ -3,6 +3,7 @@ import { GET as health } from "@/app/api/health/route";
 import manifest from "@/app/manifest";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
+import { isPublicPath } from "@/proxy";
 
 describe("platform metadata and health routes", () => {
   it("returns a minimal non-cached health response", async () => {
@@ -21,15 +22,23 @@ describe("platform metadata and health routes", () => {
     expect(disallowed).toContain("/marketplace/demo");
   });
 
-  it("publishes only stable public pages and an installable manifest", () => {
-    const urls = sitemap().map((entry) => new URL(entry.url).pathname);
+  it("publishes only stable public pages and an installable manifest", async () => {
+    const urls = (await sitemap()).map((entry) => new URL(entry.url).pathname);
     expect(urls).toContain("/");
     expect(urls).toContain("/marketplace");
+    expect(urls).toContain("/featured-farmers");
+    expect(urls).toContain("/featured-farmers/narayana-reddy");
     expect(urls).not.toContain("/marketplace/demo");
     expect(manifest()).toMatchObject({
       name: "FarmerBook",
       start_url: "/",
       display: "standalone",
     });
+  });
+
+  it("keeps search metadata routes public", () => {
+    expect(isPublicPath("/robots.txt")).toBe(true);
+    expect(isPublicPath("/sitemap.xml")).toBe(true);
+    expect(isPublicPath("/manifest.webmanifest")).toBe(true);
   });
 });

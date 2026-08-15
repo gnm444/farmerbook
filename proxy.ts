@@ -14,7 +14,11 @@ const publicPrefixes = [
   "/unsubscribe",
   "/api/health",
   "/api/outreach",
+  "/manifest.webmanifest",
   "/marketplace",
+  "/featured-farmers",
+  "/robots.txt",
+  "/sitemap.xml",
   "/companies",
   "/offers",
   "/profile",
@@ -25,7 +29,7 @@ const publicPrefixes = [
   "/terms",
 ];
 
-function isPublicPath(pathname: string) {
+export function isPublicPath(pathname: string) {
   return publicPrefixes.some((prefix) =>
     prefix === "/" ? pathname === "/" : pathname.startsWith(prefix),
   );

@@ -8,6 +8,9 @@ export const featureFlagNames = [
   "ENABLE_OUTREACH_AGENT",
   "ENABLE_PROFILE_RESEARCH_AGENT",
   "ENABLE_MANAGED_OPERATIONS_AGENTS",
+  "ENABLE_FEATURED_FARMER_PROFILES",
+  "ENABLE_PRIVATE_FARMER_CONTACTS",
+  "ENABLE_SOURCED_FARMER_RESEARCH",
 ] as const;
 
 export type FeatureFlagName = (typeof featureFlagNames)[number];

@@ -16,6 +16,8 @@ import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import { loadMessages, messageFor } from "@/lib/i18n";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { privateFarmerContactConfiguration } from "@/features/farmer-database/crypto";
+import { mirrorConsentLeadToPrivateFarmerDatabase } from "@/features/farmer-database/private-contact-service";
 import { createOutreachAgent } from "./agent";
 import { createConfiguredOutreachProvider } from "./providers";
 import {
@@ -209,6 +211,12 @@ export async function submitAcquisitionConsentAction(input: unknown) {
   const parsed = consentLeadSchema.safeParse(input);
   if (!parsed.success) return outreachFailure("INVALID_INPUT", z.flattenError(parsed.error).fieldErrors);
   if (isDemoMode() || !isSupabaseConfigured()) return outreachFailure("NOT_CONFIGURED");
+  if (
+    isFeatureEnabled("ENABLE_PRIVATE_FARMER_CONTACTS") &&
+    !privateFarmerContactConfiguration().configured
+  ) {
+    return outreachFailure("NOT_CONFIGURED");
+  }
   const signingSecret = process.env.OUTREACH_CONSENT_SIGNING_SECRET ?? "";
   const token = await verifyConsentToken(parsed.data.consentNonce, signingSecret);
   if (!token) return outreachFailure("INVALID_INPUT");
@@ -259,6 +267,7 @@ export async function submitAcquisitionConsentAction(input: unknown) {
     introductionDraft,
   };
   const inputFingerprint = await sha256(JSON.stringify(lead));
+  const consentRecordedAt = new Date().toISOString();
   const supabase = createAdminClient();
   const { data, error } = await supabase.rpc("submit_outreach_consent_lead", {
     lead_input: {
@@ -272,6 +281,23 @@ export async function submitAcquisitionConsentAction(input: unknown) {
     | { code?: unknown; prospect_id?: unknown; status?: unknown }
     | null;
   if (!row || typeof row.code !== "string" || typeof row.prospect_id !== "string") {
+    return outreachFailure("DATA_UNAVAILABLE");
+  }
+  try {
+    await mirrorConsentLeadToPrivateFarmerDatabase({
+      prospectId: row.prospect_id,
+      fullName: parsed.data.fullName,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      preferredChannel: parsed.data.preferredChannel,
+      state: parsed.data.state,
+      district: parsed.data.district,
+      preferredLocale: parsed.data.preferredLocale,
+      consentPolicyVersion: parsed.data.consentPolicyVersion,
+      consentRecordedAt,
+      idempotencyKey: token.nonce,
+    });
+  } catch {
     return outreachFailure("DATA_UNAVAILABLE");
   }
   return {

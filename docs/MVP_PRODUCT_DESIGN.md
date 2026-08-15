@@ -11,9 +11,9 @@
 
 ## 1. Product summary
 
-FarmerBook is a professional networking website for farmers. It helps a farmer establish a useful professional identity, find people working with similar crops nearby, share knowledge or opportunities, and start a direct conversation.
+FarmerBook is a farmer-first social and professional network with a direct agriculture marketplace. Think LinkedIn-style professional identity and Facebook-style community sharing, purpose-built for farmers: a farmer can establish a useful identity, find people working with similar crops nearby, share knowledge or opportunities, start a direct conversation, showcase produce, and receive private buyer enquiries.
 
-The MVP is not a complete LinkedIn clone and is not an agricultural marketplace. It tests one proposition:
+This document began as the narrower professional-network MVP approved on 2026-07-29. The implemented product has since expanded to include the direct marketplace recorded in the requirements register and living plan. It is not a complete LinkedIn or Facebook clone and is not an e-commerce checkout, payments, escrow, shipping, or logistics platform. The core network proposition remains:
 
 > Will farmers repeatedly use a trusted, crop- and location-aware professional network to learn from and connect with other people in agriculture?
 

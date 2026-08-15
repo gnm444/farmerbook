@@ -22,6 +22,13 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials*.json
+service-account*.json
 
 # debug
 npm-debug.log*
@@ -44,4 +51,6 @@ next-env.d.ts
 /supabase/.branches/
 /supabase/.temp/
 /outputs/
+/output/
+/tmp/
 /work/

@@ -1,10 +1,13 @@
 # FarmerBook
 
-FarmerBook is a responsive professional network and direct agriculture
-marketplace for Farmers, Customers, Wholesalers and agricultural businesses.
-Participants can build a role-aware profile, share updates, discover and follow
-peers, exchange direct messages, connect around produce and record reviews from
-seller-confirmed completed enquiries.
+FarmerBook is a farmer-first social network and direct agriculture marketplace -
+think LinkedIn-style professional identity and Facebook-style community,
+designed specifically for farmers. Farmers can build a role-aware profile,
+share knowledge and opportunities, discover and follow peers, exchange direct
+messages, showcase produce, receive private buyer enquiries, and build trust
+through reviews tied to seller-confirmed completed enquiries. Customers,
+wholesalers, and agriculture businesses participate in the same connected
+ecosystem.
 
 The repository includes an explicitly labelled, read-only marketplace demo and
 a Supabase-backed application boundary with email authentication, PostgreSQL Row Level
@@ -27,6 +30,13 @@ To connect a Supabase project, copy `.env.example` to `.env.local`, provide the
 public project values and server-only service-role key, then apply every SQL
 file in `supabase/migrations` in filename order.
 
+Real credentials must stay in ignored `.env*` files for local development and
+in the target platform's secret store for deployment. Codex, ChatGPT, Claude,
+or other developer-tool login credentials are never application dependencies.
+See [Secrets and GitHub deployment](docs/SECRETS_AND_GITHUB_DEPLOYMENT.md) for
+the public/secret boundary and the credentials a future deployment workflow
+would need.
+
 Production must set `NEXT_PUBLIC_SITE_URL`, both public Supabase values, and
 `NEXT_PUBLIC_DEMO_MODE=false`. The application refuses to start on a
 non-local origin with demo mode enabled or without a complete public Supabase
@@ -46,6 +56,10 @@ target environment:
 - `ENABLE_INC_SOURCING`
 - `ENABLE_OUTREACH_AGENT`
 - `ENABLE_PROFILE_RESEARCH_AGENT`
+- `ENABLE_MANAGED_OPERATIONS_AGENTS`
+- `ENABLE_FEATURED_FARMER_PROFILES`
+- `ENABLE_PRIVATE_FARMER_CONTACTS`
+- `ENABLE_SOURCED_FARMER_RESEARCH`
 
 The acquisition agent is consent-first. Administrators may analyze a bounded
 public website or supply a public social description/screenshot, but FarmerBook
@@ -72,24 +86,38 @@ is limited to five retained matches and database-capped at 25 requests per
 administrator/day and 250/month. Results can build only a private `Not
 verified` sample; they do not create a contact candidate or permission to send.
 
-Known Farmer Intake is a separate administrator workflow at
-`/admin/known-farmers` for Farmers personally known to FarmerBook. It opens a
-bounded normal Google Search for human review and stores only destination pages
-the administrator selects; FarmerBook never fetches or stores a Google results
-page. Optional YouTube discovery uses the official YouTube Data API through the
-server-only `YOUTUBE_DATA_API_KEY`, reserves database quota before every call,
-retains at most five text-only candidates for no more than 30 days, and never
-copies media, thumbnails, comments, transcripts, statistics, or cookies.
+Featured Farmers is a separate editorial workflow at
+`/admin/featured-farmers` for documenting farmers whose significant work is
+supported by public evidence. It opens five bounded Google Search query routes
+for human review and stores only destination pages selected by an administrator;
+FarmerBook never fetches or stores a Google results page. Optional YouTube
+discovery uses the official YouTube Data API through the server-only
+`YOUTUBE_DATA_API_KEY`, reserves shared database quota before every call, keeps
+at most five text-only candidates for no more than 30 days, and never copies
+media, thumbnails, comments, transcripts, statistics, or cookies.
 
-Every retained source must be selected or rejected and classified as the
-Farmer's own social profile, third-party coverage, or a professional reference.
-Posts, reels, interviews and watch URLs remain citations and cannot become
-profile social links. A private `Not verified` sample cannot be built without a
-reviewed Farmer-owned LinkedIn, Instagram, Facebook or YouTube account URL, and
-a Farmer profile cannot be made public without at least one supported social
-link. Missing links are shown honestly; none are invented. The local feature
-and database controls remain off until the runbook's provider, privacy,
-retention, RLS and staging gates pass.
+Publication at `/featured-farmers/[slug]` is an editorial article about a
+person, not a FarmerBook member profile or verification claim. Readiness
+requires two current professional sources on separate domains, at least one
+authoritative or independent source, two cited significance claims, three story
+sections, a fact check within 24 hours, and at least one manually confirmed
+Farmer-owned LinkedIn, Instagram, Facebook or YouTube account. Posts, reels,
+interviews and watch URLs remain citations and cannot become social-profile
+links. Every displayed claim keeps its selected sources; only original
+photographs with recorded republication rights may be shown. A provider-hosted
+preview may appear only when it stays on the provider, links to the source and
+shows clear attribution; otherwise the public page remains image-free. Stories expose
+their fact-check date, citations, editorial disclosure, and correction/removal
+path. The legacy `/admin/known-farmers` route redirects to this newsroom.
+
+`ENABLE_FEATURED_FARMER_PROFILES` and the database release control
+`featured_farmer_profiles` both default to false. Before enabling either one,
+name an editorial/privacy owner, approve the selection criteria and correction
+policy, confirm image rights and living-person/privacy review, rehearse RLS and
+withdrawal in staging, and approve the first subjects. Review the criteria and
+published collection at least annually. Do not publish private contact details,
+sensitive personal data, inferred attributes, copied third-party media, or any
+claim that the subject joined or endorsed FarmerBook.
 
 Consented messages receive one-time signed invitations that link the resulting
 authenticated account to its prospect record without placing contact data in
@@ -102,6 +130,28 @@ The first concrete email adapter targets Postmark with a verified FarmerBook
 domain, Broadcast Message Stream, signed double opt-in, per-message inbound
 reply routing, bounce/complaint suppression and one-click unsubscribe. A Gmail
 address may be an owner mailbox but is never used as the autonomous sender.
+
+The private Farmer database at `/admin/farmer-database` is a founder-owner-only
+contact store for direct interest, existing-member, approved partner, and
+consent-evidenced manual records. Contact values are application-encrypted and
+never exposed through browser database grants. Its on-demand YouTube Discovery
+view uses the official Data API but keeps only query hashes and aggregate run
+metadata; channel results are transient and cannot become contacts or messages.
+Only confirmed, purpose-matched email consent can enter the existing paused
+outreach outbox. WhatsApp is not implemented. Both the application flag and
+database control default to off; see the production runbook before enabling.
+
+The separate `/admin/sourced-farmers` workspace accepts an approved YouTube
+channel handle or URL and runs one resumable, quota-reserved batch through the
+official YouTube Data API. Descriptions and titles are contact-redacted before
+the founder can inspect them and are never stored. PostgreSQL retains only
+anonymous agriculture tags, actor counts, canonical source IDs/URLs,
+checkpoints, fingerprints, and refresh/expiry timestamps for no more than 30
+days. A durable named research profile can be created only from documented
+subject consent or cited, independently reviewed non-YouTube evidence. It does
+not create contacts, members, consent, outreach, verification, or public
+profiles. Both `ENABLE_SOURCED_FARMER_RESEARCH` and the database control
+`sourced_farmer_research` default to false.
 
 ## Google and Facebook sign-in
 
@@ -153,6 +203,7 @@ journeys.
 ## Product documents
 
 - [MVP product design](docs/MVP_PRODUCT_DESIGN.md)
+- [Secrets and GitHub deployment](docs/SECRETS_AND_GITHUB_DEPLOYMENT.md)
 - [Living implementation plan](PLAN.md)
 - [Implementation research](research.md)
 

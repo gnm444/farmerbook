@@ -29,6 +29,8 @@ export default async function AdminOutreachPage() {
         action={
           <div className="report-actions">
             <Link className="button button--secondary" href="/admin/known-farmers">Known Farmer Intake</Link>
+            <Link className="button button--secondary" href="/admin/sourced-farmers">Sourced farmer research</Link>
+            <Link className="button button--secondary" href="/admin/farmer-database">Private Farmer database</Link>
             <Link className="button button--secondary" href="/admin/agents">Open managed agents</Link>
           </div>
         }

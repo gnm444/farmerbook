@@ -21,7 +21,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "FARMERBOOK_COMPATIBILITY_DATE=2026-08-08 NEXT_PUBLIC_DEMO_MODE=true npm run dev",
+    command: "FARMERBOOK_COMPATIBILITY_DATE=2026-08-08 NEXT_PUBLIC_DEMO_MODE=true ENABLE_FEATURED_FARMER_PROFILES=true npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

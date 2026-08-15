@@ -1,6 +1,7 @@
 {
   "name": "farmerbook",
   "version": "0.1.0",
+  "description": "A farmer-first social and professional network with a direct agriculture marketplace.",
   "private": true,
   "engines": {
     "node": ">=22.13.0"

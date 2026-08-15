@@ -40,12 +40,6 @@ const roleOptions = [
   ["agri_business", "roleCompany"],
 ] as const;
 
-const channelOptions = [
-  ["email", "emailChannel"],
-  ["sms", "smsChannel"],
-  ["whatsapp", "whatsappChannel"],
-] as const;
-
 type SuccessState = {
   prospectId: string;
 };
@@ -69,7 +63,6 @@ export function ConsentJoinForm({
   const [success, setSuccess] = useState<SuccessState | null>(null);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileReady, setTurnstileReady] = useState(false);
-  const [preferredChannel, setPreferredChannel] = useState("email");
   const turnstileContainer = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const rawId = useId();
@@ -216,33 +209,15 @@ export function ConsentJoinForm({
           </label>
         </div>
 
-        <fieldset className="consent-channel">
-          <legend>{t("contactQuestion")}</legend>
-          <div className="choice-row">
-            {channelOptions.map(([value, key]) => (
-              <label key={value}>
-                <input
-                  type="radio"
-                  name="preferredChannel"
-                  value={value}
-                  checked={preferredChannel === value}
-                  onChange={() => setPreferredChannel(value)}
-                />
-                <span>{t(key)}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        {preferredChannel === "email" ? (
+        <input type="hidden" name="preferredChannel" value="email" />
+        <div className="form-grid form-grid--two">
           <label className="field" htmlFor={`${formId}-email`}>
             <span>{t("email")}</span>
             <input id={`${formId}-email`} name="email" type="email" autoComplete="email" required maxLength={254} />
             {fieldErrors.email?.[0] ? <small>{fieldErrors.email[0]}</small> : null}
           </label>
-        ) : (
           <label className="field" htmlFor={`${formId}-phone`}>
-            <span>{t("phone")}</span>
+            <span>{t("phone")} <em>{common("optional")}</em></span>
             <input
               id={`${formId}-phone`}
               name="phone"
@@ -251,11 +226,14 @@ export function ConsentJoinForm({
               autoComplete="tel"
               placeholder="+919876543210"
               pattern="\+91[6-9][0-9]{9}"
-              required
             />
             {fieldErrors.phone?.[0] ? <small>{fieldErrors.phone[0]}</small> : null}
           </label>
-        )}
+        </div>
+        <p className="muted">
+          Email is the only enabled invitation channel. An optional phone number
+          is stored privately for future consent workflows; WhatsApp is not enabled.
+        </p>
 
         <div className="consent-statements">
           <label>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sha256, uuidFromText } from "@/features/outreach/crypto";
 import { verifyEmailConsentToken } from "@/features/outreach/email-action-token";
+import { activateMirroredEmailConsent } from "@/features/farmer-database/private-contact-service";
 import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -54,6 +55,9 @@ export async function POST(request: Request) {
     uuidFromText(`postmark-consent:introduction:${token}`),
     uuidFromText(`postmark-consent:followup:${token}`),
   ]);
+  const privateContactKey = await uuidFromText(
+    `private-farmer-contact-email-confirmed:${token}`,
+  );
   const recorded = await supabase.rpc(
     "record_verified_email_double_opt_in",
     {
@@ -76,7 +80,17 @@ export async function POST(request: Request) {
       followup_idempotency_key_input: followupKey,
     },
   );
-  return recorded.error
-    ? redirectWithStatus(request, "unavailable")
-    : redirectWithStatus(request, "confirmed");
+  if (recorded.error) return redirectWithStatus(request, "unavailable");
+  try {
+    await activateMirroredEmailConsent({
+      prospectId: payload.prospectId,
+      confirmationReference: receiptId,
+      confirmedAt: grantedAt.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+      idempotencyKey: privateContactKey,
+    });
+  } catch {
+    return redirectWithStatus(request, "unavailable");
+  }
+  return redirectWithStatus(request, "confirmed");
 }

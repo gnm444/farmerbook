@@ -6,7 +6,15 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/marketplace", "/profile/", "/store/", "/companies", "/join"],
+      allow: [
+        "/",
+        "/marketplace",
+        "/featured-farmers/",
+        "/profile/",
+        "/store/",
+        "/companies",
+        "/join",
+      ],
       disallow: [
         "/admin/",
         "/business/",

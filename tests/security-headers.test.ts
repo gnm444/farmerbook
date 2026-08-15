@@ -13,6 +13,7 @@ describe("production response security headers", () => {
     expect(policy).toContain("https://project.supabase.co");
     expect(policy).toContain("wss://project.supabase.co");
     expect(policy).toContain("https://challenges.cloudflare.com");
+    expect(policy).toContain("img-src 'self' data: blob: https://i.ytimg.com");
     expect(policy).not.toContain("https://project.supabase.co/path");
   });
 

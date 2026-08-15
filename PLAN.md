@@ -10,8 +10,8 @@ After this plan is completed, an invited farmer can register in a phone browser,
 
 The MVP is a responsive website, not a native mobile application. It deliberately excludes phone OTP, video, payments, algorithmic recommendations, and other expensive infrastructure. The complete product scope and interaction design are recorded in `docs/MVP_PRODUCT_DESIGN.md`; the essentials needed to execute the build are repeated here so this plan remains usable on its own.
 
-The current unimplemented Featured Farmer addendum extends that product with a
-public editorial collection. An administrator will be able to research farmers
+The implemented, default-off Featured Farmer addendum extends that product with
+a public editorial collection. An administrator can research farmers
 whose significant work is documented on the Web, build claim-level cited
 stories, and publish them at `/featured-farmers`. Readers will see the reason
 each farmer was selected, sourced impact, confirmed owned social accounts,
@@ -50,7 +50,7 @@ FarmerBook member or verified participant.
 - [x] (2026-08-11 20:04 IST) Product owner rejected Brave before account creation and requested a Google-like alternative. Verified from current official documentation that Google Custom Search is closed to new customers and ends on 2027-01-01; recorded Tavily as the proposed free-tier replacement. Existing Brave code remains disabled pending explicit replacement approval.
 - [x] (2026-08-12) Researched the product owner's correction from personally-known intake to sourced Featured Farmer editorial stories; updated `research.md`, `docs/REQUIREMENTS.md`, this plan, the implementation log and structured-development state without changing application or production code.
 - [x] (2026-08-12) Product owner explicitly approved the Featured Farmer editorial profiles correction addendum and authorized implementation.
-- [ ] Implement and verify the approved Featured Farmer editorial plan; stop before any provider account, real-person research, publication, production mutation or deployment.
+- [x] (2026-08-12) Implemented and locally verified the approved Featured Farmer editorial plan; stopped before any provider account, real-person research, publication, production mutation or deployment.
 - [ ] Continue product-owner intake one focused question at a time and update `docs/REQUIREMENTS.md`, this plan, `implementation-log.md`, and `.structured-dev-state` at every stopping point.
 - [ ] Finish the LinkedIn developer app and Supabase provider after Chrome file-upload permission is enabled for the required app logo.
 - [ ] Product owner chooses the pilot region, crop focus, local language, pilot invitation method, and moderator.
@@ -206,13 +206,18 @@ The remaining work is operational rather than hidden application scope: connect 
 
 The 2026-08-09 agriculture-ecosystem milestone is currently research and planning only. Three subagents produced independent read-only audits, the local baseline passes, and the detailed implementation/rollback program is recorded below. No company, taxonomy, resumable-onboarding, or 23-locale product code should be described as complete until the addendum is explicitly approved and its behavioral gates pass.
 
-The 2026-08-12 Featured Farmer correction is at the research-and-planning
-checkpoint. The new outcome, source standard, editorial data model, public
-experience, safety boundary, validation and rollback program are documented in
-this plan and `research.md`. No Featured Farmer feature code, migration,
-real-person research, public article or production state has been created. The
-previous Known Farmer implementation remains default-disabled and must not be
-presented as satisfying the corrected requirement.
+The 2026-08-12 Featured Farmer correction is implemented locally behind
+default-off application and database controls. The private newsroom supports
+human-reviewed Web/YouTube sources, claim-level citations, confirmed owned
+social accounts, structured editorial drafts, media-rights review, fact checks,
+immutable revisions and withdrawal. The public collection and articles use the
+Deccan editorial design, honest empty/fallback states, localized shells,
+Article-about-Person metadata and published-only sitemap entries. A clean local
+database rebuild and all database, unit, browser, lint, type and build gates
+pass. No provider account or key, real-person research, real publication,
+production migration/control, deployment or other production state was changed.
+The previous Known Farmer implementation remains default-disabled and its admin
+route redirects to the replacement newsroom.
 
 At the end of each milestone, add a short entry here covering what is demonstrably working, remaining gaps, measured effort, and any scope decision that should affect later milestones.
 
@@ -5127,31 +5132,32 @@ history or delete correction/audit evidence outside the privacy procedure.
 
 ### Detailed implementation todo list
 
-- [ ] Add the forward-only private research, source, draft, claim, social,
+- [DONE] Add the forward-only private research, source, draft, claim, social,
   media, publication, event and quota schema.
-- [ ] Add release control, RLS, grants, anonymous publication view/RPC and
+- [DONE] Add release control, RLS, grants, anonymous publication view/RPC and
   executable pgTAP coverage.
-- [ ] Add strict editorial/source/claim/media/publication schemas.
-- [ ] Generalize bounded Web Search query families without Google fetching.
-- [ ] Reuse the official YouTube adapter under the editorial quota ledger.
-- [ ] Add source review, claim linkage and significance-readiness services.
-- [ ] Add structured story generation with deterministic claim/URL validation.
-- [ ] Add admin create/edit/review/publish/withdraw actions with idempotency and
+- [DONE] Add strict editorial/source/claim/media/publication schemas.
+- [DONE] Generalize bounded Web Search query families without Google fetching.
+- [DONE] Reuse the official YouTube adapter under the editorial quota ledger.
+- [DONE] Add source review, claim linkage and significance-readiness services.
+- [DONE] Add structured story generation with deterministic claim/URL validation.
+- [DONE] Add admin create/edit/review/publish/withdraw actions with idempotency and
   revision checks.
-- [ ] Build `/admin/featured-farmers` and redirect the obsolete admin route.
-- [ ] Build `/featured-farmers` and `/featured-farmers/[slug]` with the Deccan
-  editorial design and rights-safe fallback art.
-- [ ] Add public citations, owned social links, fact-check disclosure and
+- [DONE] Build `/admin/featured-farmers` and redirect the obsolete admin route.
+- [DONE] Build `/featured-farmers` and `/featured-farmers/[slug]` with the Deccan
+  editorial design, rights-cleared original photographs, and an image-free state
+  when no approved original is available.
+- [DONE] Add public citations, owned social links, fact-check disclosure and
   correction/removal/claim path.
-- [ ] Add Article/Person metadata and published-only sitemap entries.
-- [ ] Add English/Hindi/Marathi shell and disclosure messages without
+- [DONE] Add Article/Person metadata and published-only sitemap entries.
+- [DONE] Add English/Hindi/Marathi shell and disclosure messages without
   machine-translating sourced claims.
-- [ ] Add focused schema/action/migration/component/metadata tests.
-- [ ] Run TypeScript, ESLint, Vitest, build and diff gates continuously.
-- [ ] Run clean Supabase/pgTAP/RLS and desktop/mobile Playwright/visual/a11y
+- [DONE] Add focused schema/action/migration/component/metadata tests.
+- [DONE] Run TypeScript, ESLint, Vitest, build and diff gates continuously.
+- [DONE] Run clean Supabase/pgTAP/RLS and desktop/mobile Playwright/visual/a11y
   evidence.
-- [ ] Update requirements, runbook, implementation log and structured state.
-- [ ] Stop before provider account/key, real-person research, publication,
+- [DONE] Update requirements, runbook, implementation log and structured state.
+- [DONE] Stop before provider account/key, real-person research, publication,
   production migration/control, deployment or other production mutation.
 
 Plan revision note (2026-08-12): this replacement follows the product owner's
@@ -5160,3 +5166,775 @@ familiarity. The separate editorial domain avoids impersonating a member,
 retains the safe Web Search/YouTube/source controls, requires sourced significance
 and an owned social account, and makes publication, corrections and image rights
 explicit. The product owner approved this addendum on 2026-08-12.
+
+Release note (2026-08-13): after explicit deployment approval, FarmerBook
+published and expanded a static historical pilot for L. Narayana Reddy. Nine
+linked sources support seven original narrative chapters, eight milestones, six
+reader questions and ten claim-level citation groups. Because no
+verified account owned by the deceased subject was found, two YouTube links are
+labelled third-party archival coverage and the limitation is stated on-page; no
+account ownership is inferred. The product owner subsequently required original
+images only. Unsung marks its photographs © Mahesh Bhat and no reuse licence or
+written permission was found, so the generated illustration was removed from the
+repository and production. At the product owner's subsequent direction, the
+profile now displays the official `Sarala Virala` YouTube documentary preview as
+a real source-hosted portrait. It is not copied into FarmerBook assets, links to
+the full documentary and visibly credits Naguvana Creations and YouTube. A
+separately hosted hero photograph still requires documented republication rights.
+Canonical metadata, Article/Person/Organization/Breadcrumb structured data,
+visible citations, the public sitemap and robots rules support conventional and
+AI-assisted search discovery without claiming or guaranteeing ranking. Worker
+version `b41699f0-ca4b-4887-b277-4a7839c96c82` serves the article at 100%
+traffic. The database migration, editorial release control, provider integrations
+and dynamic newsroom publication remain unapplied and disabled.
+## Private Farmer Database and YouTube Discovery addendum — implementation
+
+### Status and approval boundary
+
+Research and planning are complete. The product owner approved this addendum
+on 2026-08-13 for local implementation and tests only. This addendum
+reframes the requested YouTube-to-email pipeline to comply with YouTube's
+current API developer policies and FarmerBook's existing consent requirements.
+
+The deliverable is:
+
+- an owner-only Farmer contact database containing email and phone values that
+  farmers supplied or consented to share for a recorded FarmerBook purpose;
+- an administrator-only, on-demand YouTube Discovery view using the official
+  Data API, with transient search results and no contact extraction;
+- email integration through the existing outreach provider only for records
+  with active, purpose-matched email consent; and
+- WhatsApp intentionally absent until a separately approved official Business
+  Platform tranche.
+
+The implementation will not build a permanent email/phone database from
+YouTube channels and will not send unsolicited email. YouTube's official policy
+guide explicitly prohibits harvesting or storing usernames, full names, email,
+and phone data without consent. Public contact visibility is not consent.
+
+### Progress
+
+- [x] (2026-08-13) Audited the existing outreach, managed-agent, YouTube,
+  administrator, Supabase/RLS, feature-flag, Worker binding, and test paths.
+- [x] (2026-08-13) Checked current official YouTube API resources, quota rules,
+  storage rules, and the prohibition on contact/user-data harvesting.
+- [x] (2026-08-13) Selected an owner-scoped encrypted contact database plus a
+  separate transient YouTube discovery view.
+- [x] (2026-08-13) Product owner approved this compliant scope for local
+  implementation and tests only.
+- [x] (2026-08-13) Implemented the forward migration, feature modules, administrator UI,
+  interest/consent intake, transient discovery, and existing email handoff.
+- [x] (2026-08-13) Completed unit, database, browser, build, privacy, and rollback evidence.
+- [ ] Obtain separate approval before any production migration, secret, flag,
+  provider, real contact import, search, send, schedule, or deployment.
+
+### Decision log
+
+- Decision: Do not extract email or phone data from YouTube API responses,
+  channel descriptions, or scraped YouTube pages.
+  Rationale: YouTube's current developer-policy guide identifies usernames,
+  full names, email, and phone as user data that API clients must not harvest or
+  store without consent. It also requires refresh/deletion of stored API data.
+  Date/Author: 2026-08-13 / Codex; approved by the product owner.
+- Decision: Populate the private database through direct Farmer interest forms,
+  existing FarmerBook membership, approved partner/FPO consent campaigns, or a
+  manual import with verifiable channel/purpose consent evidence.
+  Rationale: This produces useful contacts while preserving a provable path to
+  consent and withdrawal.
+  Date/Author: 2026-08-13 / Codex; approved by the product owner.
+- Decision: Keep YouTube discovery on demand and transient for the low-budget
+  pilot instead of running a 24/7 scheduled crawler.
+  Rationale: A permanent discovery queue would add privacy/platform-policy risk
+  and operating cost without creating a lawful email recipient. Current results
+  are useful for market research and partner targeting without retention.
+  Date/Author: 2026-08-13 / Codex; approved by the product owner.
+- Decision: Reuse the current consent-checked outreach provider and outbox; do
+  not introduce another email sender or force-send route.
+  Rationale: The existing SQL and processor already enforce consent,
+  idempotency, suppression, provider events, reply handling, and auditability.
+  Date/Author: 2026-08-13 / Codex; approved by the product owner.
+
+### Data flow
+
+```text
+Farmer interest form / existing member / approved partner consent
+                              |
+                              v
+               owner-only encrypted contact database
+                              |
+                    active email consent?
+                         /          \
+                       no            yes
+                       |              |
+                  never queue     existing outreach outbox
+                                      |
+                                approved email provider
+
+Administrator query --official YouTube API--> transient discovery results
+                                                |
+                                         open original channel
+                                                |
+                                    no contact extraction/storage
+```
+
+Discovery and contact acquisition are deliberately separate. No YouTube result
+can be promoted directly to a contact or outbox row.
+
+### 1. Add a forward-only, owner-scoped contact schema
+
+**Files:**
+
+- `supabase/migrations/20260813120000_private_farmer_contacts.sql` (new)
+- `supabase/tests/private_farmer_contacts_test.sql` (new)
+- `tests/private-farmer-contacts-migration.test.ts` (new)
+- `docs/REQUIREMENTS.md`
+
+Add the default-off database release control `private_farmer_contacts` and the
+following service-only tables:
+
+```sql
+create table public.farmer_contact_lists (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  purpose text not null,
+  created_at timestamptz not null default now(),
+  unique (id, owner_id)
+);
+
+create table public.farmer_contacts (
+  id uuid primary key default gen_random_uuid(),
+  list_id uuid not null,
+  owner_id uuid not null,
+  encrypted_display_name text,
+  encrypted_email text,
+  email_hash text,
+  encrypted_phone text,
+  phone_hash text,
+  acquisition_source text not null,
+  source_reference text,
+  consent_channel text not null,
+  consent_purpose text not null,
+  consent_state text not null,
+  consent_text_version text not null,
+  consent_recorded_at timestamptz,
+  consent_expires_at timestamptz,
+  review_state text not null default 'pending',
+  suppression_state text not null default 'none',
+  last_contacted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  foreign key (list_id, owner_id)
+    references public.farmer_contact_lists(id, owner_id) on delete cascade
+);
+
+create table public.farmer_contact_events (
+  id uuid primary key default gen_random_uuid(),
+  contact_id uuid not null references public.farmer_contacts(id),
+  owner_id uuid not null references auth.users(id),
+  event_type text not null,
+  bounded_metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+```
+
+Use constraints rather than trusting the UI:
+
+- accepted acquisition sources are `farmerbook_interest_form`,
+  `existing_farmerbook_member`, `partner_consent_campaign`, and
+  `manual_consent_import`; `youtube_api` is invalid;
+- at least one encrypted email or phone value is required;
+- a value cannot be marked consented without channel, purpose, text version,
+  timestamp, evidence reference, and non-expired consent;
+- suppression and withdrawal immediately make delivery ineligible;
+- owner ID is immutable and every duplicate hash is scoped to one owner;
+- event rows are insert-only and contain no raw email/phone;
+- public, anonymous, and authenticated table privileges are revoked; RLS is
+  enabled; service-role access is explicit; and any authenticated RPC verifies
+  `auth.uid()`, administrator metadata, the database gate, and row ownership.
+
+Do not modify or rewrite earlier migrations. The new RPC that hands a consented
+contact to outreach should call the existing consent/outbox functions and
+preserve their stricter checks.
+
+### 2. Encrypt private contact values and validate imports
+
+**Files:**
+
+- `features/farmer-database/crypto.ts` (new)
+- `features/farmer-database/schemas.ts` (new)
+- `features/farmer-database/types.ts` (new)
+- `tests/farmer-database-crypto.test.ts` (new)
+- `tests/farmer-database-schemas.test.ts` (new)
+- `.env.example`
+- `lib/cloudflare-bindings.ts`
+
+Add `FARMER_CONTACT_ENCRYPTION_KEY` as a server-only Cloudflare secret. Use
+WebCrypto AES-256-GCM with a new random IV for each value and an authenticated
+versioned envelope. Use a separate derived HMAC key for normalized email/phone
+deduplication. Never log plaintext, include it in error text, put it in URLs, or
+return it from a client mutation.
+
+The import schema accepts a maximum of 100 records at a time and requires:
+
+```ts
+{
+  displayName?: string;
+  email?: string;
+  phone?: string;
+  acquisitionSource:
+    | "farmerbook_interest_form"
+    | "existing_farmerbook_member"
+    | "partner_consent_campaign"
+    | "manual_consent_import";
+  consentChannel: "email" | "phone";
+  consentPurpose: "farmerbook_invitation";
+  consentTextVersion: string;
+  consentRecordedAt: string;
+  consentExpiresAt?: string;
+  sourceReference: string;
+}
+```
+
+Normalize Indian phone numbers to `+91XXXXXXXXXX`, validate email conservatively,
+reject spreadsheet formula prefixes and unexpected fields, and produce a dry-run
+summary before the administrator confirms an import. CSV export is out of scope
+for the first release; this reduces accidental leakage.
+
+### 3. Build the owner-only Farmer Database service and administrator page
+
+**Files:**
+
+- `features/farmer-database/actions.ts` (new)
+- `features/farmer-database/queries.ts` (new)
+- `features/farmer-database/farmer-database-console.tsx` (new)
+- `app/(product)/admin/farmer-database/page.tsx` (new)
+- `app/(product)/admin/outreach/page.tsx`
+- `app/(product)/admin/agents/page.tsx`
+- `app/globals.css`
+- `tests/farmer-database-actions.test.ts` (new)
+- `tests/farmer-database-console.test.tsx` (new)
+
+Every query and mutation first calls `requireAdmin()`. Queries then use the
+server-only Supabase client and filter by the returned administrator ID before
+decrypting only the current page. The interface provides:
+
+- list creation and purpose;
+- count cards for total, email-consented, phone-only, expired, suppressed, and
+  duplicates;
+- a private table with name, email, phone, consent source/state/date, review
+  state, last contacted date, and evidence link;
+- add-one and bounded CSV dry-run/import flows;
+- consent correction, withdrawal, suppression, and deletion controls;
+- audit history with contact values redacted; and
+- an “Eligible for consented email” filter and per-record preparation action.
+
+The page must state: “Private to your administrator account. YouTube results are
+never copied into this database.” Do not place private counts or values in page
+metadata, logs, analytics, client caches, public routes, sitemap, or demo data.
+
+### 4. Add direct consent intake
+
+**Files:**
+
+- `app/join/farmer-interest/page.tsx` (new)
+- `features/farmer-database/interest-form.tsx` (new)
+- `features/farmer-database/interest-actions.ts` (new)
+- `app/api/farmer-interest/confirm/route.ts` (new)
+- English/Hindi/Marathi message catalogs
+- privacy notice and production runbook
+- `tests/farmer-interest-form.test.tsx` (new)
+- `tests/farmer-interest-routes.test.ts` (new)
+
+Create a minimal mobile-first interest form so a Farmer can provide name,
+email and/or phone, preferred language, district/state, and explicit consent to
+receive a FarmerBook invitation through each selected channel. Record the exact
+consent copy version, timestamp, source campaign, IP/user-agent only if the
+approved privacy policy requires them, and a signed confirmation token. Email
+must be confirmed before it becomes active consent. Phone collection does not
+enable WhatsApp and the form must say so.
+
+Use Turnstile, duplicate throttling, generic success responses, expiring signed
+tokens, and no account-existence disclosure. A withdrawal link must work without
+requiring login and must suppress future use.
+
+### 5. Add a transient official YouTube Discovery view
+
+**Files:**
+
+- `features/farmer-database/youtube-discovery.ts` (new)
+- `features/farmer-database/youtube-actions.ts` (new)
+- `features/farmer-database/youtube-discovery-panel.tsx` (new)
+- `supabase/migrations/20260813120000_private_farmer_contacts.sql`
+- `tests/youtube-discovery.test.ts` (new)
+- `tests/youtube-discovery-actions.test.ts` (new)
+
+Refactor common bounded request/response handling from
+`features/profile-agent/youtube-search.ts`, without changing the existing Known
+Farmer or Featured Farmer behavior. The new query uses the official endpoint:
+
+```ts
+new URLSearchParams({
+  part: "snippet",
+  q: approvedQuery,
+  type: "channel",
+  regionCode: "IN",
+  relevanceLanguage: language,
+  safeSearch: "strict",
+  maxResults: "10",
+  key: configuration.apiKey,
+});
+```
+
+Return current channel title, original channel URL, short description for the
+active screen, and YouTube attribution. Do not extract contact patterns or send
+the result through `extractContactCandidates`. Do not persist result items.
+
+Persist only an owner-scoped quota/audit row containing query hash, language,
+region, result count, provider status, requested time, and completion time.
+Reserve at most 10 manual searches per owner per day and 100 per month, with a
+lower project cap that can be configured. Do not auto-page or retry quota/auth
+failures. Reject a request unless `YOUTUBE_DATA_API_KEY` is server-configured.
+
+The first release will not add a scheduled Durable Object class because a
+background crawler cannot lawfully create the requested contact database. The
+UI may call this bounded service the “YouTube Discovery Agent,” but it is
+operator-initiated and read-only. A true scheduled role remains a future option
+only after a YouTube API compliance review for the exact retained-data use case.
+
+### 6. Connect consented email without adding a force-send path
+
+**Files:**
+
+- `features/farmer-database/actions.ts`
+- `features/outreach/processor.ts` only if a narrow compatibility adapter is
+  required
+- `features/outreach/providers.ts`
+- `features/outreach/postmark-provider.ts`
+- `tests/farmer-database-email-handoff.test.ts` (new)
+- existing outreach provider/processor tests
+
+The prepare-email action must atomically re-check:
+
+1. authenticated administrator and owner ID;
+2. database/application feature controls;
+3. active, non-expired email consent for `farmerbook_invitation`;
+4. confirmed email ownership;
+5. no withdrawal, suppression, complaint, bounce, or prior duplicate send;
+6. configured approved provider and verified sender; and
+7. campaign batch/spend limits.
+
+It then creates or links the existing outreach prospect/contact/consent rows and
+queues the existing outbox message with an idempotency key. The Outreach Growth
+Agent remains the only delivery worker. One introduction and one separately
+consented bounded follow-up are the maximum. Every email contains FarmerBook
+identity, reason/purpose, privacy link, unsubscribe link, and provider tracking.
+
+Automated tests use fictional addresses and a fake provider. Implementation
+does not install a real sender secret, enqueue a real recipient, activate an
+agent, or send a message.
+
+### 7. Keep WhatsApp impossible in this tranche
+
+**Files:**
+
+- `features/farmer-database/schemas.ts`
+- `features/farmer-database/farmer-database-console.tsx`
+- `docs/PRODUCTION_RUNBOOK.md`
+- tests asserting no WhatsApp provider/action/binding
+
+Phone numbers may be privately stored after consent, but they are not a
+deliverable WhatsApp channel. Show `WhatsApp: not configured` and no send
+button. Do not add WhatsApp Web automation, QR-session storage, unofficial APIs,
+templates, webhooks, or agent branches. A later addendum must name the official
+Business Platform provider, approved sender, template, opt-in wording,
+webhooks, costs, suppression, staging proof, and rollback.
+
+### 8. Feature controls, tests, rollout, and rollback
+
+**Files:**
+
+- `lib/feature-flags.ts`
+- `.env.example`
+- `vite.config.ts`
+- `docs/PRODUCTION_RUNBOOK.md`
+- `docs/REQUIREMENTS.md`
+- `research.md`
+- `PLAN.md`
+- `implementation-log.md`
+- `.structured-dev-state`
+- `tests/feature-flags.test.ts`
+- `tests/platform-routes.test.ts`
+- `tests/e2e/farmer-database.spec.ts` (new)
+
+Add `ENABLE_PRIVATE_FARMER_CONTACTS=false`; keep the database release control
+false as well. The YouTube view also requires the server API key but no new
+public variable. The contact encryption key and provider secrets are never
+embedded in Vite public Worker vars.
+
+Focused tests prove:
+
+- anonymous, ordinary authenticated, another administrator, and browser clients
+  cannot read the product owner's contacts;
+- service operations cannot omit the owner filter;
+- encrypted values do not appear in SQL/API snapshots, logs, errors, metadata,
+  analytics, URLs, or audit rows;
+- duplicates, malformed contacts, missing consent, expired consent, withdrawal,
+  suppression, and provider failures fail closed;
+- YouTube result data cannot be imported, promoted, extracted, queued, or sent;
+- YouTube quotas, timeouts, response sizes, safe search, official host, no
+  pagination, no retry, and transient results are enforced;
+- direct-interest confirmation and withdrawal are token-safe and idempotent;
+- an eligible fictional email reaches only the fake provider once; and
+- WhatsApp remains impossible.
+
+After focused tests, run:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+git diff --check
+supabase db reset
+supabase test db
+npm run test:e2e
+```
+
+Visually inspect desktop and mobile views with fictional contacts and prove no
+horizontal overflow, keyboard traps, plaintext leakage in page source, or
+private data in screenshots committed to the repository.
+
+Production rollout is a separate approval sequence: backup the target database,
+apply the forward migration to staging, install a staging encryption key,
+create synthetic consented contacts, configure a verified test sender, prove
+provider events/unsubscribe/withdrawal, run multi-user ownership checks, obtain
+privacy/retention approval, then request explicit production approval. Keep
+YouTube discovery manual and WhatsApp off.
+
+Rollback pauses the Outreach Growth Agent first, disables the database release
+control and `ENABLE_PRIVATE_FARMER_CONTACTS`, cancels queued test messages,
+verifies the outbox is empty, then rolls back the Worker version. Do not drop or
+decrypt contact tables during an operational rollback. Data deletion follows
+the documented owner/request/retention process and creates a redacted audit
+event.
+
+### Implementation questions resolved by this plan
+
+- “Keep the data private to me” means row ownership by the authenticated founder
+  administrator, service-only database grants, application encryption, and no
+  CSV export in the first release.
+- “For now send email” means send only after confirmed active email consent via
+  the existing provider path. It does not authorize harvested or unsolicited
+  outreach.
+- “WhatsApp later” means phone storage is allowed after consent, but there is no
+  WhatsApp send capability in this tranche.
+- “24/7 agents on a low budget” means event-driven consent intake and delivery,
+  manual YouTube discovery, and no continuously running model process.
+
+### Approval recorded
+
+The product owner approved local implementation and tests on 2026-08-13. That
+approval did not authorize a production migration, secret installation,
+external search, real-person data import, email, WhatsApp message, agent
+activation, deployment, or any other production mutation.
+
+## Bounded sourced-Farmer research workspace addendum — 2026-08-14
+
+### Status and approved interpretation needed
+
+This plan responds to the request to use multiple agents in a loop to discover
+farming channels like `https://www.youtube.com/@RythuBadi`, parse video
+descriptions, store farmer details privately, and add an administrator UI.
+Research and approved local implementation are complete. Production/provider
+activation still requires a separate approval naming the seed and batch cap.
+
+The literal YouTube-to-named-farmer database is excluded: current YouTube API
+policy prohibits harvesting/deriving/storing identifying names, usernames and
+contact data without consent. The implementable interpretation is:
+
+- official YouTube API data is an attributed, transient discovery surface;
+- descriptions are contact-redacted in memory and never stored raw;
+- agents persist anonymous agriculture topics, counts, run metadata and
+  refreshable source provenance only;
+- a durable named sourced-farmer profile requires documented subject consent
+  or an administrator-reviewed, independently approved non-YouTube source;
+- the new domain never creates a contact, consent, member, outreach prospect,
+  message, outbox item, verification badge or public profile.
+
+### Approach
+
+Add a separate founder-only research domain and two private routes. Keep the
+existing `farmer_contacts` schema and its transient channel search unchanged.
+Use a bounded checkpointed pipeline rather than an infinite/self-feeding crawl:
+
+```text
+Seed resolver -> Upload batch reader -> Contact redactor/topic parser
+     |                  |                         |
+     +------ quota/checkpoint/run ledger --------+
+                              |
+                 transient admin source review
+                              |
+          consent OR independent-source evidence review
+                              |
+                 durable sourced-farmer profile
+```
+
+The roles are purpose-limited stages, not independent unrestricted identities.
+The initial release runs one administrator-requested batch at a time; no cron or
+24/7 crawler is enabled. The database run ledger and checkpoint make repeated
+manual runs resume safely. A later scheduled trigger requires a separate
+production/provider/privacy approval.
+
+### 1. Feature and founder access boundary
+
+**Files:** `lib/feature-flags.ts`, `.env.example`,
+`features/sourced-farmers/access.ts`, `docs/PRODUCTION_RUNBOOK.md`
+
+Add `ENABLE_SOURCED_FARMER_RESEARCH=false` and a separate
+`sourced_farmer_research` SQL release control. Reuse the exact founder UUID but
+do not require the private-contact encryption key or contact feature flag.
+Every query/action calls a dedicated founder guard and every SQL function checks
+the database control.
+
+```ts
+export async function requireSourcedFarmerResearchOwner() {
+  if (!isFeatureEnabled("ENABLE_SOURCED_FARMER_RESEARCH")) {
+    return { ok: false as const, code: "FEATURE_DISABLED" as const };
+  }
+  const administrator = await requireAdmin();
+  const { ownerId, configured } = sourcedFarmerResearchConfiguration();
+  if (!configured || administrator.demo || administrator.id !== ownerId) {
+    return { ok: false as const, code: "FORBIDDEN" as const };
+  }
+  return { ok: true as const, administrator };
+}
+```
+
+### 2. Forward-only owner-scoped schema
+
+**Files:** new `supabase/migrations/20260814120000_sourced_farmer_research.sql`,
+new `supabase/tests/sourced_farmer_research_test.sql`
+
+Create `farmer_source_channels`, `farmer_source_videos`,
+`farmer_source_discovery_runs`, `sourced_farmer_profiles`,
+`sourced_farmer_facts`, and immutable `farmer_source_events`. Denormalize
+`owner_id`, use composite owner foreign keys, enable RLS, revoke all access from
+`public`/`anon`/`authenticated`, and grant only narrow service RPCs. Add unique
+provider IDs, fact fingerprints, idempotency keys, optimistic revisions,
+refresh/expiry constraints and bounded text/JSON checks.
+
+The profile eligibility constraint is conceptually:
+
+```sql
+check (
+  evidence_basis in ('documented_subject_consent', 'independent_public_source')
+  and youtube_identity_source = false
+)
+```
+
+No table contains email, phone, WhatsApp, home address, outreach IDs, consent
+state, member profile IDs, publication state, raw provider response, transcript,
+comments, media copies or person-level financial claims.
+
+The SQL surface consists of release-control-aware operations for run reserve,
+checkpoint/complete/fail, anonymous source save, independent-evidence profile
+create/update/review, archive/remove, expiry purge and exact summary counts.
+
+### 3. Official YouTube API client and bounded loop
+
+**Files:** new `features/sourced-farmers/youtube-client.ts`,
+`channel-seed.ts`, `redaction.ts`, `topic-parser.ts`, `runner.ts`
+
+Implement only official endpoints under `www.googleapis.com/youtube/v3`:
+
+- `channels.list` resolves a handle or stable channel ID and its uploads list;
+- `playlistItems.list` reads at most 50 items per page and at most two pages per
+  run initially;
+- `videos.list` retrieves current snippet/status metadata for batches of 50;
+- the existing server-only `YOUTUBE_DATA_API_KEY` is reused;
+- every response has an eight-second timeout and 500 KB cap;
+- reservation occurs before provider calls, with no automatic pagination past
+  the run cap and no recursive description-link following.
+
+```ts
+for (let page = 0; page < MAX_PAGES_PER_RUN; page += 1) {
+  const batch = await listUploadBatch(checkpoint);
+  const redacted = batch.items.map(toContactFreeTransientSource);
+  await saveAnonymousTopicsAndCheckpoint(redacted, batch.nextPageToken);
+  if (!batch.nextPageToken || batch.hitKnownVideo) break;
+}
+```
+
+`toContactFreeTransientSource` uses an allowlisted output DTO. It destroys
+emails, Indian/international phone patterns, WhatsApp/contact handles and direct
+contact URLs before any UI, model, log, audit or database boundary. It then
+derives only crop/livestock/practice/actor-type tags and aggregates detached
+from a person. Candidate agriculture matching tests source content independently
+of the seed query.
+
+### 4. Evidence review and durable profile actions
+
+**Files:** new `features/sourced-farmers/schemas.ts`, `types.ts`, `actions.ts`,
+`queries.ts`
+
+Define separate transient-source and durable-profile schemas. Durable creation
+requires an HTTPS non-YouTube evidence URL or documented subject-consent
+reference, bounded cited facts, an explicit administrator attestation, a
+revision and an idempotency key. Do not accept a raw name/location extracted by
+the YouTube stage.
+
+```ts
+const durableProfileInput = z.object({
+  evidenceBasis: z.enum([
+    "documented_subject_consent",
+    "independent_public_source",
+  ]),
+  evidenceUrl: nonYouTubeHttpsUrl.optional(),
+  consentReference: z.string().min(8).max(500).optional(),
+  facts: z.array(citedProfessionalFactSchema).min(1).max(20),
+  operatorAttested: z.literal(true),
+  revision: z.number().int().nonnegative(),
+  idempotencyKey: z.uuid(),
+}).superRefine(requireEvidenceForBasis);
+```
+
+Queries use exact database counts and bounded URL-backed pagination; every
+service call contains the authenticated `owner_id`. Suggested duplicate matches
+never merge automatically. Archive/removal and expiry delete unsupported
+provider data and record only redacted immutable events.
+
+### 5. Founder-only index and detail UI
+
+**Files:** new `app/(product)/admin/sourced-farmers/page.tsx`,
+`[profileId]/page.tsx`, `loading.tsx`, `error.tsx`, new
+`features/sourced-farmers/sourced-farmer-console.tsx`,
+`sourced-farmer-detail.tsx`, changes to `app/globals.css` and admin header links
+
+Both routes are dynamic, independently owner-authorized and `noindex, nofollow,
+nocache`. `/admin/sourced-farmers` provides:
+
+- seed-channel input and `Run one bounded batch` control;
+- recent bounded-run state, quota, checkpoint and safe failure status;
+- exact summary counts and URL-backed filters;
+- transient attributed videos with contact-free descriptions and anonymous
+  agriculture tags;
+- durable reviewed profiles sourced from consent/independent evidence;
+- distinct empty, filtered-empty, disabled, stale and provider-error states.
+
+`/admin/sourced-farmers/[profileId]` shows every professional fact beside its
+independent source, review decision, freshness, revision and audit history. It
+supports approve/reject and archive-to-remove-from-active-research. It never
+renders contact fields or send/invite/verify/connect/marketplace/publication
+controls.
+
+Visible disclosure:
+
+> Private research · not a FarmerBook member · not verified · no contact or
+> outreach consent.
+
+Source links open with `target="_blank" rel="noreferrer"`; original-language
+text uses `dir="auto"`. Add links from the existing Farmer database, Outreach
+and Agents headers without changing the global member navigation.
+
+### 6. Documentation and retention operations
+
+**Files:** `README.md`, `docs/REQUIREMENTS.md`,
+`docs/PRODUCTION_RUNBOOK.md`, `research.md`, `PLAN.md`,
+`implementation-log.md`, `.structured-dev-state`
+
+Document the strict separation between transient YouTube research, durable
+independent evidence, consented contacts and public/member profiles. The runbook
+must cover API-key setup, quotas, pause, refresh/delete within 30 days, expiry
+purge proof, feature/database activation order, incident response and rollback.
+Enabling a feature does not authorize a live search, a real-person durable row,
+or a scheduled trigger.
+
+### 7. Verification strategy
+
+Add focused tests:
+
+- `tests/sourced-farmer-access.test.ts`
+- `tests/sourced-farmer-schemas.test.ts`
+- `tests/sourced-farmer-youtube-client.test.ts`
+- `tests/sourced-farmer-redaction.test.ts`
+- `tests/sourced-farmer-runner.test.ts`
+- `tests/sourced-farmer-actions.test.ts`
+- `tests/sourced-farmer-queries.test.ts`
+- `tests/sourced-farmer-console.test.tsx`
+- `tests/sourced-farmer-detail.test.tsx`
+- `tests/sourced-farmer-migration.test.ts`
+- `tests/e2e/sourced-farmers.spec.ts`
+
+Fixtures are fictional and provider calls mocked. Prove:
+
+- official hosts/endpoints only, quota-before-fetch, size/timeout/page caps and
+  checkpoint/idempotent replay;
+- Telugu/English text handling, contact destruction, no forbidden output keys,
+  and no accidental redaction of acres/years/yield quantities;
+- YouTube identity facts cannot create durable profiles;
+- independent evidence/consent, citations, revisions and operator attestation
+  are mandatory;
+- owner/application/database controls fail before provider/service work;
+- RLS/no browser grants, cross-owner denial, immutable events and actual expiry
+  deletion;
+- zero reads/writes to contacts, profiles, consent, outreach, outbox, messages
+  and Featured Farmer publications;
+- accessible filters, loading/error/empty states, source-link safety, no private
+  metadata, and desktop/mobile no-overflow behavior.
+
+Run after significant changes:
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+git diff --check
+supabase db reset
+supabase test db
+npm run test:e2e
+```
+
+### Rollout and rollback
+
+Local implementation and fictional tests do not authorize real collection.
+Before any live run: obtain a YouTube API key, complete provider/privacy review,
+apply the forward migration to staging, enable only the database control and
+application flag for the founder, run synthetic mocked/replay evidence, verify
+the expiry purge, then request explicit approval naming the seed and maximum
+batch. A production scheduled trigger remains off.
+
+Rollback pauses new reservations, disables the SQL control and application
+flag, completes/fails any identified active run, purges expired/unreviewed API
+metadata, verifies no contact/outreach rows exist, and rolls back the Worker.
+Reviewed independently sourced records remain private unless an approved
+privacy/removal request requires deletion.
+
+### Detailed todo list
+
+- [DONE] Add the application flag, server configuration and dedicated founder guard.
+- [DONE] Add the forward-only release control, sourced tables and bounded RPCs.
+- [DONE] Add RLS/grants, owner-composite constraints, immutable events and purge.
+- [DONE] Implement channel seed normalization and official handle resolution.
+- [DONE] Implement bounded uploads/video batching with quota and checkpoints.
+- [DONE] Implement contact-destructive redaction and anonymous topic extraction.
+- [DONE] Implement no-retry run orchestration, stop bounds and safe failure handling.
+- [DONE] Implement durable independent-evidence/consent schemas and actions.
+- [DONE] Implement owner-scoped summaries, filters, pagination and detail queries.
+- [DONE] Build the private index, run controls and transient source-review UI.
+- [DONE] Build the cited durable-profile detail/review/audit UI.
+- [DONE] Add route-local loading/error boundaries, styles and admin header links.
+- [DONE] Add all unit, component, action, query, migration, pgTAP and E2E tests.
+- [DONE] Update README, requirements, runbook, implementation log and state.
+- [DONE] Run TypeScript/lint/focused tests after each significant tranche.
+- [DONE] Run full unit/build/diff/database/pgTAP/desktop-mobile E2E gates.
+- [DONE] Inspect desktop/mobile fail-closed UI and verify no private-data leakage.
+- [DONE] Leave all new controls, schedules, live provider work and deployment off.
+
+### Approval and completion checkpoint
+
+Approval recorded: the product owner said `Plan approved` on 2026-08-14. Local
+implementation and fictional verification are authorized. This does not
+authorize a live YouTube API run, real-person durable record, hosted migration,
+scheduled trigger, deployment, message, or other production mutation.

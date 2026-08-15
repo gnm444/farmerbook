@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Known UUID-only idempotency fixture used by offer tests"
+regexTarget = "secret"
+regexes = [
+  '''30da4c28-c8a8-46e7-823c-a5f3e936eaaf''',
+]

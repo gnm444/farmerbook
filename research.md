@@ -2546,3 +2546,652 @@ TypeScript, ESLint, Vitest, build plus executable PostgreSQL/pgTAP evidence.
 Provider account creation, API-key installation, real-person searches,
 production migrations, release-control changes, invitations, messages and
 deployment remain separate production mutations requiring explicit approval.
+
+## Featured Farmer editorial profiles — scope correction research (2026-08-12)
+
+### Corrected product intent
+
+The product owner's correction changes the entity and the publication purpose,
+not merely the label. FarmerBook should select farmers whose work is publicly
+documented as significant, research them through Web Search, YouTube and other
+permitted public sources, and publish beautiful, citation-backed editorial
+stories. A personal relationship with FarmerBook is not an eligibility
+requirement. The output is not an automatically created FarmerBook member
+account, not an outreach prospect, and not proof of identity, farmer status,
+endorsement or consent.
+
+The previous FB-REQ-017 implementation is therefore the wrong downstream model:
+
+- `features/profile-agent/known-farmer-schemas.ts:8-55` makes one of four
+  personal-relationship bases and `relationshipConfirmed: true` mandatory.
+- `features/profile-agent/known-farmer-console.tsx:26-37` presents relationship
+  labels, while `:354-368` calls relationship attestation the first stage and
+  prevents intake without it.
+- `supabase/migrations/20260812140000_known_farmer_intake.sql:346-410`
+  enforces that relationship again in the database, so changing UI copy alone
+  would leave the product behavior wrong.
+- `features/profile-agent/known-farmer-actions.ts:500-631` turns selected
+  research into an `outreach_prospect`, a managed member-style profile sample
+  and an approval Workflow. That creates an acquisition/claim pipeline rather
+  than an editorial publishing workflow.
+- `features/profile-agent/schemas.ts:144-199` and
+  `features/profile-agent/profile-builder.ts:103-179` can express only a short
+  member profile (headline, 500-character bio, crops/method/experience and
+  links). They cannot express the reason the person is featured, milestones,
+  sourced impact, long-form story sections, media rights or corrections.
+- `features/profiles/public-farmer-profile.tsx:92-249` assumes the subject is a
+  FarmerBook participant and offers connection, buyer-enquiry and marketplace
+  actions. Reusing `/profile/[handle]` for an unclaimed editorial subject would
+  falsely imply membership and platform activity.
+
+Useful parts should be retained: bounded manual Google queries, the official
+YouTube search adapter, destination-source review, explicit owned-account
+classification, strict URL policy, private candidate storage, citations,
+retention, RLS, quota reservation, and fail-closed provider behavior.
+
+### Search and provider boundary
+
+Current official provider material confirms the earlier technical conclusion:
+
+- [Google Custom Search JSON API](https://developers.google.com/custom-search/v1/overview)
+  is unavailable to new customers; existing customers must migrate by
+  2027-01-01. It is not a viable new FarmerBook dependency.
+- The official [YouTube `search.list` reference](https://developers.google.com/youtube/v3/docs/search/list)
+  supports bounded channel/video discovery. The current implementation already
+  limits result count, text, timeout and retained fields, and it should remain a
+  candidate finder rather than an automatic fact source.
+- [Tavily Search](https://docs.tavily.com/documentation/api-reference/endpoint/search)
+  exposes bounded results, domain filters, India boosting and optional cleaned
+  content, but its [service terms](https://www.tavily.com/terms) make API use,
+  customer-application distribution and third-party processing subject to the
+  applicable order and terms. It remains a separately approved provider option,
+  not a dependency silently added by this correction.
+
+The first implementation can therefore satisfy “use Web Search” without a new
+provider account: FarmerBook generates several research queries, opens Google
+for operator review, accepts only selected destination URLs, and uses the
+official YouTube adapter for YouTube candidates. Search result snippets are
+discovery hints, never stored as facts. The selected destination page is opened
+and reviewed before its public statements can support a claim. A future
+provider adapter can automate candidate discovery behind the same source and
+retention contract after explicit provider approval.
+
+Recommended query families for each subject are:
+
+1. identity and farming: exact name + farmer/agriculture + district/state;
+2. significance: exact name + innovation/award/impact/community/technique;
+3. institutions: exact name + FPO/cooperative/ICAR/KVK/government/award body;
+4. social presence: exact name + YouTube/Instagram/Facebook/LinkedIn;
+5. contradictory or current information: exact name + latest/year and the
+   principal achievement claim.
+
+The query family and hash should be recorded, but the Google result page and
+snippet should not be retained. The administrator records the destination URL,
+publisher, visible title, publication date when available, accessed date and a
+short evidence excerpt. Ordinary permitted sites may use the bounded existing
+fetcher; protected social sites remain no-fetch and require operator-reviewed
+visible text.
+
+### Editorial significance standard
+
+“Significant work” needs an auditable editorial threshold rather than an AI
+popularity score. A profile becomes review-ready only when all of these hold:
+
+- the subject is consistently identified as a farmer by the selected evidence;
+- at least two non-social professional sources on different publisher domains
+  support the work, including at least one government/institutional/award record
+  or independent editorial source;
+- at least two displayable significance claims are each connected to a source;
+- one or more signals cover documented innovation, measurable farm/community
+  impact, recognized achievement, knowledge sharing, ecological stewardship,
+  farmer leadership, or a practice adopted beyond the subject's own farm;
+- at least one supported Farmer-owned social account is manually confirmed;
+- every number, award, date and named organization has a direct citation;
+- conflicting claims are resolved, qualified or omitted; and
+- no follower count, search ranking, single promotional page or FarmerBook
+  relationship is sufficient by itself.
+
+This is a checklist, not a public score or badge. “Featured by FarmerBook” means
+an editorial selection only. It must not appear as `Verified`, `Identity
+verified`, `Farmer-role verified`, a government recognition or a commercial
+endorsement.
+
+### Separate editorial content model
+
+Create a clean editorial domain instead of extending the member profile:
+
+```text
+featured_farmer_research
+  -> source_candidates (private discovery and review)
+  -> story draft + structured claims (private)
+  -> explicit editorial review/publish action
+  -> immutable public snapshot at /featured-farmers/[slug]
+  -> correction, withdrawal, or optional link to a later claimed member profile
+```
+
+The minimum structured profile is:
+
+- identity: full name, public district/state, authored locale and canonical slug;
+- editorial framing: headline, short deck and “Why FarmerBook is featuring
+  this farmer” statement;
+- story: origin/context, the work or practice, documented impact and what other
+  farmers can learn, stored as bounded ordered sections rather than one opaque
+  generated HTML blob;
+- impact facts: bounded label/value/context triples, each backed by one or more
+  citations;
+- milestones: optional dated title/body/source entries;
+- agriculture focus: canonical FarmerBook categories and optional bounded tags;
+- social links: at least one manually confirmed owned YouTube, Instagram,
+  Facebook or LinkedIn account; third-party videos/posts remain coverage;
+- media: optional Farmer image only with an explicit rights basis, credit and
+  source/permission record; otherwise use FarmerBook's designed crop/initial
+  fallback rather than copying or hotlinking a Web Search image;
+- publication: draft/review-ready/published/withdrawn state, creator, reviewer,
+  first-published date, last fact-check date and revision;
+- disclosure and remedies: “FarmerBook editorial profile,” “not a member
+  profile unless marked claimed,” source list, support-email correction/removal
+  link and optional claimed member-profile link.
+
+Claims should be first-class rows with type, statement, display order and
+source joins. A generated story may only reference approved claim IDs; it may
+not cite a URL the editor did not select. Publishing should snapshot the exact
+approved story, claims, sources, social links and media metadata so later search
+results cannot silently alter a live page.
+
+### Public information architecture and visual direction
+
+Do not serve these pages from `/profile/[handle]`. Use:
+
+- `/featured-farmers` — an index of published editorial stories;
+- `/featured-farmers/[slug]` — one indexable editorial profile;
+- `/admin/featured-farmers` — private research, drafting and review;
+- `/admin/known-farmers` — redirect to the new workspace with no new personal-
+  relationship intake, while existing disabled private records remain intact.
+
+The public page should use the existing Deccan editorial system instead of the
+member dashboard layout:
+
+```text
+editorial disclosure + last fact checked
+large story hero (rights-cleared photo or designed crop fallback)
+name + story headline + location + owned social buttons
+"Why featured" statement
+sourced impact facts
+long-form story sections
+practice/focus chips + milestone timeline
+selected interviews/coverage
+numbered sources
+correction / removal / claim pathway
+```
+
+The current cream/forest/terracotta/turmeric tokens and public profile card CSS
+in `app/globals.css:4190-4368` are reusable, but member-only modules—followers,
+listings, reviews, identity card, connection and buyer-enquiry CTAs—must not be
+shown. The page should remain attractive with no licensed subject photograph by
+using the existing crop imagery, typography, shaped color fields and initials.
+
+Google's current `ProfilePage` structured-data guidance describes people who
+are affiliated with the site and share first-hand perspectives. An unclaimed
+editorial subject is not necessarily affiliated, so the editorial page should
+not use member `ProfilePage` semantics. Schema.org's
+[Article](https://schema.org/Article) model supports `about`, `citation`,
+`datePublished`, `dateModified`, `correction` and `publishingPrinciples`; use an
+`Article` about a `Person`, with confirmed official accounts in `sameAs`, until
+the farmer claims a real FarmerBook member profile.
+
+### Privacy, accuracy and correction boundary
+
+The final Indian [Digital Personal Data Protection Rules, 2025](https://www.meity.gov.in/documents/act-and-policies/digital-personal-data-protection-rules-2025-gDOxUjMtQWa)
+and the [DPDP Act, 2023](https://www.meity.gov.in/static/uploads/2024/02/Digital-Personal-Data-Protection-Act-2023.pdf)
+make the data-governance boundary current and release-sensitive. This research
+does not make a legal determination about publishing any named person. Before
+production, FarmerBook needs named privacy/editorial ownership and counsel or
+policy review for the intended public-interest/editorial basis, notice,
+correction/removal handling and retention.
+
+Irrespective of legal basis, the product should exclude phone/email, exact home
+or farm address, IDs, land records, family details, caste, religion, health,
+politics, wealth estimates and inferred private traits. Display district/state
+only when directly supported. Keep source excerpts private and bounded; public
+pages show short claim citations and outbound originals, not copied articles.
+Profiles should be fact-checked at publication and at least annually, with
+faster review when a source disappears or a correction is requested.
+
+### Migration and compatibility constraints
+
+The old known-Farmer migration has been committed and rehearsed locally but is
+not deployed. Preserve it as disabled historical/private data and add a new
+forward migration for editorial tables and RPCs. This avoids rewriting migration
+history or incorrectly turning old relationship/intake records into public
+stories. The new feature gets its own default-off Worker flag and database
+release control; it does not require the outreach-agent gate and it creates no
+prospect, consent, invitation, message, verification claim, member profile,
+listing or public record before the explicit editorial publish RPC.
+
+### Required verification
+
+The replacement needs schema/action tests for source quality, significance
+readiness, claim-to-source integrity, owned social URL rules, media rights,
+idempotency, revision conflicts, publication snapshots, withdrawal and RLS. UI
+tests must prove the public page is clearly editorial, omits member/commerce
+signals, renders every citation/social link, has a correction path, supports a
+no-photo fallback and is responsive and accessible. Metadata tests should prove
+`Article` semantics and prevent unclaimed `ProfilePage`/verification markup.
+Full TypeScript, ESLint, Vitest, production build, clean Supabase rebuild,
+pgTAP/RLS, desktop/mobile Playwright and visual screenshot review are release
+gates. Real-person research, subject selection, publication, provider accounts,
+secrets, production migrations/flags and deployment remain separate actions.
+## Private Farmer Contact Database and YouTube Discovery research — 2026-08-13
+
+### Requested outcome
+
+The product owner wants a private database of Farmer email addresses and phone
+numbers, a YouTube Discovery Agent that finds farming-related channels, email
+delivery now, and WhatsApp later. The database must remain private to the
+product owner.
+
+This cannot safely be implemented as “find YouTube channels, extract their
+email/phone, and send invitations.” YouTube's current official developer-policy
+guide explicitly lists full names or usernames and contact information,
+including email and phone numbers, among data that an API client must not
+harvest, derive, or store without the user's consent:
+
+- https://developers.google.com/youtube/terms/developer-policies-guide
+- https://developers.google.com/youtube/terms/developer-policies
+
+The same policies require stored YouTube API data to be refreshed or deleted
+after 30 calendar days, and require deletion within 30 days when authorization
+cannot be verified. A public channel description therefore does not create a
+permitted contact-harvesting pipeline or outreach consent. This is consistent
+with FarmerBook's existing FB-REQ-007 through FB-REQ-010 consent boundary.
+
+The compliant decomposition is:
+
+1. a private, owner-scoped contact database populated only from direct signup,
+   a partner campaign with recorded consent, an existing FarmerBook account,
+   or an administrator import that includes verifiable channel/purpose consent;
+2. a separate, read-only YouTube discovery view that uses the official API to
+   show current agriculture-channel search results without extracting or
+   persisting email/phone data and without adding a result to the contact
+   database; and
+3. the existing outreach provider path, which may send email only when the
+   selected contact has active email consent for the FarmerBook invitation
+   purpose. WhatsApp remains technically and operationally disabled.
+
+### Existing implementation that should be reused
+
+- `features/profile-agent/youtube-search.ts` already calls the official
+  `search.list` endpoint with a server-side key, India region, relevance
+  language, strict safe search, bounded response size, eight-second timeout,
+  and fail-closed provider errors. It currently searches for a known named
+  farmer and can be refactored around a shared bounded YouTube client.
+- `features/outreach/contact-extractor.ts` can recognize email and Indian mobile
+  patterns in operator-supplied evidence, but it must not be run over YouTube
+  API responses for this feature.
+- `features/outreach/processor.ts` and the outreach SQL outbox enforce consent
+  at delivery time. The new database must promote only consented contacts into
+  that path; it must not add a bypass or a second sender.
+- `features/managed-agents/runtime.ts` supplies bounded schedules, durable state,
+  duplicate-run protection, and automatic failure pause. It remains suitable
+  for consented delivery and supervision. A scheduled discovery agent is not
+  useful for the first release if its results cannot be harvested or retained
+  as prospects, so the YouTube view should start on demand.
+- `features/auth/require-admin.ts` identifies the authenticated administrator.
+  `lib/supabase/admin.ts` supplies server-only service-role access. Together
+  they can support an owner-filtered UI without granting browser access to
+  private contact values.
+- `supabase/migrations/20260809140000_outreach_agent.sql` already demonstrates
+  service-only contact storage, value hashing, consent state, suppression,
+  immutable evidence, and research purging. The new schema should reuse its
+  consent/outbox system instead of weakening it.
+
+### Official YouTube API boundary and cost
+
+The official `search.list` method supports `q`, `type=channel`, `regionCode`,
+`relevanceLanguage`, `safeSearch`, `maxResults`, and bounded page tokens:
+
+- https://developers.google.com/youtube/v3/docs/search/list
+
+The official `channels.list` method accepts a comma-separated batch of channel
+IDs and can return the `snippet` resource; it costs one quota unit:
+
+- https://developers.google.com/youtube/v3/docs/channels/list
+- https://developers.google.com/youtube/v3/docs/channels
+
+As of the June 2026 YouTube quota change, `search.list` has its own granular
+daily call bucket and each call costs one unit. The default is currently 100
+`search.list` calls per day, while ordinary read endpoints such as
+`channels.list` use the general quota. FarmerBook should still impose a much
+smaller internal budget: manual search, at most 10–25 channels per request, no
+automatic pagination, and daily/monthly per-owner counters. A larger quota or
+automated search schedule is unnecessary for the low-budget pilot.
+
+### Proposed private contact model
+
+The durable contact database should contain only consented or explicitly
+attested records, not YouTube search results:
+
+```text
+farmer_contact_lists
+  id, owner_id, name, purpose, created_at
+
+farmer_contacts
+  id, list_id, owner_id
+  display_name
+  encrypted_email, email_hash
+  encrypted_phone, phone_hash
+  acquisition_source
+  source_reference
+  consent_channel, consent_purpose, consent_state
+  consent_text_version, consent_recorded_at, consent_expires_at
+  review_state, suppression_state, last_contacted_at
+  created_at, updated_at
+
+farmer_contact_events
+  contact_id, owner_id, event_type, bounded_metadata, created_at
+```
+
+Email and phone values should be encrypted in the application before database
+storage using a dedicated Cloudflare secret, with keyed hashes for duplicate
+detection. The web browser never receives a service-role key. Every query first
+uses `requireAdmin()`, filters by `owner_id = administrator.id`, decrypts only
+the rows needed for the page, and prevents other administrators from viewing or
+exporting the product owner's list. PostgreSQL grants remain revoked from
+`public`, `anon`, and `authenticated`; service-role functions and owner-checking
+RPCs are the only access paths. Events are immutable and do not repeat the
+contact value.
+
+Accepted acquisition sources are `farmerbook_interest_form`,
+`existing_farmerbook_member`, `partner_consent_campaign`, and
+`manual_consent_import`. A manual import requires the administrator to record
+how, when, through which channel, for which purpose, and under which consent
+text the person opted in. `youtube_api` is deliberately not an acquisition
+source for contact values.
+
+### YouTube Discovery view
+
+The first release should use an administrator-initiated server action rather
+than a 24/7 crawler. It may store only the query hash, actor, quota reservation,
+request time, provider outcome, and result count for audit/cost control. Search
+items are returned for the current review screen and discarded when the request
+ends. The page shows YouTube attribution and opens the original channel.
+
+The service does not:
+
+- extract or store a channel email, phone number, username, description, or
+  subscriber/view metric in the Farmer contact database;
+- scrape the channel `About` page or use browser automation;
+- create an outreach prospect, consent, invitation, outbox item, profile,
+  verification claim, comment, subscription, or message;
+- combine YouTube API data with another source to infer identity or contact;
+  or
+- claim complete coverage of farming channels.
+
+If FarmerBook later wants persistent YouTube candidate records or a scheduled
+discovery agent, the product owner must first obtain a YouTube API compliance
+review for the exact use case. Even after approval, non-authorized API data must
+be refreshed or deleted within 30 days and remains isolated from contact
+consent.
+
+### Email and WhatsApp boundary
+
+“Email supported now” means the database and UI can hand an active,
+purpose-matched email-consent record to FarmerBook's existing approved provider
+path. It does not mean that a public or YouTube-derived address may be sent an
+unsolicited invitation. Production delivery still requires the verified sender,
+provider credentials, signed webhook, unsubscribe/complaint processing, privacy
+owner, retention decision, staged test evidence, and separate release approval
+already recorded for FB-REQ-007 and FB-REQ-009.
+
+WhatsApp remains absent from the schema's deliverable channels and from every
+agent binding. A future tranche must use the official WhatsApp Business
+Platform, require explicit WhatsApp opt-in, approved templates for
+business-initiated messages, signed webhooks, STOP/withdrawal suppression, and
+separate production approval. No WhatsApp Web automation belongs in the plan.
+
+### Low-budget operating model
+
+- YouTube discovery is on demand, not continuously scheduled.
+- The existing Outreach Growth Agent remains event/schedule driven and wakes
+  only for already-consented jobs.
+- The existing Operations Supervisor runs once daily only after the production
+  agent release is approved.
+- Start with a private FarmerBook interest form and partner/FPO campaign so
+  farmers submit their own email/phone and consent.
+- No model call is required for contact extraction, deduplication, consent
+  validation, or sending. AI may later assist with bounded draft translation,
+  but deterministic controls decide eligibility.
+
+### Verification and release gates
+
+Implementation must prove owner isolation, encryption/decryption boundaries,
+duplicate handling, consent evidence, expiry, withdrawal, suppression,
+immutable events, no YouTube-to-contact promotion, no send without active
+consent, provider failure closure, YouTube quota reservation, and transient
+result handling. Final local gates are ESLint, TypeScript, focused Vitest,
+production build, clean Supabase rebuild, pgTAP/RLS tests, desktop/mobile
+Playwright, and `git diff --check`.
+
+No provider key, encryption key, production migration, release flag, agent
+schedule, external search, real contact import, email, WhatsApp message, or
+deployment is authorized by this research checkpoint.
+
+## Bounded farming-channel research workspace — 2026-08-14
+
+### Requested outcome and research method
+
+The product owner supplied `https://www.youtube.com/@RythuBadi` as a seed and
+asked for multiple agents to repeatedly discover farming channels, parse farmer
+details from video descriptions, store those details in the Farmer database,
+and expose them in an administrator-only UI. Three read-only research agents
+audited the live seed, the database/security boundary, and the admin UI in
+parallel. The live-source agent then performed a second privacy/compliance pass
+over its first findings. No application code, database row, secret, deployment,
+message, or production state changed during this checkpoint.
+
+The bounded live sample covered 20 recent long-form uploads plus one older
+video and two description-linked videos. It found seven descriptions that
+explicitly presented an individual as a farmer, three organization/equipment
+subjects, and two separately mentioned experts or farmers. Phone and email
+strings were redacted in memory and were not retained in this document. The
+sample found only the seed channel's own YouTube/social links, not a reliable
+external-channel graph. This means description links are not a sufficient or
+safe discovery graph and must never create an unbounded recursive crawl.
+
+### Provider and privacy boundary
+
+The current YouTube developer-policy guide says API clients must not harvest,
+track, infer, derive, or store identifying information without consent, and it
+explicitly lists full names/usernames and contact information. The policy also
+requires non-authorized stored API data to be refreshed or deleted within 30
+days when authorization cannot be verified:
+
+- https://developers.google.com/youtube/terms/developer-policies-guide
+- https://developers.google.com/youtube/terms/developer-policies
+- https://developers.google.com/youtube/v3/docs/channels/list
+- https://developers.google.com/youtube/v3/docs/playlistItems/list
+- https://developers.google.com/youtube/v3/docs/videos/list
+
+An administrator-only page does not change this provider restriction. Calling
+a description claim `unverified` also does not make a stored identifying row
+permissible. The product therefore needs two deliberately separate layers:
+
+```text
+approved seed channel
+  -> official API, bounded pages and quota reservation
+  -> transient attributed videos/descriptions (contact-redacted)
+  -> anonymous agriculture tags and aggregate counts
+  -> administrator selects independent evidence or records subject consent
+  -> reviewed durable sourced-farmer research record
+
+YouTube description
+  -X-> named durable farmer row
+  -X-> contact database / consent / outreach / member profile
+```
+
+The persistence classification is:
+
+| Data | Allowed treatment |
+|---|---|
+| Current YouTube title, thumbnail, date, URL and redacted description | Attributed transient display; refresh or delete within the applicable 30-day window |
+| Full name, handle, transliteration or channel-owner identity | Persist only from documented subject consent or an independently approved non-YouTube source |
+| A named person tied to village, district, crop, acreage, practice or livestock | Persist only from consent or independently approved evidence |
+| Individual income, yield or financial claims | Do not persist without consent and separate sensitive-data review |
+| Phone, email, WhatsApp, home address or inferred private identifier | Exclude entirely; never store as a candidate |
+| Crop/practice/actor counts detached from identity | Aggregate retention; suppress small location cells |
+| Video provenance, scrubbed title, parser version and run status | Bounded refreshable provenance with retention enforcement |
+
+The second source pass found independent non-YouTube support for the seed
+channel's creator, one horticulture official, and two agricultural businesses.
+Those are creator/expert/organization entities, not farmer records. It found no
+reliable independent evidence for the sampled farmer identities. Consequently,
+the first real run may populate transient source review and anonymous topic
+aggregates, but it must create zero named durable farmer rows until independent
+evidence or subject consent is added.
+
+### Existing private Farmer database
+
+The current domain is a consented contact store, not a research directory:
+
+- `features/farmer-database/access.ts:6-25` requires the application flag, a
+  configured non-demo deployment, `admin`, and exact equality with the founder
+  owner UUID.
+- `features/farmer-database/actions.ts:90-149` inserts only a validated contact
+  with consent evidence; `types.ts:3-8` deliberately excludes YouTube as an
+  acquisition source.
+- `supabase/migrations/20260813120000_private_farmer_contacts.sql:52-143`
+  requires encrypted email or phone and consent-specific state.
+- The same migration's `:163-187` discovery table stores only query hashes and
+  aggregate run metadata; `:756-800` revokes browser access and grants only the
+  service role.
+- `features/farmer-database/actions.ts:317-348` returns YouTube results with
+  `retention: "request_only"` and never inserts a result item.
+- `tests/private-farmer-contacts-migration.test.ts:34-47`,
+  `tests/farmer-database-actions.test.ts:82-115`, and
+  `supabase/tests/private_farmer_contacts_test.sql:79-99` protect that boundary.
+- `docs/REQUIREMENTS.md:37`, `README.md:124-132`, and
+  `docs/PRODUCTION_RUNBOOK.md:1123-1157` say the same thing operationally.
+
+Inserting sourced people into `farmer_contacts` would therefore create false
+consent semantics and violate current tests and release promises. The correct
+model is a separate founder-only sourced-research domain which cannot link to
+contacts, outreach, consent, outbox, member profiles, or public publications.
+
+A related control gap should not be copied: several existing contact actions
+perform service-role direct table writes after checking the application flag,
+while only SQL RPC paths check the database release control. Every new sourced
+research read and write should go through a database-control-aware RPC or an
+equivalent server guard, in addition to founder authorization and owner scope.
+
+### Existing source/provenance patterns
+
+The Featured Farmer domain provides the strongest reusable evidence model:
+
+- `supabase/migrations/20260812150000_featured_farmer_profiles.sql:20-150`
+  records subject research, source URL/title/excerpt/hash, provider provenance,
+  association, review decision, collection date, refresh date and retention.
+- `features/featured-farmers/queries.ts:30-167` validates private research,
+  sources, drafts, claims, social links and media separately.
+- `features/featured-farmers/editorial-workspace.tsx:78-180` shows reviewable
+  source cards and preserves third-party-versus-owned association.
+- `features/profile-agent/sample-preview.tsx:43-190` provides a useful private,
+  cited, unverified detail layout.
+
+Those tables cannot be reused directly because Featured Farmers assumes a
+known named subject, multi-source significance review, and possible public
+editorial publication. The new domain is an administrator-only discovery and
+evidence workspace with no publication state.
+
+### Official bounded collection loop
+
+Production must not parse YouTube HTML. The supported provider loop is:
+
+1. Normalize a supplied handle/channel URL and call
+   `channels.list(part=snippet,contentDetails&forHandle=...)` to resolve the
+   stable channel ID and uploads playlist.
+2. Page `playlistItems.list` in batches of at most 50, with a maximum number of
+   pages per run and a durable last-seen video/checkpoint.
+3. Batch at most 50 IDs into `videos.list(part=snippet,status)` for current
+   canonical metadata.
+4. Redact contacts before any UI/model boundary, discard raw payloads and raw
+   descriptions, and derive only anonymous agriculture topics/actor counts.
+5. Display videos transiently for administrator review. A named research row
+   becomes eligible only after an independent HTTPS destination or documented
+   subject consent is reviewed.
+6. Stop on a known ID/date, quota limit, page limit, repeated cursor, explicit
+   pause, or three consecutive failures. Retry only transient failures with a
+   small capped backoff; never recursively follow arbitrary description links.
+7. Refresh or delete provider metadata by 30 days and cascade removal of
+   unsupported, unreviewed evidence.
+
+The current environment contains no `YOUTUBE_DATA_API_KEY`; a real official-API
+run is therefore blocked even after local implementation. Public-page research
+was sufficient to validate the problem shape, but is not a production adapter.
+
+### Recommended data model
+
+Add a default-off `sourced_farmer_research` release control and a matching
+`ENABLE_SOURCED_FARMER_RESEARCH` application flag. Use forward-only tables:
+
+- `farmer_source_channels`: founder owner, provider channel ID and canonical
+  URL, reviewed state, timestamps, refresh/expiry and unique owner/provider ID.
+- `farmer_source_videos`: owner/channel composite key, provider video ID,
+  canonical URL, redacted bounded metadata, published/refresh/expiry dates and
+  content fingerprint; never raw response, transcript, comments, contacts,
+  media copies or statistics.
+- `farmer_source_discovery_runs`: owner, seed fingerprint, bounded cursor,
+  counts, quota, state/failure and timestamps; no raw result arrays.
+- `sourced_farmer_profiles`: durable founder-only record created only after
+  consent or independently approved evidence, with display facts, evidence
+  basis, review state, confidence, expiry and revision; no contact or member
+  fields.
+- `sourced_farmer_facts`: field-level fact type/value, independent source,
+  redacted excerpt, extraction/reviewer metadata, decision and fingerprint.
+- `farmer_source_events`: immutable IDs/hashes/counts-only audit history.
+
+All tables should denormalize `owner_id`, use composite foreign keys to prevent
+cross-owner linkage, enable RLS, revoke `public`/`anon`/`authenticated` table
+access, and expose only bounded service functions after founder authorization.
+Name alone must never be a hard dedupe key; cross-source matches remain review
+suggestions based on name, locality and agriculture context.
+
+### Administrator UI
+
+Use separate routes rather than implying these rows are consented contacts:
+
+- `/admin/sourced-farmers` — seed/run controls, exact summary counts,
+  URL-backed filters, refresh/expiry status, transient source review and durable
+  independently-evidenced profiles.
+- `/admin/sourced-farmers/[profileId]` — field-level provenance, review,
+  correction, merge suggestion, archive/removal and immutable event history.
+
+Each page independently checks the founder-owner boundary, is force-dynamic,
+uses `noindex, nofollow, nocache`, and returns `notFound()` for disabled,
+unconfigured or wrong-owner access. The visible notice should say: `Private
+research · not a FarmerBook member · not verified · no contact or outreach
+consent.` There must be no email, phone, invite, message, verified badge,
+marketplace, connection, publication or outbox action.
+
+The closest UI patterns are `app/(product)/admin/farmer-database/page.tsx:10-31`,
+`features/featured-farmers/editorial-workspace.tsx`, the URL filter treatment in
+`features/network/discover-client.tsx:90`, and the existing private-table/audit
+styles at `app/globals.css:8915-8960`. A new route-local `loading.tsx` and
+`error.tsx` should keep provider/database failures from leaking details.
+
+### Verification required
+
+Tests must cover official endpoints only; bounded pages/IDs/body size/timeouts;
+quota-before-fetch; checkpoint/idempotent replay; multilingual contact
+redaction; host/channel/featured-person separation; anonymous extraction;
+independent-evidence eligibility; duplicate suggestions without automatic
+merge; release-control and owner scope on every operation; RLS/no browser
+grants; immutable events; actual expiry deletion; zero writes to contacts,
+profiles, outreach, consent, outbox or publications; private page metadata;
+accessible desktop/mobile layouts; and no real-person/provider calls in test
+fixtures.
+
+Research checkpoint conclusion: the requested durable named-YouTube-farmer
+database is not an implementable policy-safe target. A bounded transient
+YouTube research loop plus a separate durable, independently evidenced or
+consented founder-only workspace achieves the underlying discovery goal while
+preserving FarmerBook's contact, consent and provider boundaries.

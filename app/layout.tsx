@@ -7,7 +7,7 @@ import { directionForLocale, getServerI18n } from "@/lib/i18n";
 import "./globals.css";
 
 const description =
-  "The professional network and direct produce marketplace helping farmers build trust, grow their network and reach more customers.";
+  "A farmer-first social and professional network with a direct agriculture marketplace - LinkedIn-style identity and Facebook-style community, purpose-built for farmers.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();

@@ -163,22 +163,25 @@ passes.
 | `ENABLE_OUTREACH_AGENT` | Controlled growth add-on | consent wording/legal review, Turnstile, provider/DLT-DCA approval, suppression, retention, webhook, outbox, and incident gates pass |
 | `ENABLE_PROFILE_RESEARCH_AGENT` | Managed private-profile add-on | outreach consent/provider gates, Agents SDK binding/migration, Workflow, private preview, verification-claim RLS, retention/deletion, cost, and staged approval/claim journeys pass |
 | `ENABLE_MANAGED_OPERATIONS_AGENTS` | Purpose-limited operations fleet | outreach/profile prerequisites, four Durable Object bindings, processor secret, private fleet migration, automatic-pause, audit, scheduling and synthetic staging journeys pass |
+| `ENABLE_PRIVATE_FARMER_CONTACTS` | Founder-owned consent database | owner UUID, encryption/rotation plan, private migration/RLS, synthetic consent and deletion, transient YouTube, approved email provider and rollback evidence pass |
+| `ENABLE_SOURCED_FARMER_RESEARCH` | Founder-only sourced research | owner UUID, official YouTube key/privacy review, private migration/RLS, contact-redaction, 30-day refresh/purge and synthetic evidence-review rollback pass |
 
 Release A runs with all flags `false`. Release B must not enable Release C
 flags. `ENABLE_BUSINESS_OFFERS` must not be enabled before
 `ENABLE_AGRI_BUSINESSES`.
 
 The Worker flags are rollout controls, not authorization boundaries. The
-database also owns eight private controls in
+database also owns eleven private controls in
 `public.ecosystem_release_controls`: `extended_locales`,
-`resumable_onboarding`, `agri_businesses`, `business_offers`, and
-`outreach_agent`, `inc_sourcing`, `profile_research_agents`, plus
-`managed_operations_agents`. Every row is
+`resumable_onboarding`, `agri_businesses`, `business_offers`,
+`outreach_agent`, `inc_sourcing`, `profile_research_agents`,
+`managed_operations_agents`, `featured_farmer_profiles`,
+`private_farmer_contacts`, and `sourced_farmer_research`. Every row is
 seeded `false`; `anon` and `authenticated` have no privileges on the control
 table. Change them only through a reviewed SQL console/session running as the
 database owner or service role, and record the operator and change ticket.
 
-Before and after every rollout or rollback, verify all eight rows:
+Before and after every rollout or rollback, verify all eleven rows:
 
 ```sql
 select control_key, enabled, updated_at
@@ -229,7 +232,7 @@ roll back the Worker. Never enable all controls as a convenience.
 | `GOOGLE_LEAD_WEBHOOK_SECRET` | **REQUIRED only when Google lead forms are enabled:** per-form secret, owner and rotation evidence |
 | `BRAVE_SEARCH_API_KEY` | **REQUIRED for name discovery:** install directly with `wrangler secret put BRAVE_SEARCH_API_KEY`; never expose through a Vite/public variable, logs, source, or support transcript |
 | `BRAVE_SEARCH_STORAGE_RIGHTS_CONFIRMED` | **REQUIRED for name discovery:** set `true` only after recording that the selected Brave plan explicitly grants storage rights for the retained result snippets; otherwise discovery fails closed |
-| `YOUTUBE_DATA_API_KEY` | **REQUIRED only for Known Farmer YouTube discovery:** install directly with `wrangler secret put YOUTUBE_DATA_API_KEY` after Google Cloud project, API restriction, privacy and YouTube policy review; never expose through Vite/public variables, logs, support output or client props |
+| `YOUTUBE_DATA_API_KEY` | **REQUIRED only for approved Farmer editorial/research YouTube discovery:** install directly with `wrangler secret put YOUTUBE_DATA_API_KEY` after Google Cloud project, API restriction, privacy and YouTube policy review; never expose through Vite/public variables, logs, support output or client props |
 | Verification-document storage | **REQUIRED before Release C:** private bucket/binding names, encryption/access policy, malware/content handling, backup/restore proof |
 | Error monitoring | **REQUIRED:** environment-specific DSN/binding name, redaction rules, alert destination; never record the value here |
 
@@ -986,6 +989,79 @@ key. Preserve required audit/consent/suppression evidence and let private
 research retention cleanup run; do not rewrite migration history or drop the
 tables as an incident shortcut.
 
+The Known Farmer workflow is superseded for the public editorial objective. Do
+not enable it as a substitute for Featured Farmers or publish its private
+member-style samples.
+
+## 12B.2 Featured Farmer editorial profiles
+
+Featured Farmers are sourced editorial articles about people with significant
+publicly documented agricultural work. They are not FarmerBook accounts,
+verification badges, endorsements, invitations, contact leads, marketplace
+profiles, or consent records. The application flag
+`ENABLE_FEATURED_FARMER_PROFILES` and database release control
+`featured_farmer_profiles` must both remain false until this section passes.
+
+### Required staging and editorial evidence
+
+1. Apply `20260812150000_featured_farmer_profiles.sql` in a clean staging
+   rebuild. Prove private research, source, draft, claim, social, media, event,
+   YouTube-candidate, and quota tables have RLS and no browser table grants.
+   Prove public RPCs return only the latest published, non-withdrawn immutable
+   snapshot and return nothing while the database release control is false.
+2. Name an editorial/privacy owner and correction/removal owner. Record policy
+   and legal review for public living-person articles and applicable DPDP
+   handling, a support email, a deletion/retention schedule, incident response,
+   and an annual review date for selection criteria and published stories.
+3. Approve written selection criteria before choosing a subject. Exclude
+   private contact details, sensitive personal data, inferred traits, personal
+   gossip, unsupported superlatives, follower-count significance, copied media,
+   and any implication that a subject joined, endorsed, or was verified by
+   FarmerBook. Obtain explicit approval for each initial named subject before
+   any real-person research or publication.
+4. Exercise all five bounded Google query routes manually. Store only reviewed
+   destination pages, never a Google results page or snippet. If YouTube search
+   is enabled, restrict the official API key and prove database reservation
+   precedes every call, candidate text expires within 30 days, and no media,
+   thumbnail, comment, transcript, statistic, cookie, or raw response is kept.
+5. For a synthetic subject, prove readiness fails without two current
+   professional sources on separate domains, one authoritative or independent
+   source, two approved significance claims, citations for every selected
+   claim, three story sections, a fact check within 24 hours, and one manually
+   confirmed owned LinkedIn, Instagram, Facebook, or YouTube account. Posts,
+   reels, groups, interviews, watch URLs, and `youtu.be` links remain coverage.
+6. Verify each image is an original photograph with a recorded rights basis,
+   credit, reference, and approval. With no approved media, verify the image-free
+   treatment appears and no generated, generic, copied, proxied, or hotlinked
+   image is used.
+7. Review English, Hindi, and Marathi shells without translating sourced claims
+   automatically. Verify the collection and article display citations, owned
+   social links, fact-check date, editorial/unclaimed disclosure, and the
+   correction/removal path. Verify metadata uses `Article` about `Person`, not
+   a FarmerBook member `ProfilePage`, and the sitemap contains published slugs
+   only.
+8. Run a clean Supabase reset and all pgTAP suites, full ESLint, TypeScript,
+   Vitest, production build, and desktop/mobile browser journeys. Publish,
+   revise, withdraw, and attempt stale-revision actions with synthetic data;
+   confirm withdrawal immediately removes public reads without deleting the
+   audit trail. Record exact migration checksum and test evidence.
+
+### Enablement and rollback
+
+Deploy code with both controls false. After the staging/editorial evidence and
+first-subject approvals are signed, enable the database control first and then
+canary `ENABLE_FEATURED_FARMER_PROFILES`. Install a YouTube key only if that
+optional route is approved; Google research requires no key because it remains
+human-opened. Monitor correction requests, source freshness, public RPC errors,
+and unexpected publication events.
+
+For rollback, set `featured_farmer_profiles=false` first; this removes the
+collection, article reads, and sitemap entries even if an old Worker remains.
+Then disable `ENABLE_FEATURED_FARMER_PROFILES` or restore the previous Worker.
+For one disputed article, use the withdrawal RPC immediately. Preserve source,
+revision, publication, withdrawal, and correction evidence; repair schema or
+data with a reviewed forward migration rather than rewriting migration history.
+
 ## 12C. Purpose-limited managed operations fleet
 
 The fleet adds four independent Durable Objects: Growth & Outreach, Farmer
@@ -1045,6 +1121,108 @@ from `/admin/agents` if the page is healthy, then set
 Do not delete Durable Object migrations, run/event evidence, consent receipts
 or suppressions. Rotate `MANAGED_AGENT_PROCESSOR_SECRET` after any suspected
 exposure.
+
+## 12D. Founder-owned private Farmer contacts
+
+The private Farmer database is not a harvested lead list. It accepts only
+direct Farmer interest, existing-member support, an approved partner consent
+campaign, or a manual record whose operator attests to purpose- and
+channel-matched consent. The exact authenticated founder UUID in
+`FARMER_CONTACT_OWNER_ID` is an authorization boundary in addition to the
+administrator role. `FARMER_CONTACT_ENCRYPTION_KEY` is server-only key material
+used to derive separate randomized encryption and keyed-deduplication keys; it
+must never appear in Wrangler `vars`, a browser response, a database dump,
+support logs, analytics, screenshots, or release evidence.
+
+Apply `20260813120000_private_farmer_contacts.sql` in migration order with both
+controls off. Before a staging canary, prove all of the following with fictional
+records:
+
+1. `anon`, ordinary authenticated users, and a different administrator cannot
+   read or mutate lists, contacts, audit events, or discovery-run metadata. The
+   configured owner can reach `/admin/farmer-database`; other users receive no
+   record counts or values.
+2. The stored contact fields are versioned ciphertext, duplicate matching uses
+   only keyed hashes, audit rows contain no raw contact values, events are
+   immutable, and a privacy deletion erases ciphertext and hashes while
+   retaining a redacted compliance event.
+3. A pending, expired, withdrawn, suppressed, bounced, complained, phone-only,
+   or unconfirmed address cannot create an outbox row. A fictional confirmed
+   address creates one idempotent email handoff through the existing outreach
+   controls while delivery remains paused.
+4. YouTube discovery uses only the official Data API, strict safe search,
+   `type=channel`, India region, a maximum of ten results, an eight-second
+   timeout and no pagination or retry. Closing the result view removes item
+   data; PostgreSQL contains only the query hash, locale, state, aggregate count
+   and timestamps. No action can promote a result into contacts or outreach.
+5. There is no WhatsApp provider, sender action, Worker binding, QR session,
+   template, webhook, queue branch, or scheduled discovery crawler.
+
+The first release cannot be enabled in production until an approved encryption
+key backup and rotation procedure can re-encrypt existing records without data
+loss. Install the owner UUID, encryption key and optional YouTube API key only
+in the target secret store. Enable the database control first, keep outreach
+delivery paused, enable `ENABLE_PRIVATE_FARMER_CONTACTS` for the owner account,
+and repeat the synthetic read/consent/deletion checks. Resume consented email
+delivery only under the separate section 12A approval. A feature flag never
+authorizes a real contact import, external search, or message by itself.
+
+For rollback, pause Growth & Outreach, set `private_farmer_contacts=false`,
+disable `ENABLE_PRIVATE_FARMER_CONTACTS`, cancel only identified unsent canary
+outbox rows, verify none can be claimed, and restore the previous Worker
+version if necessary. Preserve encrypted records, consent receipts,
+withdrawals, suppressions and redacted audit evidence. Do not drop the tables
+or destroy the encryption key during operational rollback; fulfill approved
+retention/privacy deletion through the owner-scoped operation and a reviewed
+forward correction.
+
+## 12E. Founder-only sourced-Farmer research
+
+Apply `20260814120000_sourced_farmer_research.sql` with both
+`ENABLE_SOURCED_FARMER_RESEARCH=false` and the database control
+`sourced_farmer_research=false`. This workspace is not a lead harvester. It may
+show a founder a contact-redacted YouTube response transiently, but it stores
+only anonymous agriculture tags and refreshable source provenance. A named
+durable profile requires either documented subject consent or an independently
+reviewed, non-YouTube HTTPS source for the profile and every fact.
+
+Before a staging canary, prove all of the following with fictional fixtures:
+
+1. The founder UUID is enforced in the application and every mutation RPC;
+   browser roles and other administrators cannot read or mutate the six tables.
+2. Quota is reserved before any provider request. A run resolves only an
+   explicitly supplied handle/channel URL, fetches at most two upload pages and
+   100 videos, uses the official API host, and stops on timeout, response-size,
+   repeated-token, known-video, page, video, or quota bounds without retrying or
+   following description links.
+3. Contact strings are destroyed before transient display. Stored channel/video
+   rows contain no title, description, name, username, location, contact,
+   transcript, raw response, financial claim, or media copy. A zero-match page
+   still saves its checkpoint without inventing a topic.
+4. YouTube URLs cannot support a durable identity or professional fact.
+   Consent/non-YouTube evidence, cited facts, operator attestation,
+   idempotency, revision-aware review, immutable redacted events, and
+   cross-owner denial all pass.
+5. Source rows are refreshed or deleted within 30 days. Run
+   `purge_expired_farmer_source_data` under an owner-authorized maintenance job,
+   record the deleted count, and verify a current child video cannot be removed
+   by an earlier channel expiry.
+6. No sourced-research action reads or writes Farmer contacts, consent,
+   outreach prospects, outbox/messages, member profiles, verification claims,
+   or Featured Farmer publications.
+
+Install `YOUTUBE_DATA_API_KEY` only in the server secret store after YouTube
+API/privacy review. Enable the database control first, then the application
+flag for the exact founder account. Enabling either control does not authorize
+a real channel run or named record: request separate approval naming the seed
+and maximum batch. No scheduled or self-feeding crawler is included.
+
+For rollback, reject new runs by setting `sourced_farmer_research=false`, then
+disable `ENABLE_SOURCED_FARMER_RESEARCH`. Mark any identified active run failed,
+purge expired/unreviewed API provenance, and verify no contact/outreach rows
+changed. Preserve reviewed consent/independent-evidence records unless an
+approved privacy/removal request requires deletion; correct schema defects
+forward rather than dropping the audit domain.
 
 ## 13. Production deploy and Worker version recording
 
@@ -1266,6 +1444,7 @@ real users.
 | Verification documents and claims | **REQUIRED before Release C:** retention, rejected/expired-document deletion, access audit |
 | Avatars, covers, post images, offer/company media | **REQUIRED:** orphan cleanup, deletion timing, backup expiration |
 | Database and Storage backups | **REQUIRED:** backup frequency, retention, encryption, access, deletion propagation limits |
+| Sourced YouTube provenance | Refresh or delete within 30 days; retain no descriptions, identity profiles, contact strings, transcripts, raw responses, or copied media |
 
 ### Account deletion contract
 

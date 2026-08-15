@@ -21,6 +21,7 @@ export function contentSecurityPolicy(
     "'self'",
     "data:",
     "blob:",
+    "https://i.ytimg.com",
     ...(supabaseOrigin ? [supabaseOrigin] : []),
   ];
 

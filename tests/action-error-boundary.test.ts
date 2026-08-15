@@ -14,6 +14,7 @@ const protectedActionFiles = [
   "features/profiles/account-actions.ts",
   "features/profiles/actions.ts",
   "features/reviews/actions.ts",
+  "features/sourced-farmers/actions.ts",
 ];
 
 const protectedClientMutationFiles = [
