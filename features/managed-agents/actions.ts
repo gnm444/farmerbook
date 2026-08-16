@@ -48,6 +48,9 @@ function rolePrerequisitesEnabled(role: ManagedAgentRole) {
   if (role === "verification_triage") {
     return isFeatureEnabled("ENABLE_PROFILE_RESEARCH_AGENT");
   }
+  if (role === "customer_support" || role === "social_content") {
+    return isFeatureEnabled("ENABLE_SUPPORT_SOCIAL_PILOT");
+  }
   return true;
 }
 
@@ -60,7 +63,11 @@ async function managedAgentStub(role: ManagedAgentRole) {
       ? bindings.PROFILE_DRAFTING_AGENT
       : role === "verification_triage"
         ? bindings.VERIFICATION_TRIAGE_AGENT
-        : bindings.OPERATIONS_SUPERVISOR_AGENT;
+        : role === "customer_support"
+          ? bindings.CUSTOMER_SUPPORT_AGENT
+          : role === "social_content"
+            ? bindings.SOCIAL_CONTENT_AGENT
+            : bindings.OPERATIONS_SUPERVISOR_AGENT;
   if (!namespace) return null;
   const { getAgentByName } = await import("agents");
   const instanceName = `farmerbook-${role.replaceAll("_", "-")}`;

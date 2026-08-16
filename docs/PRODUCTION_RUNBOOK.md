@@ -1064,8 +1064,10 @@ data with a reviewed forward migration rather than rewriting migration history.
 
 ## 12C. Purpose-limited managed operations fleet
 
-The fleet adds four independent Durable Objects: Growth & Outreach, Farmer
-Profile Drafting, Verification Triage, and Operations Supervisor. They share no
+The base fleet adds four independent Durable Objects: Growth & Outreach, Farmer
+Profile Drafting, Verification Triage, and Operations Supervisor. The
+forward-only support/social pilot adds Customer Support Drafting and Social
+Content Drafting as two more independent objects. They share no
 public Agent route. Each object calls only `/api/managed-agents/run` using the
 separate `MANAGED_AGENT_PROCESSOR_SECRET`; the route still requires the Worker
 flag, role-specific prerequisite flags, Supabase configuration and the private
@@ -1114,7 +1116,7 @@ one synthetic cycle, then enable Verification Triage, Profile Drafting and
 Growth one at a time after their prerequisite gates pass. Growth remains off
 until the approved sender/provider and consent campaign are operational.
 
-For rollback, set `managed_operations_agents=false` first. Pause all four roles
+For rollback, set `managed_operations_agents=false` first. Pause all enabled roles
 from `/admin/agents` if the page is healthy, then set
 `ENABLE_MANAGED_OPERATIONS_AGENTS=false` or roll back the Worker. Disable
 `profile_research_agents` and `outreach_agent` as their incident scope requires.
@@ -1223,6 +1225,58 @@ purge expired/unreviewed API provenance, and verify no contact/outreach rows
 changed. Preserve reviewed consent/independent-evidence records unless an
 approved privacy/removal request requires deletion; correct schema defects
 forward rather than dropping the audit domain.
+
+## 12F. Supervised support and social-content pilot
+
+Apply `20260816120000_support_social_pilot.sql` only after the managed-operations
+migration. Keep `support_social_pilot=false`,
+`ENABLE_SUPPORT_SOCIAL_PILOT=false`, and both new Agent roles paused. The Worker
+configuration must preserve prior Durable Object migrations and add only
+`support-social-agents-v1` with `CustomerSupportAgent` and
+`SocialContentAgent`.
+
+The scheduled runtime reaches `/api/managed-agents/run` without a browser
+session. The proxy bypass must match only that exact path; the route must still
+require the managed-agent flag, role prerequisite, valid bounded input and the
+constant-time checked `MANAGED_AGENT_PROCESSOR_SECRET`. Configure Cloudflare
+WAF/rate limiting for that path before activation and alert on repeated 403/503
+responses.
+
+Required staging proof:
+
+1. Browser roles cannot directly read or mutate support cases, campaign briefs,
+   proposals or events. A participant can create/list only their own support
+   cases through the narrow RPC, and never sees a pending/rejected draft.
+2. The service role can record a proposal only for the matching leased run and
+   target, but cannot execute the administrator review function. Revision and
+   idempotency conflicts fail closed and every decision creates a redacted
+   immutable event.
+3. Complaints, account/privacy operations, prices/refunds, legal/financial,
+   crop-treatment/chemical dosage, medical/veterinary, threats/emergencies and
+   ambiguous questions remain human-escalated. Missing or invalid Workers AI
+   output creates a safe fallback rather than an unreviewed answer.
+4. A support proposal is invisible until administrator approval. Approval
+   changes the case to answered and shows only the final edited content to the
+   requester. No email, WhatsApp, direct message or external sender is invoked.
+5. A social proposal uses only an administrator-authored owned-channel brief.
+   Approval labels it `Copy ready`; no UI or processor path claims publication,
+   contacts a person or calls a social-network API.
+6. Support expiry, content bounds, logs, run summaries and event details contain
+   no secret, bearer, email address, raw provider payload or duplicate support
+   body. Test the participant and administrator pages on desktop and mobile.
+
+Activation order is: rehearse the migration/RLS suite on an isolated staging
+copy; deploy the no-traffic Worker with both new Durable Objects; set the
+application flag; enable the database control; open `/admin/operations`; resume
+Customer Support Drafting with fictional cases; then resume Social Content
+Drafting with a fictional brief. Observe at least three healthy schedules and
+review every proposal manually before considering a bounded real pilot.
+
+Rollback pauses both roles, disables `support_social_pilot`, disables
+`ENABLE_SUPPORT_SOCIAL_PILOT`, and restores the recorded healthy Worker if
+needed. Preserve private cases, proposals and review evidence under the approved
+retention policy. No connector exists, so rollback must not attempt to delete or
+retract a falsely recorded publication.
 
 ## 13. Production deploy and Worker version recording
 

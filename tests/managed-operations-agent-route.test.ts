@@ -45,6 +45,7 @@ describe("private managed-agent processor route", () => {
     mocks.flags.set("ENABLE_MANAGED_OPERATIONS_AGENTS", true);
     mocks.flags.set("ENABLE_OUTREACH_AGENT", true);
     mocks.flags.set("ENABLE_PROFILE_RESEARCH_AGENT", true);
+    mocks.flags.set("ENABLE_SUPPORT_SOCIAL_PILOT", true);
     mocks.process.mockReset();
     mocks.process.mockResolvedValue({
       code: "SUCCEEDED",
@@ -82,5 +83,17 @@ describe("private managed-agent processor route", () => {
       claimed: 1,
     });
     expect(mocks.process).toHaveBeenCalledWith(validBody);
+  });
+
+  it("keeps support and social roles behind their dedicated pilot gate", async () => {
+    const supportBody = {
+      ...validBody,
+      role: "customer_support",
+      instanceName: "farmerbook-customer-support",
+    };
+    mocks.flags.set("ENABLE_SUPPORT_SOCIAL_PILOT", false);
+    expect((await POST(request(supportBody))).status).toBe(404);
+    mocks.flags.set("ENABLE_SUPPORT_SOCIAL_PILOT", true);
+    expect((await POST(request(supportBody))).status).toBe(200);
   });
 });

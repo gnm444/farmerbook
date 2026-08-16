@@ -1,8 +1,10 @@
 import type { FarmerProfileAgent } from "@/features/profile-agent/managed-agent";
 import type {
+  CustomerSupportAgent,
   OperationsSupervisorAgent,
   OutreachGrowthAgent,
   ProfileDraftingAgent,
+  SocialContentAgent,
   VerificationTriageAgent,
 } from "@/features/managed-agents/agents";
 
@@ -30,6 +32,8 @@ export type FarmerBookBindings = {
   OUTREACH_GROWTH_AGENT?: DurableObjectNamespace<OutreachGrowthAgent>;
   PROFILE_DRAFTING_AGENT?: DurableObjectNamespace<ProfileDraftingAgent>;
   VERIFICATION_TRIAGE_AGENT?: DurableObjectNamespace<VerificationTriageAgent>;
+  CUSTOMER_SUPPORT_AGENT?: DurableObjectNamespace<CustomerSupportAgent>;
+  SOCIAL_CONTENT_AGENT?: DurableObjectNamespace<SocialContentAgent>;
   OPERATIONS_SUPERVISOR_AGENT?: DurableObjectNamespace<OperationsSupervisorAgent>;
 };
 

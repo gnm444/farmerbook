@@ -5938,3 +5938,208 @@ Approval recorded: the product owner said `Plan approved` on 2026-08-14. Local
 implementation and fictional verification are authorized. This does not
 authorize a live YouTube API run, real-person durable record, hosted migration,
 scheduled trigger, deployment, message, or other production mutation.
+
+## 2026-08-16 implementation plan: supervised support and social-content pilot
+
+### Approach
+
+Extend the existing private managed-operations fleet with two independent
+scheduled roles, while making Supabase the sole approval authority. Workers AI
+can create a bounded proposal; only an authenticated administrator RPC can
+approve, reject or escalate it. The feature stays behind both the application
+flag `ENABLE_SUPPORT_SOCIAL_PILOT` and the database release control
+`support_social_pilot`.
+
+The pilot deliberately has no send/post connector. An approved support reply is
+shown in the authenticated requester's FarmerBook support page. An approved
+social proposal becomes `copy_ready` for manual posting. This produces useful
+24-by-7 draft work without granting an agent public-action authority.
+
+### 1. Forward-only database domain
+
+**File:** `supabase/migrations/20260816120000_support_social_pilot.sql`
+
+Add the release key and extend the managed-role constraint with
+`customer_support` and `social_content`. Insert both default-disabled fleet
+rows. Do not alter `20260812130000_managed_operations_agents.sql`.
+
+Create private `support_cases`, `social_campaign_briefs`,
+`agent_action_proposals` and `agent_action_proposal_events` tables with bounded
+text/JSON, 90-day support visibility/expiry, revisions, idempotency, immutable events,
+RLS and revoked browser table privileges.
+
+Add narrow functions:
+
+```sql
+public.create_support_case(...)
+public.list_my_support_cases(limit_input integer)
+public.create_social_campaign_brief(...)
+public.record_agent_action_proposal(...)
+public.review_agent_action_proposal(...)
+```
+
+The participant functions require `auth.uid()` and the release control. The
+brief/review functions require `public.is_admin()`. Draft recording requires
+`auth.role() = 'service_role'`, the matching managed run role and the release
+control. Review uses expected revision plus an idempotency key, and copies no
+support body into immutable event JSON. The service role receives no execute
+grant on the administrator review function.
+
+Recreate only the two existing role-validation functions whose explicit role
+allowlists must accept the added fleet roles. Preserve their existing
+authorization, idempotency and failure semantics.
+
+### 2. Strict AI proposal builders
+
+**Files:**
+
+- `features/customer-operations/schemas.ts`
+- `features/customer-operations/ai.ts`
+
+Define Zod contracts for support submission, campaign briefs, decisions and AI
+outputs. Use the existing Workers AI binding and model pattern:
+
+```ts
+await ai.run(MODEL, {
+  messages: boundedUntrustedPrompt,
+  response_format: { type: "json_schema", json_schema: strictSchema },
+  temperature: 0.1,
+  max_tokens: boundedLimit,
+});
+```
+
+The deterministic support classifier runs before inference and forces human
+escalation for complaints, account/privacy actions, prices/refunds, legal,
+financial, medical/veterinary, crop treatment/chemical dosage, threats and
+emergencies. AI output cannot lower a deterministic risk. Invalid or missing AI
+returns a safe review-only template. Social output never claims it was posted
+and cannot contain fabricated evidence or unsupported outcome guarantees.
+
+### 3. Two private scheduled Agents
+
+**Files:**
+
+- `features/managed-agents/contracts.ts`
+- `features/managed-agents/agents.ts`
+- `features/managed-agents/actions.ts`
+- `features/managed-agents/processor.ts`
+- `app/api/managed-agents/run/route.ts`
+- `lib/cloudflare-bindings.ts`
+- `worker/index.ts`
+- `vite.config.ts`
+
+Add definitions with separate state/schedules and boundaries:
+
+- `customer_support`: every 300 seconds, maximum 10 cases;
+- `social_content`: every 3,600 seconds, maximum 5 briefs.
+
+Add `CustomerSupportAgent` and `SocialContentAgent`, private binding lookup,
+worker exports and an additive `support-social-agents-v1` SQLite migration tag
+containing only the two new classes. Both route prerequisites require the new
+feature flag. The processor reads only open/draft source rows, builds proposals
+and persists them through the service-only RPC. It never changes a proposal to
+approved and never invokes a sender/provider.
+
+Repair the existing scheduled-call authentication path in `proxy.ts`: add a
+separate exact `isInternalServicePath()` check for only
+`/api/managed-agents/run`, and keep all security enforcement in the route.
+Harden public prefix matching to `pathname === prefix` or
+`pathname.startsWith(prefix + "/")`. Add tests proving the internal route
+bypasses browser-session authentication while prefix-confusable neighboring
+paths do not.
+
+Extend the supervisor summary with pending review counts and expired support
+cleanup only if the SQL contract makes that operation bounded and safe.
+
+### 4. Participant and administrator UI
+
+**Files:**
+
+- `features/customer-operations/types.ts`
+- `features/customer-operations/queries.ts`
+- `features/customer-operations/actions.ts`
+- `features/customer-operations/support-console.tsx`
+- `features/customer-operations/operations-console.tsx`
+- `app/(product)/support/page.tsx`
+- `app/(product)/admin/operations/page.tsx`
+- `components/settings-nav.tsx`
+- `app/(product)/admin/agents/page.tsx`
+- `app/globals.css`
+
+The support page uses the current request locale, permits one bounded
+authenticated question, and lists only that requester's cases plus approved
+replies. The administrator workspace lists original support questions and
+campaign briefs beside editable AI proposals, risk/escalation labels,
+model/prompt metadata and approve/reject/escalate controls.
+
+Approved social content is labelled `Copy ready`, never `Published`. There is
+no Send or Post button. Link the support page from settings and the operations
+workspace from the managed-agent header; do not add admin state to the global
+participant navigation.
+
+### 5. Configuration and operations documentation
+
+**Files:**
+
+- `.env.example`
+- `lib/feature-flags.ts`
+- `vite.config.ts`
+- `docs/PRODUCTION_RUNBOOK.md`
+- `docs/SECRETS_AND_GITHUB_DEPLOYMENT.md`
+- `README.md`
+
+Add only the default-false non-secret flag. Document that Workers AI is a
+binding, not a Google/OpenAI/Codex subscription key. Activation order is:
+forward migration, local/staging RLS proof, Worker deploy with the flag, DB
+control, then individually resume each Agent. No production activation is part
+of this implementation.
+
+### 6. Verification
+
+**Files:** focused additions under `tests/` and
+`supabase/tests/support_social_pilot_test.sql`.
+
+Cover schema bounds, deterministic escalation, prompt-injection isolation,
+strict AI success/fallback, fleet role/config registration, route feature
+gating, forward-only migration contents, RLS/grants, service-can-draft but
+cannot-approve, revision/idempotency behavior, participant ownership, admin
+review, honest copy-ready UI and explicit-demo isolation.
+
+Run focused tests and typecheck after each tranche, then ESLint, all Vitest,
+production build and `git diff --check`. If local Supabase/Docker is available,
+run a clean reset and the pgTAP suite. Do not claim external delivery or 24-by-7
+production operation without a deployed enabled Worker and observed schedules.
+
+### Rollback
+
+Pause the two new Agents, disable `support_social_pilot`, disable
+`ENABLE_SUPPORT_SOCIAL_PILOT`, and roll back the Worker to the prior healthy
+version. Keep the additive database tables private for evidence/retention; do
+not down-migrate or delete user support cases. Because no connector exists,
+rollback cannot leave a partially sent reply or social post.
+
+### Detailed todo list
+
+- [DONE] Append the scoped research and approval checkpoint without replacing history.
+- [DONE] Add the forward-only database schema, role extension, RLS, grants and RPCs.
+- [DONE] Add strict support/social contracts, safety classification and AI fallbacks.
+- [DONE] Register two additive Agent classes, bindings, feature gates and schedules.
+- [DONE] Repair and test the exact internal processor session-bypass path.
+- [DONE] Add bounded processor roles that create pending proposals only.
+- [DONE] Build authenticated participant support submission/history.
+- [DONE] Build administrator support/social review workspace with copy-ready semantics.
+- [DONE] Add navigation links, responsive styles and honest disabled states.
+- [DONE] Add unit, component, action, route, configuration and migration tests.
+- [DONE] Add executable pgTAP authorization tests.
+- [DONE] Update environment example, secrets guidance, README and production runbook.
+- [DONE] Run focused and full local quality gates and record evidence.
+- [DONE] Leave hosted migration, production flag/control, schedules, sending and posting off.
+
+### Approval checkpoint
+
+Approval recorded: the product owner said `ok implement this using multiple
+subagents` on 2026-08-16, after explicitly authorizing the supervised pilot in
+the preceding conversation. That instruction approves this local, default-off
+implementation plan. It does not authorize hosted database changes, production
+feature activation, a scheduled production Agent, a customer reply, an email,
+a direct social message or a public post.

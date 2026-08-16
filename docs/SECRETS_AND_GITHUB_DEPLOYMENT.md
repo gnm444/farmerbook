@@ -25,6 +25,13 @@ billing therefore belong to the Cloudflare account that owns the deployed
 Worker. `.openai/hosting.json` is non-secret build metadata and contains no
 developer login or model credential.
 
+The supervised support/social pilot uses the same binding. It adds no Gemini,
+Google AI Studio, OpenAI API, ChatGPT or Codex runtime credential. Its only new
+environment value is the non-secret, default-false
+`ENABLE_SUPPORT_SOCIAL_PILOT` release flag. The existing server-only
+`MANAGED_AGENT_PROCESSOR_SECRET` continues to authenticate the exact internal
+processor route and must remain in Cloudflare's secret store.
+
 Developer-tool authentication stored on a workstation is unrelated to the
 application. Never copy Codex/ChatGPT OAuth tokens, Claude credentials, AWS SSO
 cache files, Wrangler OAuth files, Supabase CLI login state, browser cookies,

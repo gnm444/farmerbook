@@ -51,6 +51,7 @@ const messages = {
     discover: "Discover",
     network: "Network",
     messages: "Messages",
+    support: "Support",
     purchases: "Purchases",
     myPurchases: "My purchases",
     company: "Inc",

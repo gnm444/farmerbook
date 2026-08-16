@@ -2,6 +2,14 @@ import { z } from "zod";
 import { sha256, uuidFromText } from "@/features/outreach/crypto";
 import { processOutreachBatch } from "@/features/outreach/processor";
 import { createConfiguredOutreachProvider } from "@/features/outreach/providers";
+import {
+  buildSocialContentDraft,
+  buildSupportReplyDraft,
+} from "@/features/customer-operations/ai";
+import {
+  socialCampaignCandidateSchema,
+  supportCaseCandidateSchema,
+} from "@/features/customer-operations/schemas";
 import type { FarmerProfileAgent } from "@/features/profile-agent/managed-agent";
 import type { ManagedProfileAgentInput } from "@/features/profile-agent/schemas";
 import { getCloudflareBindings } from "@/lib/cloudflare-bindings";
@@ -364,6 +372,156 @@ async function runVerificationTriage(
   };
 }
 
+async function requireSupportSocialPilot(
+  supabase: ReturnType<typeof createAdminClient>,
+) {
+  const control = await supabase.rpc("is_ecosystem_release_enabled", {
+    control_key_input: "support_social_pilot",
+  });
+  if (control.error || control.data !== true) {
+    throw new Error("FEATURE_DISABLED");
+  }
+}
+
+export async function runCustomerSupport(
+  runId: string,
+  maxItems: number,
+): Promise<RunCounts> {
+  const supabase = createAdminClient();
+  await requireSupportSocialPilot(supabase);
+  const candidatesResult = await supabase
+    .from("support_cases")
+    .select(
+      "id, participant_id, category, locale, subject, question, state, created_at, updated_at",
+    )
+    .eq("state", "open")
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: true })
+    .limit(maxItems);
+  if (candidatesResult.error) throw new Error("SUPPORT_CASE_LOOKUP_FAILED");
+  const candidates = z.array(supportCaseCandidateSchema).parse(
+    candidatesResult.data ?? [],
+  );
+  const bindings = await getCloudflareBindings();
+  let succeeded = 0;
+  let failed = 0;
+  let escalated = 0;
+  let fallbacks = 0;
+
+  for (const candidate of candidates) {
+    const draft = await buildSupportReplyDraft(candidate, bindings?.AI);
+    const idempotencyKey = await uuidFromText(
+      `support-proposal:${candidate.id}:${candidate.updated_at}:${draft.promptVersion}`,
+    );
+    const recorded = await supabase.rpc("record_agent_action_proposal", {
+      run_id_input: runId,
+      action_type_input: "support_reply",
+      target_id_input: candidate.id,
+      draft_content_input: draft.draftContent,
+      metadata_input: {
+        locale: candidate.locale,
+        category: candidate.category,
+        needsHuman: draft.needsHuman,
+        escalationReasons: draft.escalationReasons,
+        generationStatus: draft.status,
+        failureCode: draft.failureCode,
+      },
+      risk_level_input: draft.riskLevel,
+      model_input: draft.model,
+      prompt_version_input: draft.promptVersion,
+      idempotency_key_input: idempotencyKey,
+    });
+    if (recorded.error) {
+      failed += 1;
+      continue;
+    }
+    succeeded += 1;
+    if (draft.needsHuman) escalated += 1;
+    if (draft.status === "fallback") fallbacks += 1;
+  }
+
+  return {
+    claimed: candidates.length,
+    succeeded,
+    failed,
+    summary: {
+      proposalsPendingReview: succeeded,
+      escalatedForHumanReview: escalated,
+      deterministicFallbacks: fallbacks,
+      repliesSent: 0,
+    },
+    failureCode: failed > 0 ? "CUSTOMER_SUPPORT_PARTIAL" : undefined,
+  };
+}
+
+export async function runSocialContent(
+  runId: string,
+  maxItems: number,
+): Promise<RunCounts> {
+  const supabase = createAdminClient();
+  await requireSupportSocialPilot(supabase);
+  const candidatesResult = await supabase
+    .from("social_campaign_briefs")
+    .select(
+      "id, platform, locale, audience, objective, source_facts, call_to_action, state, revision, created_at, updated_at",
+    )
+    .eq("state", "draft")
+    .order("created_at", { ascending: true })
+    .limit(maxItems);
+  if (candidatesResult.error) throw new Error("SOCIAL_BRIEF_LOOKUP_FAILED");
+  const candidates = z.array(socialCampaignCandidateSchema).parse(
+    candidatesResult.data ?? [],
+  );
+  const bindings = await getCloudflareBindings();
+  let succeeded = 0;
+  let failed = 0;
+  let fallbacks = 0;
+
+  for (const candidate of candidates) {
+    const draft = await buildSocialContentDraft(candidate, bindings?.AI);
+    const idempotencyKey = await uuidFromText(
+      `social-proposal:${candidate.id}:${candidate.revision}:${draft.promptVersion}`,
+    );
+    const recorded = await supabase.rpc("record_agent_action_proposal", {
+      run_id_input: runId,
+      action_type_input: "social_post",
+      target_id_input: candidate.id,
+      draft_content_input: draft.draftContent,
+      metadata_input: {
+        locale: candidate.locale,
+        platform: candidate.platform,
+        needsHuman: true,
+        escalationReasons: draft.escalationReasons,
+        generationStatus: draft.status,
+        failureCode: draft.failureCode,
+      },
+      risk_level_input: draft.riskLevel,
+      model_input: draft.model,
+      prompt_version_input: draft.promptVersion,
+      idempotency_key_input: idempotencyKey,
+    });
+    if (recorded.error) {
+      failed += 1;
+      continue;
+    }
+    succeeded += 1;
+    if (draft.status === "fallback") fallbacks += 1;
+  }
+
+  return {
+    claimed: candidates.length,
+    succeeded,
+    failed,
+    summary: {
+      proposalsPendingReview: succeeded,
+      deterministicFallbacks: fallbacks,
+      postsPublished: 0,
+      directMessagesSent: 0,
+    },
+    failureCode: failed > 0 ? "SOCIAL_CONTENT_PARTIAL" : undefined,
+  };
+}
+
 async function runOperationsSupervisor(maxItems: number): Promise<RunCounts> {
   const supabase = createAdminClient();
   const staleBefore = new Date(Date.now() - 15 * 60 * 1_000).toISOString();
@@ -425,6 +583,12 @@ async function dispatchRole(
   if (role === "profile_drafting") return runProfileDrafting(maxItems);
   if (role === "verification_triage") {
     return runVerificationTriage(runId, maxItems);
+  }
+  if (role === "customer_support") {
+    return runCustomerSupport(runId, maxItems);
+  }
+  if (role === "social_content") {
+    return runSocialContent(runId, maxItems);
   }
   return runOperationsSupervisor(maxItems);
 }

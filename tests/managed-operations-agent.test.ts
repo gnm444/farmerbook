@@ -7,11 +7,13 @@ import {
 import { verificationTriageDecision } from "@/features/managed-agents/processor";
 
 describe("managed operations agent contracts", () => {
-  it("defines four separate purpose-limited roles", () => {
+  it("defines six separate purpose-limited roles", () => {
     expect(MANAGED_AGENT_DEFINITIONS.map((agent) => agent.role)).toEqual([
       "outreach_growth",
       "profile_drafting",
       "verification_triage",
+      "customer_support",
+      "social_content",
       "operations_supervisor",
     ]);
     expect(MANAGED_AGENT_DEFINITIONS.every((agent) => agent.boundary.length > 40)).toBe(true);

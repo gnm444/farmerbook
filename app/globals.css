@@ -1139,6 +1139,173 @@
   }
 }
 
+/* Supervised customer-support and owned-channel content review */
+.customer-operations-support,
+.customer-operations-admin {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.customer-operations-support__layout {
+  grid-template-columns: minmax(0, 2fr) minmax(15rem, 1fr);
+}
+
+.customer-operations-support__guardrails {
+  min-width: 0;
+}
+
+.customer-operations-support__form,
+.customer-operations-brief__form,
+.customer-operations-proposal {
+  display: grid;
+  gap: 1rem;
+}
+
+.customer-operations-support__history,
+.customer-operations-admin__pending,
+.customer-operations-admin__reviewed {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.customer-operations-support__case-list,
+.customer-operations-admin__proposal-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1rem;
+}
+
+.customer-operations-support__case,
+.customer-operations-proposal,
+.customer-operations-reviewed-proposal {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.customer-operations-support__case h3,
+.customer-operations-proposal h3 {
+  margin: 0.75rem 0 0.4rem;
+}
+
+.customer-operations-support__approved-reply {
+  margin-top: 1rem;
+}
+
+.customer-operations-support__approved-reply strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.customer-operations-support__approved-reply p,
+.customer-operations-support__waiting {
+  margin-top: 0.65rem;
+  white-space: pre-wrap;
+}
+
+.customer-operations-admin__overview {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.customer-operations-admin__overview .context-card {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+}
+
+.customer-operations-admin__overview strong {
+  color: var(--forest-900);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.customer-operations-brief {
+  max-width: 64rem;
+}
+
+.customer-operations-proposal__head > div {
+  min-width: 0;
+}
+
+.customer-operations-proposal__context {
+  padding: 0.85rem 0;
+  border-block: 1px solid var(--line);
+}
+
+.customer-operations-proposal__context summary {
+  color: var(--forest-900);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.customer-operations-proposal__context p,
+.customer-operations-proposal__reasons {
+  margin-top: 0.75rem;
+}
+
+.customer-operations-proposal__reasons ul {
+  margin: 0.5rem 0 0;
+  padding-inline-start: 1.25rem;
+}
+
+.customer-operations-proposal__content {
+  min-height: 12rem;
+}
+
+.customer-operations-proposal__metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.customer-operations-proposal__metadata > div {
+  min-width: 0;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--leaf-50);
+}
+
+.customer-operations-proposal__metadata dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.customer-operations-proposal__metadata dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+
+.customer-operations-risk--low {
+  color: var(--forest-900);
+  background: var(--leaf-50);
+}
+
+.customer-operations-risk--medium {
+  color: #754d0a;
+  background: #fff3d6;
+}
+
+.customer-operations-risk--high {
+  color: var(--danger);
+  background: #feecec;
+}
+
+@media (max-width: 760px) {
+  .customer-operations-support__layout,
+  .customer-operations-admin__overview,
+  .customer-operations-proposal__metadata {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-operations-proposal__head {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+}
+
 .language-selector {
   min-inline-size: 11rem;
 }

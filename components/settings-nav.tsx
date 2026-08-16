@@ -20,6 +20,7 @@ export function SettingsNav({ current }: { current: "profile" | "account" }) {
         {t("accountPrivacy")}
       </Link>
       <Link href="/community-rules">{t("communityRules")}</Link>
+      <Link href="/support">{t("support")}</Link>
       <Link href="/privacy">{t("privacyNotice")}</Link>
     </nav>
   );

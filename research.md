@@ -3195,3 +3195,163 @@ database is not an implementable policy-safe target. A bounded transient
 YouTube research loop plus a separate durable, independently evidenced or
 consented founder-only workspace achieves the underlying discovery goal while
 preserving FarmerBook's contact, consent and provider boundaries.
+
+## 2026-08-16 research: supervised customer support and social-content agents
+
+### Requested outcome and bounded pilot
+
+The requested outcome is a 24-by-7 agent pilot for customer questions and
+social outreach using the current Mac for development and Cloudflare for the
+always-on runtime. The safe first release is intentionally supervised:
+
+- authenticated FarmerBook participants can create in-app support cases;
+- a scheduled `customer_support` Agent creates a private reply proposal;
+- an administrator must edit and approve every reply before it becomes visible
+  to the participant;
+- an administrator can create an owned-channel campaign brief;
+- a scheduled `social_content` Agent creates a platform-specific draft;
+- approval makes a social draft copy-ready only. It does not post, message a
+  person, or claim publication without a future provider receipt.
+
+Email ingestion, WhatsApp, social-network APIs, autonomous sending, browser
+posting, auto-approved answers and public chat streaming are outside this
+pilot. Cloudflare Email Routing to Gmail does not populate an application
+support queue. No Google Gemini, OpenAI API, ChatGPT, Codex, Anthropic or other
+subscription secret is needed by this design; inference uses the existing
+Workers AI binding.
+
+### Existing managed-runtime extension points
+
+The Worker keeps Agent Durable Objects private. `worker/index.ts:1-13` exports
+the classes, while `worker/index.ts:40-66` sends HTTP traffic only through
+Vinext and never exposes `routeAgentRequest`. `vite.config.ts:55-121` supplies
+the AI binding, Durable Object bindings, additive SQLite migrations and the
+existing approval Workflow. `agents@0.20.1` is installed.
+
+The common scheduled runtime at `features/managed-agents/runtime.ts:38-223`
+already provides the required behavior: validated state, one recurring
+schedule, bounded batches, internal bearer authentication, retry of recoverable
+failures, health state and automatic pause after three unsuccessful cycles.
+The server action and processor route add administrator authorization, a
+constant-time secret check and database run leases
+(`features/managed-agents/actions.ts:54-165`,
+`app/api/managed-agents/run/route.ts:22-50`). The current role list is hard-coded
+in contracts, classes, routing, bindings, SQL checks and exact-list tests, so
+both new roles require a forward Supabase migration and a new Durable Object
+migration tag. Previously deployed migration files and tags must not be edited.
+
+Workers AI generation already follows the desired pattern:
+`features/outreach/agent.ts:52-127` and
+`features/profile-agent/profile-builder.ts:103-332` use bounded untrusted
+inputs, JSON-schema outputs, Zod validation and deterministic fallbacks. The
+new builders should reuse that model and never accept customer text or a
+campaign brief as instructions.
+
+### Canonical data and approval boundary
+
+Direct participant messaging is not a support system: its tables assume two
+member identities and lack assignment, risk, retention and approval state
+(`features/messages/actions.ts:39-66`,
+`features/messages/queries.ts:49-139`). Outreach replies are also unsuitable:
+they deliberately retain classification rather than raw reply text and handle
+only a small onboarding allowlist.
+
+The new domain therefore needs three primary records:
+
+- `support_cases`: one authenticated requester, category, locale, bounded
+  subject/question, lifecycle state, timestamps and a 90-day expiry;
+- `social_campaign_briefs`: an administrator-authored owned-channel brief with
+  platform, audience, objective, source facts, call to action and locale;
+- `agent_action_proposals`: a reusable private proposal for either
+  `support_reply` or `social_post`, including draft content, risk level,
+  escalation reasons, model/prompt metadata, run ID, review state, revision and
+  reviewer.
+
+An immutable proposal-event table records only decisions and bounded metadata;
+it must not copy support text into audit JSON. All tables enable RLS. Browser
+table access is revoked. Narrow security-definer functions create/list a
+participant's own support cases, create briefs, record service-only drafts and
+make administrator-only revision-checked decisions. Service code can draft but
+cannot call the administrator decision function.
+
+The database, not Agent Workflow state, is authoritative. This avoids the
+existing cross-system caveat where a database decision may succeed before a
+Workflow update (`features/profile-agent/actions.ts:431-455`). A future sender
+or connector must claim only a database-approved proposal and independently
+recheck the release control.
+
+```text
+Participant / administrator
+        | support question / campaign brief
+        v
+Supabase private source record
+        | scheduled, leased, bounded claim
+        v
+Cloudflare customer_support / social_content Agent
+        | Workers AI strict JSON or deterministic fallback
+        v
+Supabase agent_action_proposals (pending review)
+        | administrator edit + approve/reject/escalate
+        +-----------------------+
+        |                       |
+        v                       v
+approved support reply     copy-ready social draft
+(visible in-app)           (no posting connector)
+```
+
+### Support safety policy
+
+Every response remains human-approved during the pilot. Deterministic
+classification must escalate complaints, refunds/pricing disputes, account or
+personal-data actions, legal/financial questions, crop treatment or chemical
+dosage, veterinary/medical issues, threats/emergencies and ambiguous requests.
+The model receives a small approved FarmerBook fact set only: the product is a
+professional agriculture network and direct marketplace; it does not provide
+checkout, escrow or guaranteed refunds; verification is human-controlled; and
+blocking/reporting exist. Unknown product behavior must become a clarifying
+question or escalation, not a hallucinated answer.
+
+### Social-content safety policy
+
+Social drafts are for FarmerBook-owned channels, not unsolicited direct
+messages. The builder must avoid fabricated farmer stories, yield or income
+claims, unverified certifications, guaranteed prices, medical/agronomic claims
+and false publication status. A draft remains `pending_review`; administrator
+approval changes it to `copy_ready`. A later connector may add a separate
+published transition only with an authenticated provider post ID/URL.
+
+### UI and test anchors
+
+The participant route follows the standard protected server-page plus client
+form pattern and can be linked from settings. The administrator workspace
+follows `/admin/reports` and the moderation queue for review cards, with a link
+from `/admin/agents`; `/admin/agents` remains fleet health rather than becoming
+an inbox. `app/robots.ts:18-31` already excludes administrator routes.
+
+Verification must cover strict AI output and fallback behavior, escalation
+keywords, prompt-injection isolation, schemas, feature gating, additive Worker
+bindings, forward-only SQL constraints, RLS and grants, immutable events,
+revision/idempotency checks, non-self-approval by the service role, honest
+copy-ready language, accessible controls, repository type/lint/unit/build
+gates, and executable local Supabase authorization tests when Docker is
+available.
+
+### Research checkpoint
+
+Three parallel read-only audits of the Agent runtime, UI/tests and security
+boundaries agree on the forward-only design above. The implementation can reuse
+the current private scheduled fleet and Workers AI binding without a new AI
+subscription. The release must remain default off and must not apply a hosted
+migration, set production flags, activate schedules, send a response or publish
+a social post during local implementation.
+
+The security audit also found that `proxy.ts:38-75` currently applies Supabase
+session authentication before the scheduled Agent's bearer-protected processor
+route. `features/managed-agents/runtime.ts:126-169` supplies no browser cookie,
+so a schedule may be redirected to login before the route can validate its
+internal secret. The repair must add only `/api/managed-agents/run` to a named
+exact session-bypass set; the route remains non-public in semantics and retains
+its feature gates, 32-character secret minimum, constant-time comparison and
+input bounds. The same proxy change should replace broad `startsWith(prefix)`
+matching with exact-or-descendant matching so names such as
+`/api/outreach-admin` cannot inherit a neighboring public prefix.

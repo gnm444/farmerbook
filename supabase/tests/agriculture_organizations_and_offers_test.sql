@@ -50,7 +50,7 @@ begin
     'agri_businesses', 'business_offers', 'extended_locales',
     'featured_farmer_profiles', 'inc_sourcing', 'managed_operations_agents',
     'outreach_agent', 'private_farmer_contacts', 'profile_research_agents',
-    'resumable_onboarding', 'sourced_farmer_research'
+    'resumable_onboarding', 'sourced_farmer_research', 'support_social_pilot'
   ]::text[] then
     raise exception 'ecosystem release controls must match the disabled gate set';
   end if;

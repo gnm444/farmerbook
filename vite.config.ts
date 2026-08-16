@@ -35,6 +35,8 @@ for (const [name, value] of Object.entries({
     process.env.ENABLE_PROFILE_RESEARCH_AGENT,
   ENABLE_MANAGED_OPERATIONS_AGENTS:
     process.env.ENABLE_MANAGED_OPERATIONS_AGENTS,
+  ENABLE_SUPPORT_SOCIAL_PILOT:
+    process.env.ENABLE_SUPPORT_SOCIAL_PILOT,
   ENABLE_FEATURED_FARMER_PROFILES:
     process.env.ENABLE_FEATURED_FARMER_PROFILES,
   ENABLE_PRIVATE_FARMER_CONTACTS:
@@ -66,6 +68,7 @@ const localBindingConfig = {
   ...(process.env.ENABLE_OUTREACH_AGENT?.toLowerCase() === "true" ||
   process.env.ENABLE_PROFILE_RESEARCH_AGENT?.toLowerCase() === "true"
   || process.env.ENABLE_MANAGED_OPERATIONS_AGENTS?.toLowerCase() === "true"
+  || process.env.ENABLE_SUPPORT_SOCIAL_PILOT?.toLowerCase() === "true"
     ? {
         ai: { binding: "AI" },
         ...(process.env.ENABLE_OUTREACH_AGENT?.toLowerCase() === "true"
@@ -95,6 +98,14 @@ const localBindingConfig = {
         name: "OPERATIONS_SUPERVISOR_AGENT",
         class_name: "OperationsSupervisorAgent",
       },
+      {
+        name: "CUSTOMER_SUPPORT_AGENT",
+        class_name: "CustomerSupportAgent",
+      },
+      {
+        name: "SOCIAL_CONTENT_AGENT",
+        class_name: "SocialContentAgent",
+      },
     ],
   },
   migrations: [
@@ -109,6 +120,13 @@ const localBindingConfig = {
         "ProfileDraftingAgent",
         "VerificationTriageAgent",
         "OperationsSupervisorAgent",
+      ],
+    },
+    {
+      tag: "support-social-agents-v1",
+      new_sqlite_classes: [
+        "CustomerSupportAgent",
+        "SocialContentAgent",
       ],
     },
   ],

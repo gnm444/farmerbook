@@ -4,6 +4,8 @@ export const managedAgentRoleSchema = z.enum([
   "outreach_growth",
   "profile_drafting",
   "verification_triage",
+  "customer_support",
+  "social_content",
   "operations_supervisor",
 ]);
 
@@ -115,6 +117,26 @@ export const MANAGED_AGENT_DEFINITIONS: readonly ManagedAgentDefinition[] = [
     defaultMaxItemsPerRun: 10,
     boundary:
       "Produces a recommendation only; it cannot set a verification claim to verified or issue a badge.",
+  },
+  {
+    role: "customer_support",
+    displayName: "Customer Support Drafting",
+    description:
+      "Creates private reply proposals for authenticated FarmerBook support cases.",
+    defaultIntervalSeconds: 300,
+    defaultMaxItemsPerRun: 10,
+    boundary:
+      "Cannot approve, reveal or send a reply; every proposal requires an administrator decision and high-risk questions stay escalated.",
+  },
+  {
+    role: "social_content",
+    displayName: "Social Content Drafting",
+    description:
+      "Creates owned-channel social drafts from administrator-authored campaign briefs.",
+    defaultIntervalSeconds: 3_600,
+    defaultMaxItemsPerRun: 5,
+    boundary:
+      "Cannot contact a person or publish to a network; approval makes content copy-ready for a human operator only.",
   },
   {
     role: "operations_supervisor",

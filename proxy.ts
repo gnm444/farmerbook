@@ -31,13 +31,25 @@ const publicPrefixes = [
 
 export function isPublicPath(pathname: string) {
   return publicPrefixes.some((prefix) =>
-    prefix === "/" ? pathname === "/" : pathname.startsWith(prefix),
+    prefix === "/"
+      ? pathname === "/"
+      : pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+const internalServicePaths = new Set(["/api/managed-agents/run"]);
+
+export function isInternalServicePath(pathname: string) {
+  return internalServicePaths.has(pathname);
+}
+
+export function requiresUserSession(pathname: string) {
+  return !isPublicPath(pathname) && !isInternalServicePath(pathname);
 }
 
 export async function proxy(request: NextRequest) {
   if (!isSupabaseConfigured()) {
-    if (!isDemoMode() && !isPublicPath(request.nextUrl.pathname)) {
+    if (!isDemoMode() && requiresUserSession(request.nextUrl.pathname)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.searchParams.set("error", "Sign-in is temporarily unavailable.");
@@ -70,7 +82,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && !isPublicPath(request.nextUrl.pathname)) {
+  if (!user && requiresUserSession(request.nextUrl.pathname)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", request.nextUrl.pathname);

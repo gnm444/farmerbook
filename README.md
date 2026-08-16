@@ -153,6 +153,22 @@ not create contacts, members, consent, outreach, verification, or public
 profiles. Both `ENABLE_SOURCED_FARMER_RESEARCH` and the database control
 `sourced_farmer_research` default to false.
 
+## Supervised support and social-content pilot
+
+FarmerBook includes a default-off customer-operations pilot. Authenticated
+participants can submit an in-app support case. When separately enabled on a
+deployed Worker, two private Cloudflare Agents use Workers AI schedules to
+prepare customer-support replies and FarmerBook-owned social content, while
+Supabase stores the review queue and immutable decision evidence.
+
+Agents cannot approve their own work. Every support reply remains private until
+an administrator approves it, and every social proposal becomes only
+`Copy ready` for manual posting. The pilot has no email/WhatsApp ingestion,
+direct-message automation, social-network connector, automatic send or public
+post operation. Enablement requires `ENABLE_SUPPORT_SOCIAL_PILOT`, the separate
+`support_social_pilot` database control, the existing managed-agent fleet and a
+reviewed staging rehearsal; see the production runbook.
+
 ## Google and Facebook sign-in
 
 FarmerBook uses Supabase's server-side OAuth/PKCE flow. To activate the buttons:

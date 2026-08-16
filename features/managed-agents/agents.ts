@@ -18,6 +18,16 @@ export class VerificationTriageAgent extends ScheduledManagedAgent {
   initialState = initialManagedAgentState(this.managedRole);
 }
 
+export class CustomerSupportAgent extends ScheduledManagedAgent {
+  protected readonly managedRole = "customer_support" as const;
+  initialState = initialManagedAgentState(this.managedRole);
+}
+
+export class SocialContentAgent extends ScheduledManagedAgent {
+  protected readonly managedRole = "social_content" as const;
+  initialState = initialManagedAgentState(this.managedRole);
+}
+
 export class OperationsSupervisorAgent extends ScheduledManagedAgent {
   protected readonly managedRole = "operations_supervisor" as const;
   initialState = initialManagedAgentState(this.managedRole);

@@ -6,9 +6,11 @@ import { withSecurityHeaders } from "../lib/security-headers";
 export { FarmerProfileAgent } from "../features/profile-agent/managed-agent";
 export { FarmerProfileApprovalWorkflow } from "../features/profile-agent/approval-workflow";
 export {
+  CustomerSupportAgent,
   OperationsSupervisorAgent,
   OutreachGrowthAgent,
   ProfileDraftingAgent,
+  SocialContentAgent,
   VerificationTriageAgent,
 } from "../features/managed-agents/agents";
 

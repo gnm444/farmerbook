@@ -7,6 +7,7 @@ import {
   Building2,
   Factory,
   Compass,
+  HelpCircle,
   Home,
   MessageCircle,
   ShoppingBasket,
@@ -72,6 +73,7 @@ export function AppShell({
     { href: "/discover", label: t("discover"), icon: Search },
     { href: "/network", label: t("network"), icon: UsersRound },
     { href: "/messages", label: t("messages"), icon: MessageCircle },
+    { href: "/support", label: t("support"), icon: HelpCircle },
     commerceItem,
     { href: profileHref, label: t("myProfile"), icon: UserRound },
   ];

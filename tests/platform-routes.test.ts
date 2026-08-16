@@ -1,9 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { NextRequest } from "next/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET as health } from "@/app/api/health/route";
 import manifest from "@/app/manifest";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
-import { isPublicPath } from "@/proxy";
+import {
+  isInternalServicePath,
+  isPublicPath,
+  proxy,
+  requiresUserSession,
+} from "@/proxy";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe("platform metadata and health routes", () => {
   it("returns a minimal non-cached health response", async () => {
@@ -40,5 +50,33 @@ describe("platform metadata and health routes", () => {
     expect(isPublicPath("/robots.txt")).toBe(true);
     expect(isPublicPath("/sitemap.xml")).toBe(true);
     expect(isPublicPath("/manifest.webmanifest")).toBe(true);
+  });
+
+  it("matches public subtrees without exposing prefix-confusable routes", () => {
+    expect(isPublicPath("/api/outreach/provider/events")).toBe(true);
+    expect(isPublicPath("/api/outreach-admin")).toBe(false);
+    expect(isPublicPath("/profile/farmer-one")).toBe(true);
+    expect(isPublicPath("/profile-export")).toBe(false);
+  });
+
+  it("bypasses browser sessions only for the exact bearer-protected processor", async () => {
+    expect(isInternalServicePath("/api/managed-agents/run")).toBe(true);
+    expect(isInternalServicePath("/api/managed-agents/run/extra")).toBe(false);
+    expect(requiresUserSession("/api/managed-agents/run")).toBe(false);
+    expect(requiresUserSession("/api/managed-agents/run/extra")).toBe(true);
+
+    vi.stubEnv("NEXT_PUBLIC_DEMO_MODE", "false");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "");
+    const internalResponse = await proxy(new NextRequest(
+      "http://localhost:3000/api/managed-agents/run",
+    ));
+    const neighboringResponse = await proxy(new NextRequest(
+      "http://localhost:3000/api/managed-agents/run/extra",
+    ));
+
+    expect(internalResponse.status).toBe(200);
+    expect(neighboringResponse.status).toBe(307);
+    expect(neighboringResponse.headers.get("location")).toContain("/login");
   });
 });

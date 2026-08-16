@@ -16,6 +16,9 @@ function roleFeaturesEnabled(role: string) {
   if (role === "verification_triage") {
     return isFeatureEnabled("ENABLE_PROFILE_RESEARCH_AGENT");
   }
+  if (role === "customer_support" || role === "social_content") {
+    return isFeatureEnabled("ENABLE_SUPPORT_SOCIAL_PILOT");
+  }
   return role === "operations_supervisor";
 }
 
