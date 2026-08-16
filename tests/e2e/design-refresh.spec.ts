@@ -124,6 +124,26 @@ test("consent-first acquisition fails closed without external providers", async 
     path: `/tmp/farmerbook-consent-${testInfo.project.name}.png`,
     fullPage: true,
   });
+
+  await page.goto("/partner-interest");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Build useful farming collaborations across borders.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      level: 2,
+      name: "The consent service is being prepared.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Record my request" })).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth + 1,
+    ),
+  ).toBe(false);
 });
 
 test("outreach administration is visibly paused without configured delivery", async ({

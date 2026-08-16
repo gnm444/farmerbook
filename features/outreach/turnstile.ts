@@ -12,6 +12,7 @@ export async function verifyTurnstileToken(
     secret?: string;
     remoteIp?: string;
     expectedHostname?: string;
+    expectedAction?: string;
     fetcher?: typeof fetch;
   } = {},
 ) {
@@ -27,11 +28,10 @@ export async function verifyTurnstileToken(
     if (!response.ok) return false;
     const result = responseSchema.safeParse(await response.json());
     if (!result.success || !result.data.success) return false;
-    if (
-      options.expectedHostname &&
-      result.data.hostname &&
-      result.data.hostname !== options.expectedHostname
-    ) {
+    if (options.expectedHostname && result.data.hostname !== options.expectedHostname) {
+      return false;
+    }
+    if (options.expectedAction && result.data.action !== options.expectedAction) {
       return false;
     }
     return true;

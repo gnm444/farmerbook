@@ -56,6 +56,7 @@ describe("Postmark email consent and unsubscribe routes", () => {
     const token = await createEmailConsentToken({
       prospectId,
       contactCandidateId,
+      engagementType: "membership",
       requestedPurposes: [
         "farmerbook_introduction",
         "onboarding_followup",

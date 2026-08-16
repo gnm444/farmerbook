@@ -22,16 +22,19 @@ describe("outreach consent nonce", () => {
   it("accepts the signed token shape in the public consent schema", async () => {
     const token = await createConsentToken(secret);
     const parsed = consentLeadSchema.safeParse({
+      engagementType: "membership",
       role: "farmer",
       fullName: "Anita Patil",
+      countryCode: "IN",
       state: "Maharashtra",
       district: "Nashik",
+      farmingApproach: "organic",
       preferredLocale: "mr-IN",
       preferredChannel: "email",
       email: "anita@example.com",
       introductionConsent: true,
       followupConsent: false,
-      consentPolicyVersion: "2026-08-09.1",
+      consentPolicyVersion: "2026-08-17.1",
       consentNonce: token,
       turnstileToken: "verified-token",
     });

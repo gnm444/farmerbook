@@ -123,3 +123,46 @@
 - 2026-08-14: Completed the approved default-off FB-REQ-019 production release. Enabled YouTube Data API v3 in the existing FarmerBook Google Cloud project, deleted an initially exposed throwaway credential before use, created a fresh API-restricted key and stored it only as Cloudflare's encrypted `YOUTUBE_DATA_API_KEY` secret. Took a protected public schema/data backup, recorded the five structurally matched baseline migrations, and dry-ran/applied only the release-control bridge, sourced-farmer schema and forward-only grant hardening. The production catalog smoke caught permissive service-role default grants before activation; the hardening migration revoked inherited mutations and the rerun passed table RLS, browser denial, service SELECT/RPC-only access and forbidden-column checks. A clean local rebuild applied all 23 migrations, all six pgTAP suites passed, and the full application gate passed 128 files/557 tests plus lint, TypeScript and build. Worker version `dc0aae7f-26fc-4ac9-a42f-6e79f3d9f285` is active at 100% in deployment `9b049c9d-b6d3-4582-b374-b9a3f97385e6`; apex, `www`, health and private-auth smoke checks pass. Both the Worker flag and database control remain false because `FARMER_CONTACT_OWNER_ID` and `SUPABASE_SERVICE_ROLE_KEY` are not provisioned; no live YouTube batch, named farmer row, contact, message or schedule was created.
 - 2026-08-15: Completed the explicitly approved FB-REQ-019 production activation. Preserved the confirmed founder account's existing Auth metadata while granting the shared global administrator role. `YOUTUBE_DATA_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `FARMER_CONTACT_OWNER_ID` remain encrypted Worker secrets. Built and dry-ran the enabled artifact, then deployed Worker version `b86935c2-8a00-44fe-b2aa-8327997ffcd0` at 100% in deployment `262b2ea9-3039-4243-a8d7-f3a4a22bf097`; all three secret bindings remained present and `ENABLE_SOURCED_FARMER_RESEARCH=true`. Homepage and health returned HTTP 200, anonymous access to `/admin/sourced-farmers` redirected to login, the database release control was enabled last, and an authenticated Chrome smoke reached the private sourced-Farmer workspace and run form. Final audits show one global administrator and both release gates enabled. No YouTube provider batch, named farmer row, contact, message or schedule was created.
 - 2026-08-16: Completed the supervised support and social-content pilot locally using three parallel architecture, UI/test and security workstreams. Added two independently scheduled Cloudflare Agent classes that use Workers AI to create pending proposals only; authenticated in-app support submission and approved-reply history; administrator-authored owned-channel briefs; and an editable administrator approval queue whose social outcome is `Copy ready`, never published. The forward-only private Supabase domain defaults off, revokes browser table access, limits service-role authority to draft recording, requires administrator review with revision/idempotency evidence, keeps event JSON body-free, expires participant support visibility after 90 days, and rate-limits intake. The exact internal processor path now bypasses browser-session middleware while retaining bearer authentication and feature/database gates. No Google, OpenAI, ChatGPT or Codex runtime credential was added; Workers AI uses the Cloudflare binding and all candidate source changes pass gitleaks. Final evidence passed ESLint, TypeScript, 133 Vitest files/585 tests, the Vinext build, a clean 24-migration local Supabase reset, all seven pgTAP/RLS suites, 50 desktop/mobile Playwright journeys and `git diff --check`. Docker/Supabase were stopped afterward. No hosted migration, production flag/control, Agent schedule, customer reply, email, direct message, social API call, post, deployment or external account mutation occurred.
+- 2026-08-17: Verified and documented the professional outreach identity. The
+  active Cloudflare Email Routing rule forwards `ceo@farmerbook.in` to the
+  product owner's Gmail, and one controlled mailbox test was recorded as
+  `Forwarded`. Gmail's `Send mail as` list contains only the Gmail address, so
+  `ceo@farmerbook.in` remains receive-only and no attempt was made to spoof it
+  as an outbound sender. The product owner then approved the written production
+  consent-intake plan with “Do the needful for next steps.” Default-off code and
+  release preparation may proceed; Postmark domain verification, outbound
+  SPF/DKIM/DMARC, a valid business postal address, owner canary, staged evidence
+  and separate activation approval remain required. The controlled mailbox test
+  was not outreach, discovery CSVs were not imported, and no prospect or group
+  was contacted.
+- 2026-08-17: Completed the approved consent-first collaboration release
+  candidate locally. Added the fail-closed `/partner-interest` intake for
+  international organizations, kept `/join` membership-only for India, and
+  assigned deterministic priority from the applicant's self-declared farming
+  approach: natural/organic/regenerative/agroecological first, then
+  sustainable/low-input/smallholder, then general. Updated consent receipts and
+  signed email tokens to bind membership versus collaboration; only membership
+  can receive a private signup invitation. Hardened Turnstile to require the
+  exact hostname and route action, and made page readiness depend on the full
+  provider, sender, postal-footer, signing, database and Turnstile configuration.
+- 2026-08-17: Completed the Postmark contract and isolated production database
+  bridge. Requested confirmations and introductions use the transactional
+  stream; an optional single follow-up requires a separate Broadcast stream.
+  Every message has the FarmerBook identity, privacy/unsubscribe/STOP controls,
+  a validated physical postal footer and tracking disabled. The two ordered
+  migrations create or converge the private consent/outbox domain, service-only
+  grants and RLS; enforce consent at the outbox trigger; add membership-only
+  invitation redemption; and provide immutable audit, pause, suppression,
+  privacy-erasure, retry and administrator status controls. Both the release
+  control and delivery runtime remain off/paused after migration.
+- 2026-08-17: Final local evidence passed repository ESLint and TypeScript, 134
+  Vitest files/595 tests, the Vinext production build, a Wrangler no-upload
+  dry-run, clean Supabase rebuild through both new migrations, all seven
+  pgTAP/RLS files, the production-shaped no-outreach compatibility rehearsal,
+  all 50 desktop/mobile Playwright journeys and `git diff --check`. No Postmark
+  account, Turnstile widget, secret, hosted migration, Worker version, feature
+  control, canary, email, WhatsApp message or discovery-list contact was created
+  or changed. Production preparation remains blocked on owner-authorized
+  Postmark/domain setup, a valid FarmerBook postal address, canary inbox,
+  human-reviewed localized copy, staged evidence and separate activation
+  approval.

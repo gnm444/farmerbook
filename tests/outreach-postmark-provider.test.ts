@@ -4,9 +4,11 @@ import { PostmarkOutreachProvider } from "@/features/outreach/postmark-provider"
 function postmarkProvider(fetcher?: typeof fetch) {
   return new PostmarkOutreachProvider({
     serverToken: "p".repeat(32),
-    fromEmail: "hello@farmerbook.in",
+    fromEmail: "ceo@farmerbook.in",
     inboundAddress: "serverhash@inbound.postmarkapp.com",
-    messageStream: "farmerbook-consented",
+    transactionalMessageStream: "farmerbook-transactional",
+    broadcastMessageStream: "farmerbook-broadcast",
+    postalAddress: "FarmerBook, Hyderabad, Telangana 500001, India",
     applicationOrigin: "https://farmerbook.in",
     actionSigningSecret: "a".repeat(48),
     webhookUsername: "farmerbook-events",
@@ -43,6 +45,7 @@ describe("Postmark outreach provider", () => {
         idempotencyKey: "00000000-0000-4000-8000-000000000101",
         prospectId: "00000000-0000-4000-8000-000000000102",
         contactCandidateId: "00000000-0000-4000-8000-000000000103",
+        engagementType: "membership",
         requestedPurposes: ["farmerbook_introduction"],
       }),
     ).resolves.toMatchObject({
@@ -56,9 +59,9 @@ describe("Postmark outreach provider", () => {
     });
     const body = JSON.parse(String(init?.body));
     expect(body).toMatchObject({
-      From: "FarmerBook <hello@farmerbook.in>",
+      From: "FarmerBook CEO <ceo@farmerbook.in>",
       To: "grower@example.com",
-      MessageStream: "farmerbook-consented",
+      MessageStream: "farmerbook-transactional",
       TrackOpens: false,
       TrackLinks: "None",
       Metadata: { outboxId: "00000000-0000-4000-8000-000000000101" },
@@ -67,6 +70,7 @@ describe("Postmark outreach provider", () => {
       "+00000000-0000-4000-8000-000000000101@",
     );
     expect(body.TextBody).toContain("/confirm-email?token=");
+    expect(body.TextBody).toContain("Hyderabad, Telangana 500001, India");
     expect(body.Headers).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ Name: "List-Unsubscribe" }),
@@ -150,6 +154,8 @@ describe("Postmark outreach provider", () => {
         channel: "email",
         message: "A consented FarmerBook introduction.",
         idempotencyKey: "00000000-0000-4000-8000-000000000101",
+        purpose: "farmerbook_introduction",
+        engagementType: "membership",
       }),
     ).rejects.toThrow("POSTMARK_DELIVERY_UNKNOWN");
   });
@@ -164,6 +170,8 @@ describe("Postmark outreach provider", () => {
         channel: "email",
         message: "A consented FarmerBook introduction.",
         idempotencyKey: "00000000-0000-4000-8000-000000000101",
+        purpose: "farmerbook_introduction",
+        engagementType: "membership",
       }),
     ).rejects.toThrow("POSTMARK_DELIVERY_UNKNOWN");
   });
@@ -186,9 +194,65 @@ describe("Postmark outreach provider", () => {
         channel: "email",
         message: "A consented FarmerBook introduction.",
         idempotencyKey: "00000000-0000-4000-8000-000000000101",
+        purpose: "farmerbook_introduction",
+        engagementType: "membership",
       }),
     ).resolves.toMatchObject({
       acceptedAt: "2026-08-10T17:30:00+05:30",
     });
+  });
+
+  it("uses Broadcast only for the separately consented follow-up", async () => {
+    const fetcher = vi.fn(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        void input;
+        void init;
+        return Response.json({
+          ErrorCode: 0,
+          Message: "OK",
+          MessageID: "postmark-followup",
+          SubmittedAt: "2026-08-10T12:00:00.000Z",
+          To: "grower@example.com",
+        });
+      },
+    );
+    const provider = postmarkProvider(fetcher as typeof fetch);
+    await provider.deliver({
+      contact: "grower@example.com",
+      channel: "email",
+      message: "The one follow-up you separately requested from FarmerBook.",
+      idempotencyKey: "00000000-0000-4000-8000-000000000101",
+      purpose: "onboarding_followup",
+      engagementType: "membership",
+    });
+    const body = JSON.parse(String(fetcher.mock.calls[0][1]?.body));
+    expect(body.MessageStream).toBe("farmerbook-broadcast");
+    expect(body.Tag).toBe("farmerbook-followup");
+  });
+
+  it("rejects an unverified Gmail sender and placeholder postal address", () => {
+    const base = {
+      serverToken: "p".repeat(32),
+      inboundAddress: "serverhash@inbound.postmarkapp.com",
+      transactionalMessageStream: "farmerbook-transactional",
+      applicationOrigin: "https://farmerbook.in",
+      actionSigningSecret: "a".repeat(48),
+      webhookUsername: "farmerbook-events",
+      webhookPassword: "w".repeat(48),
+    };
+    expect(
+      new PostmarkOutreachProvider({
+        ...base,
+        fromEmail: "gnm444@gmail.com",
+        postalAddress: "FarmerBook, Hyderabad, Telangana 500001, India",
+      }).configured,
+    ).toBe(false);
+    expect(
+      new PostmarkOutreachProvider({
+        ...base,
+        fromEmail: "ceo@farmerbook.in",
+        postalAddress: "TBD placeholder",
+      }).configured,
+    ).toBe(false);
   });
 });

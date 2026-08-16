@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { CheckCircle2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { submitAcquisitionConsentAction } from "./actions";
-import { OUTREACH_CONSENT_POLICY_VERSION } from "./schemas";
+import {
+  OUTREACH_CONSENT_POLICY_VERSION,
+  type OutreachEngagementType,
+} from "./schemas";
 import { INDIA_STATES_AND_UNION_TERRITORIES } from "@/lib/india/regions";
 import {
   localeRegistry,
@@ -48,10 +51,14 @@ export function ConsentJoinForm({
   consentNonce,
   turnstileSiteKey,
   locales,
+  engagementType,
+  campaignCode,
 }: {
   consentNonce: string;
   turnstileSiteKey: string;
   locales: readonly SupportedLocale[];
+  engagementType: OutreachEngagementType;
+  campaignCode: "direct-join" | "farmer-interest" | "partner-interest";
 }) {
   const t = useTranslations("outreach");
   const common = useTranslations("common");
@@ -73,7 +80,10 @@ export function ConsentJoinForm({
     if (widgetId.current) window.turnstile.remove(widgetId.current);
     widgetId.current = window.turnstile.render(turnstileContainer.current, {
       sitekey: turnstileSiteKey,
-      action: "farmerbook_join",
+      action:
+        engagementType === "collaboration"
+          ? "farmerbook_partner_interest"
+          : "farmerbook_join",
       callback: setTurnstileToken,
       "expired-callback": () => setTurnstileToken(""),
       "error-callback": () => setTurnstileToken(""),
@@ -84,7 +94,7 @@ export function ConsentJoinForm({
         widgetId.current = null;
       }
     };
-  }, [turnstileReady, turnstileSiteKey]);
+  }, [engagementType, turnstileReady, turnstileSiteKey]);
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -93,11 +103,16 @@ export function ConsentJoinForm({
     const form = new FormData(event.currentTarget);
     startTransition(async () => {
       const result = await submitAcquisitionConsentAction({
+        engagementType,
         role: form.get("role"),
         fullName: form.get("fullName"),
         businessName: form.get("businessName") || undefined,
-        state: form.get("state"),
-        district: form.get("district"),
+        organizationWebsite: form.get("organizationWebsite") || undefined,
+        countryCode: form.get("countryCode"),
+        state: form.get("state") || undefined,
+        district: form.get("district") || undefined,
+        region: form.get("region") || undefined,
+        farmingApproach: form.get("farmingApproach"),
         preferredLocale: form.get("preferredLocale"),
         preferredChannel: form.get("preferredChannel"),
         email: form.get("email") || undefined,
@@ -107,7 +122,7 @@ export function ConsentJoinForm({
         consentPolicyVersion: OUTREACH_CONSENT_POLICY_VERSION,
         consentNonce,
         turnstileToken,
-        campaignCode: form.get("campaignCode") || undefined,
+        campaignCode,
       });
       if (!result.ok) {
         setError(result.message);
@@ -132,8 +147,11 @@ export function ConsentJoinForm({
         <h2>{t("confirmNext")}</h2>
         <p>{t("confirmationQueued")}</p>
         <p className="muted">{t("reference", { id: success.prospectId })}</p>
-        <Link className="button" href="/signup">
-          {t("createAccount")}
+        <Link
+          className="button"
+          href={engagementType === "membership" ? "/signup" : "/"}
+        >
+          {engagementType === "membership" ? t("createAccount") : t("returnHome")}
         </Link>
       </section>
     );
@@ -153,7 +171,11 @@ export function ConsentJoinForm({
         <div className="consent-form__heading">
           <div>
             <p className="eyebrow">{t("formEyebrow")}</p>
-            <h2>{t("formTitle")}</h2>
+            <h2>
+              {engagementType === "collaboration"
+                ? t("partnerFormTitle")
+                : t("formTitle")}
+            </h2>
           </div>
           <ShieldCheck aria-hidden="true" />
         </div>
@@ -181,21 +203,67 @@ export function ConsentJoinForm({
             {fieldErrors.fullName?.[0] ? <small>{fieldErrors.fullName[0]}</small> : null}
           </label>
           <label className="field" htmlFor={`${formId}-business`}>
-            <span>{t("businessName")} <em>{common("optional")}</em></span>
-            <input id={`${formId}-business`} name="businessName" autoComplete="organization" maxLength={120} />
+            <span>
+              {engagementType === "collaboration"
+                ? t("organizationName")
+                : t("businessName")}
+              {engagementType === "membership" ? (
+                <> <em>{common("optional")}</em></>
+              ) : null}
+            </span>
+            <input
+              id={`${formId}-business`}
+              name="businessName"
+              autoComplete="organization"
+              maxLength={120}
+              required={engagementType === "collaboration"}
+            />
           </label>
-          <label className="field" htmlFor={`${formId}-state`}>
-            <span>{t("state")}</span>
-            <select id={`${formId}-state`} name="state" defaultValue="" required>
-              <option value="" disabled>{t("selectState")}</option>
-              {INDIA_STATES_AND_UNION_TERRITORIES.map((state) => (
-                <option value={state} key={state}>{state}</option>
-              ))}
+          {engagementType === "membership" ? (
+            <>
+              <input type="hidden" name="countryCode" value="IN" />
+              <label className="field" htmlFor={`${formId}-state`}>
+                <span>{t("state")}</span>
+                <select id={`${formId}-state`} name="state" defaultValue="" required>
+                  <option value="" disabled>{t("selectState")}</option>
+                  {INDIA_STATES_AND_UNION_TERRITORIES.map((state) => (
+                    <option value={state} key={state}>{state}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field" htmlFor={`${formId}-district`}>
+                <span>{t("district")}</span>
+                <input id={`${formId}-district`} name="district" autoComplete="address-level2" required maxLength={100} />
+              </label>
+            </>
+          ) : (
+            <>
+              <label className="field" htmlFor={`${formId}-country`}>
+                <span>{t("countryCode")}</span>
+                <input id={`${formId}-country`} name="countryCode" autoComplete="country" required minLength={2} maxLength={2} placeholder="IN" />
+              </label>
+              <label className="field" htmlFor={`${formId}-region`}>
+                <span>{t("region")}</span>
+                <input id={`${formId}-region`} name="region" autoComplete="address-level1" required maxLength={100} />
+              </label>
+              <label className="field" htmlFor={`${formId}-website`}>
+                <span>{t("organizationWebsite")} <em>{common("optional")}</em></span>
+                <input id={`${formId}-website`} name="organizationWebsite" type="url" autoComplete="url" maxLength={2048} placeholder="https://" />
+              </label>
+            </>
+          )}
+          <label className="field" htmlFor={`${formId}-approach`}>
+            <span>{t("farmingApproach")}</span>
+            <select id={`${formId}-approach`} name="farmingApproach" defaultValue="general" required>
+              <option value="natural">{t("approachNatural")}</option>
+              <option value="organic">{t("approachOrganic")}</option>
+              <option value="regenerative">{t("approachRegenerative")}</option>
+              <option value="agroecological">{t("approachAgroecological")}</option>
+              <option value="sustainable">{t("approachSustainable")}</option>
+              <option value="low_input">{t("approachLowInput")}</option>
+              <option value="smallholder">{t("approachSmallholder")}</option>
+              <option value="general">{t("approachGeneral")}</option>
             </select>
-          </label>
-          <label className="field" htmlFor={`${formId}-district`}>
-            <span>{t("district")}</span>
-            <input id={`${formId}-district`} name="district" autoComplete="address-level2" required maxLength={100} />
           </label>
           <label className="field" htmlFor={`${formId}-locale`}>
             <span>{t("preferredLanguage")}</span>
@@ -250,7 +318,6 @@ export function ConsentJoinForm({
           </label>
         </div>
 
-        <input type="hidden" name="campaignCode" value="direct-join" />
         <div className="turnstile-slot" ref={turnstileContainer} aria-label="Spam protection" />
         <button className="button button--large" type="submit" disabled={isPending || !turnstileToken}>
           {isPending ? t("recording") : t("recordRequest")}

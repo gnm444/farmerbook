@@ -35,6 +35,8 @@ describe("outreach provider boundary", () => {
         channel: "email",
         message: "A message that is long enough for delivery.",
         idempotencyKey: crypto.randomUUID(),
+        purpose: "farmerbook_introduction",
+        engagementType: "membership",
       }),
     ).rejects.toThrow("OUTREACH_PROVIDER_NOT_CONFIGURED");
     await expect(new NonSendingOutreachProvider().deliver()).rejects.toThrow(
@@ -65,6 +67,8 @@ describe("outreach provider boundary", () => {
         channel: "email",
         message: "A consented FarmerBook introduction.",
         idempotencyKey,
+        purpose: "farmerbook_introduction",
+        engagementType: "membership",
       }),
     ).resolves.toMatchObject({ receiptId: "receipt-1" });
     const [, request] = fetcher.mock.calls[0];

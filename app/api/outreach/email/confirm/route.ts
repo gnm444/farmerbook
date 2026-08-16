@@ -67,9 +67,12 @@ export async function POST(request: Request) {
         contactHash: contact.data.value_hash,
         channel: "email",
         requestedPurposes: payload.requestedPurposes,
-        statementVersion: "farmerbook-email-2026-08-10.1",
+        engagementType: payload.engagementType,
+        statementVersion: "farmerbook-email-2026-08-17.1",
         statementText:
-          "I confirm that FarmerBook may introduce its agriculture network by email and send the separately requested onboarding follow-up. I can withdraw at any time.",
+          payload.engagementType === "collaboration"
+            ? "I confirm that FarmerBook may send the farming collaboration introduction I requested by email and the separately requested single follow-up. I can withdraw at any time."
+            : "I confirm that FarmerBook may introduce its agriculture network by email and send the separately requested single onboarding follow-up. I can withdraw at any time.",
         captureMethod: "double_opt_in",
         provider: "postmark",
         providerReceiptId: receiptId,
@@ -81,16 +84,23 @@ export async function POST(request: Request) {
     },
   );
   if (recorded.error) return redirectWithStatus(request, "unavailable");
-  try {
-    await activateMirroredEmailConsent({
-      prospectId: payload.prospectId,
-      confirmationReference: receiptId,
-      confirmedAt: grantedAt.toISOString(),
-      expiresAt: expiresAt.toISOString(),
-      idempotencyKey: privateContactKey,
-    });
-  } catch {
-    return redirectWithStatus(request, "unavailable");
+  if (payload.engagementType === "membership") {
+    try {
+      await activateMirroredEmailConsent({
+        prospectId: payload.prospectId,
+        confirmationReference: receiptId,
+        confirmedAt: grantedAt.toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        idempotencyKey: privateContactKey,
+      });
+    } catch {
+      return redirectWithStatus(request, "unavailable");
+    }
   }
-  return redirectWithStatus(request, "confirmed");
+  return redirectWithStatus(
+    request,
+    payload.engagementType === "collaboration"
+      ? "confirmed-collaboration"
+      : "confirmed",
+  );
 }

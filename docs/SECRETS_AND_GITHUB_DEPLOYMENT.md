@@ -69,6 +69,17 @@ Turnstile, outreach, provider, Postmark, webhook, and signing secrets; and the
 managed-agent processor secret. OAuth provider client secrets remain in
 Supabase Auth provider settings.
 
+For professional outreach, `ceo@farmerbook.in` is the selected identity. Its
+Cloudflare Email Routing rule and inbound forwarding are verified, but it is
+not a Gmail `Send mail as` identity and must remain receive-only until Postmark
+verifies `farmerbook.in` for outbound delivery. The server token, inbound
+address, webhook Basic credentials, email-action signing secret, Turnstile
+secret and consent signing secret are Worker secrets. Stream identifiers, the
+public Turnstile site key and a valid business postal address are configuration
+values, but the postal address must never be replaced with a placeholder. Do
+not copy the owner Gmail password, cookie, OAuth session or mailbox token into
+any deployment system.
+
 ## Before every push
 
 1. Run `gitleaks git --redact --no-banner .` to scan committed history.

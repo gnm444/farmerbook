@@ -17,14 +17,13 @@ export default async function ConfirmEmailPage({
 }) {
   const { token = "", status } = await searchParams;
   const { t } = await getServerI18n();
-  const valid = token
-    ? Boolean(
-        await verifyEmailConsentToken(
-          token,
-          process.env.OUTREACH_EMAIL_ACTION_SIGNING_SECRET ?? "",
-        ),
+  const payload = token
+    ? await verifyEmailConsentToken(
+        token,
+        process.env.OUTREACH_EMAIL_ACTION_SIGNING_SECRET ?? "",
       )
-    : false;
+    : null;
+  const valid = Boolean(payload);
 
   return (
     <AuthLayout>
@@ -33,13 +32,18 @@ export default async function ConfirmEmailPage({
           <Brand />
         </Link>
         <h2>{t("auth.confirmTitle")}</h2>
-        {status === "confirmed" ? (
+        {status === "confirmed" || status === "confirmed-collaboration" ? (
           <>
             <div className="notice notice--success">
               {t("auth.confirmed")}
             </div>
-            <Link className="button button--full" href="/signup">
-              {t("auth.createFarmerBookAccount")}
+            <Link
+              className="button button--full"
+              href={status === "confirmed-collaboration" ? "/" : "/signup"}
+            >
+              {status === "confirmed-collaboration"
+                ? t("auth.returnToFarmerBook")
+                : t("auth.createFarmerBookAccount")}
             </Link>
           </>
         ) : status === "invalid" || (!valid && !status) ? (
@@ -62,7 +66,15 @@ export default async function ConfirmEmailPage({
           </>
         )}
         <div className="auth-links">
-          <Link href="/join">{t("auth.requestNewConfirmation")}</Link>
+          <Link
+            href={
+              payload?.engagementType === "collaboration"
+                ? "/partner-interest"
+                : "/join"
+            }
+          >
+            {t("auth.requestNewConfirmation")}
+          </Link>
           <Link href="/privacy">{t("auth.privacy")}</Link>
         </div>
       </div>

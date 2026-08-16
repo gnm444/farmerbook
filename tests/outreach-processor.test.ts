@@ -28,6 +28,7 @@ function provider(configured = true) {
 function clientFor(
   job: Record<string, unknown>,
   preview?: { code: "PREVIEW_ATTACHED"; message: string },
+  engagementType: "membership" | "collaboration" = "membership",
 ) {
   const resultWrites: unknown[] = [];
   const rpc = vi.fn(async (name: string, input: unknown) => {
@@ -60,13 +61,19 @@ function clientFor(
     }
     return { data: [{ code: "RECORDED" }], error: null };
   });
-  const maybeSingle = vi.fn(async () => ({
-    data: { private_value: "grower@example.com" },
-    error: null,
+  const from = vi.fn((table: string) => ({
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        maybeSingle: vi.fn(async () => ({
+          data:
+            table === "outreach_prospects"
+              ? { followup_requested: false, engagement_type: engagementType }
+              : { private_value: "grower@example.com" },
+          error: null,
+        })),
+      })),
+    })),
   }));
-  const eq = vi.fn(() => ({ maybeSingle }));
-  const select = vi.fn(() => ({ eq }));
-  const from = vi.fn(() => ({ select }));
   return {
     supabase: { rpc, from } as unknown as SupabaseClient,
     rpc,
@@ -222,5 +229,22 @@ describe("autonomous outreach processor", () => {
       }),
     ).resolves.toMatchObject({ claimed: 1, delivered: 0, failed: 1 });
     expect(configuredProvider.deliver).not.toHaveBeenCalled();
+  });
+
+  it("does not create a signup invitation for a collaboration introduction", async () => {
+    const configuredProvider = provider();
+    const job = { ...baseJob, purpose: "farmerbook_introduction" };
+    const { supabase, rpc } = clientFor(job, undefined, "collaboration");
+
+    await expect(
+      processOutreachBatch({ supabase, provider: configuredProvider }),
+    ).resolves.toMatchObject({ claimed: 1, delivered: 1, failed: 0 });
+    expect(rpc).not.toHaveBeenCalledWith(
+      "prepare_outreach_invitation",
+      expect.anything(),
+    );
+    expect(configuredProvider.deliver).toHaveBeenCalledWith(
+      expect.objectContaining({ engagementType: "collaboration" }),
+    );
   });
 });

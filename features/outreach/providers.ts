@@ -1,4 +1,5 @@
 import type { OutreachChannel } from "./types";
+import type { OutreachEngagementType } from "./schemas";
 import { z } from "zod";
 import { constantTimeEqual } from "./crypto";
 import { PostmarkOutreachProvider } from "./postmark-provider";
@@ -63,6 +64,7 @@ export interface ConsentAcquisitionProvider {
     idempotencyKey: string;
     prospectId: string;
     contactCandidateId: string;
+    engagementType: OutreachEngagementType;
     requestedPurposes: Array<"farmerbook_introduction" | "onboarding_followup">;
   }): Promise<ProviderReceipt>;
   verifyWebhook(request: Request): Promise<ConsentDecision>;
@@ -210,6 +212,8 @@ export class HttpOutreachProvider
     channel: OutreachChannel;
     message: string;
     idempotencyKey: string;
+    purpose: "farmerbook_introduction" | "onboarding_followup" | "onboarding_reply";
+    engagementType: OutreachEngagementType;
   }) {
     return this.post("messages", input, input.idempotencyKey);
   }
@@ -241,7 +245,10 @@ export function createConfiguredOutreachProvider(
       serverToken: process.env.POSTMARK_SERVER_TOKEN ?? "",
       fromEmail: process.env.POSTMARK_FROM_EMAIL ?? "",
       inboundAddress: process.env.POSTMARK_INBOUND_ADDRESS ?? "",
-      messageStream: process.env.POSTMARK_MESSAGE_STREAM ?? "",
+      transactionalMessageStream:
+        process.env.POSTMARK_TRANSACTIONAL_MESSAGE_STREAM ?? "",
+      broadcastMessageStream: process.env.POSTMARK_BROADCAST_MESSAGE_STREAM ?? "",
+      postalAddress: process.env.OUTREACH_SENDER_POSTAL_ADDRESS ?? "",
       applicationOrigin: process.env.NEXT_PUBLIC_SITE_URL ?? "",
       actionSigningSecret:
         process.env.OUTREACH_EMAIL_ACTION_SIGNING_SECRET ?? "",
@@ -268,6 +275,8 @@ export interface OutreachDeliveryProvider {
     channel: OutreachChannel;
     message: string;
     idempotencyKey: string;
+    purpose: "farmerbook_introduction" | "onboarding_followup" | "onboarding_reply";
+    engagementType: OutreachEngagementType;
   }): Promise<ProviderReceipt>;
 }
 

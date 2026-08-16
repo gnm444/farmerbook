@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { isOutreachConsentIntakeConfigured } from "@/features/outreach/configuration";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadMessages, messageFor } from "@/lib/i18n";
 import { constantTimeEqual, sha256, uuidFromText } from "@/features/outreach/crypto";
@@ -20,7 +21,8 @@ export async function POST(request: Request) {
   if (
     !isFeatureEnabled("ENABLE_OUTREACH_AGENT") ||
     isDemoMode() ||
-    !isSupabaseConfigured()
+    !isSupabaseConfigured() ||
+    !isOutreachConsentIntakeConfigured()
   ) {
     return NextResponse.json({ code: "FEATURE_DISABLED" }, { status: 404 });
   }
@@ -56,11 +58,14 @@ export async function POST(request: Request) {
   const idempotencyKey = await uuidFromText(`google-lead:${parsed.data.lead_id}`);
   const sourceUrl = `https://ads.google.com/lead-form/${encodeURIComponent(parsed.data.form_id)}/${encodeURIComponent(parsed.data.lead_id)}`;
   const lead = verifiedConsentLeadSchema.safeParse({
+    engagementType: "membership",
     fullName: values.FULL_NAME || [values.FIRST_NAME, values.LAST_NAME].filter(Boolean).join(" "),
     businessName: values.COMPANY_NAME || undefined,
     role: values.ROLE?.toLowerCase().replaceAll(" ", "_") || "customer",
+    countryCode: "IN",
     state: values.REGION,
     district: values.CITY,
+    farmingApproach: "general",
     preferredLocale: values.PREFERRED_LOCALE || "en-IN",
     preferredChannel: email ? "email" : "sms",
     email,
@@ -68,7 +73,7 @@ export async function POST(request: Request) {
     introductionConsent: true,
     followupConsent: values.ONBOARDING_FOLLOWUP_CONSENT?.toLowerCase() === "yes",
     consentPolicyVersion: OUTREACH_CONSENT_POLICY_VERSION,
-    campaignCode: parsed.data.campaign_id.toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 64),
+    campaignCode: "google-lead-form",
   });
   if (!lead.success) {
     return NextResponse.json({ code: "INCOMPLETE_LEAD" }, { status: 202 });

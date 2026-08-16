@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { privateFarmerContactConfiguration } from "@/features/farmer-database/crypto";
 import { mirrorConsentLeadToPrivateFarmerDatabase } from "@/features/farmer-database/private-contact-service";
 import { createOutreachAgent } from "./agent";
+import { isOutreachConsentIntakeConfigured } from "./configuration";
 import { createConfiguredOutreachProvider } from "./providers";
 import {
   outreachDatabaseFailure,
@@ -34,6 +35,7 @@ import {
 } from "./ocr";
 import {
   consentLeadSchema,
+  outreachPriorityTier,
   outreachSourceInputSchema,
 } from "./schemas";
 import {
@@ -210,8 +212,9 @@ export async function submitAcquisitionConsentAction(input: unknown) {
   }
   const parsed = consentLeadSchema.safeParse(input);
   if (!parsed.success) return outreachFailure("INVALID_INPUT", z.flattenError(parsed.error).fieldErrors);
-  if (isDemoMode() || !isSupabaseConfigured()) return outreachFailure("NOT_CONFIGURED");
+  if (!isOutreachConsentIntakeConfigured()) return outreachFailure("NOT_CONFIGURED");
   if (
+    parsed.data.engagementType === "membership" &&
     isFeatureEnabled("ENABLE_PRIVATE_FARMER_CONTACTS") &&
     !privateFarmerContactConfiguration().configured
   ) {
@@ -223,10 +226,15 @@ export async function submitAcquisitionConsentAction(input: unknown) {
   const requestHeaders = await headers();
   const requestHost =
     requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
-  const hostname = requestHost?.split(":")[0];
+  const hostname = requestHost?.split(",")[0]?.trim().split(":")[0];
+  const expectedAction =
+    parsed.data.engagementType === "collaboration"
+      ? "farmerbook_partner_interest"
+      : "farmerbook_join";
   const turnstileValid = await verifyTurnstileToken(parsed.data.turnstileToken, {
     remoteIp: requestHeaders.get("cf-connecting-ip") ?? undefined,
     expectedHostname: hostname && !hostname.includes("localhost") ? hostname : undefined,
+    expectedAction,
   });
   if (!turnstileValid) return outreachFailure("FORBIDDEN");
 
@@ -236,23 +244,33 @@ export async function submitAcquisitionConsentAction(input: unknown) {
   const requestOrigin = requestHost
     ? `${protocol}://${requestHost}`
     : getSiteUrl();
-  const sourceUrl = new URL("/join", requestOrigin).toString();
+  const sourcePath =
+    parsed.data.engagementType === "collaboration" ? "/partner-interest" : "/join";
+  const sourceUrl = new URL(sourcePath, requestOrigin).toString();
   const applicationOrigin = new URL(requestOrigin).origin;
-  const consentMessages = await loadMessages(parsed.data.preferredLocale);
-  const introductionDraft = messageFor(
-    consentMessages,
-    "outreach.introductionTemplate",
-    {
-      name: parsed.data.fullName,
-      signupUrl: new URL("/signup", applicationOrigin).toString(),
-    },
-  );
+  const introductionDraft =
+    parsed.data.engagementType === "collaboration"
+      ? `Hello ${parsed.data.fullName}, you asked FarmerBook to contact ${parsed.data.businessName} about a farming collaboration. FarmerBook would like to explore a bounded knowledge exchange, farmer story, or educational partnership without implying endorsement. Reply to this email if you would like to continue. You can withdraw consent at any time.`
+      : messageFor(
+          await loadMessages(parsed.data.preferredLocale),
+          "outreach.introductionTemplate",
+          {
+            name: parsed.data.fullName,
+            signupUrl: new URL("/signup", applicationOrigin).toString(),
+          },
+        );
   const lead = {
+    engagementType: parsed.data.engagementType,
     role: parsed.data.role,
     fullName: parsed.data.fullName,
     businessName: parsed.data.businessName,
+    organizationWebsite: parsed.data.organizationWebsite,
+    countryCode: parsed.data.countryCode,
     state: parsed.data.state,
     district: parsed.data.district,
+    region: parsed.data.region,
+    farmingApproach: parsed.data.farmingApproach,
+    priorityTier: outreachPriorityTier(parsed.data.farmingApproach),
     preferredLocale: parsed.data.preferredLocale,
     preferredChannel: parsed.data.preferredChannel,
     email: parsed.data.email,
@@ -283,28 +301,31 @@ export async function submitAcquisitionConsentAction(input: unknown) {
   if (!row || typeof row.code !== "string" || typeof row.prospect_id !== "string") {
     return outreachFailure("DATA_UNAVAILABLE");
   }
-  try {
-    await mirrorConsentLeadToPrivateFarmerDatabase({
-      prospectId: row.prospect_id,
-      fullName: parsed.data.fullName,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      preferredChannel: parsed.data.preferredChannel,
-      state: parsed.data.state,
-      district: parsed.data.district,
-      preferredLocale: parsed.data.preferredLocale,
-      consentPolicyVersion: parsed.data.consentPolicyVersion,
-      consentRecordedAt,
-      idempotencyKey: token.nonce,
-    });
-  } catch {
-    return outreachFailure("DATA_UNAVAILABLE");
+  if (parsed.data.engagementType === "membership") {
+    try {
+      await mirrorConsentLeadToPrivateFarmerDatabase({
+        prospectId: row.prospect_id,
+        fullName: parsed.data.fullName,
+        email: parsed.data.email,
+        phone: parsed.data.phone,
+        preferredChannel: parsed.data.preferredChannel,
+        state: parsed.data.state!,
+        district: parsed.data.district!,
+        preferredLocale: parsed.data.preferredLocale,
+        consentPolicyVersion: parsed.data.consentPolicyVersion,
+        consentRecordedAt,
+        idempotencyKey: token.nonce,
+      });
+    } catch {
+      return outreachFailure("DATA_UNAVAILABLE");
+    }
   }
   return {
     ok: true as const,
     code: row.code,
     data: {
       prospectId: row.prospect_id,
+      engagementType: parsed.data.engagementType,
       status: String(row.status ?? "consent_requested"),
       message:
         "Your request is recorded. FarmerBook will introduce itself only after your contact channel is verified.",

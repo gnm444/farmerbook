@@ -13,6 +13,7 @@ import {
   EMAIL_UNSUBSCRIBE_TTL_MS,
 } from "./email-action-token";
 import type { OutreachChannel } from "./types";
+import type { OutreachEngagementType } from "./schemas";
 
 const postmarkReceiptSchema = z.object({
   ErrorCode: z.literal(0),
@@ -69,6 +70,25 @@ function validInboundAddress(value: string) {
   );
 }
 
+function validFarmerBookSender(value: string) {
+  const parsed = z.email().safeParse(value);
+  return parsed.success && value.toLowerCase().endsWith("@farmerbook.in");
+}
+
+function validMessageStream(value: string) {
+  return /^[a-z0-9][a-z0-9_-]{1,98}$/i.test(value);
+}
+
+function validPostalAddress(value: string) {
+  const normalized = value.trim();
+  return (
+    normalized.length >= 12 &&
+    normalized.length <= 300 &&
+    /[A-Za-z]/.test(normalized) &&
+    !/\b(?:tbd|placeholder|test address|n\/?a|none)\b/i.test(normalized)
+  );
+}
+
 function replyAddress(inboundAddress: string, outboxId: string) {
   const separator = inboundAddress.lastIndexOf("@");
   return `${inboundAddress.slice(0, separator)}+${outboxId}${inboundAddress.slice(separator)}`;
@@ -96,7 +116,9 @@ export class PostmarkOutreachProvider
       serverToken: string;
       fromEmail: string;
       inboundAddress: string;
-      messageStream: string;
+      transactionalMessageStream: string;
+      broadcastMessageStream?: string;
+      postalAddress: string;
       applicationOrigin: string;
       actionSigningSecret: string;
       webhookUsername: string;
@@ -106,9 +128,12 @@ export class PostmarkOutreachProvider
   ) {
     this.configured = Boolean(
       options.serverToken.length >= 20 &&
-        z.email().safeParse(options.fromEmail).success &&
+        validFarmerBookSender(options.fromEmail) &&
         validInboundAddress(options.inboundAddress) &&
-        /^[a-z0-9][a-z0-9_-]{1,98}$/i.test(options.messageStream) &&
+        validMessageStream(options.transactionalMessageStream) &&
+        (!options.broadcastMessageStream ||
+          validMessageStream(options.broadcastMessageStream)) &&
+        validPostalAddress(options.postalAddress) &&
         validHttpsOrigin(options.applicationOrigin) &&
         options.actionSigningSecret.length >= 32 &&
         options.webhookUsername.length >= 12 &&
@@ -121,6 +146,8 @@ export class PostmarkOutreachProvider
     subject: string;
     message: string;
     idempotencyKey: string;
+    messageStream: string;
+    tag: string;
   }): Promise<ProviderReceipt> {
     if (!this.configured) throw new Error("OUTREACH_PROVIDER_NOT_CONFIGURED");
     if (!z.email().safeParse(input.contact).success) {
@@ -135,7 +162,12 @@ export class PostmarkOutreachProvider
       `/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`,
       this.options.applicationOrigin,
     ).toString();
-    const message = `${input.message.trim()}\n\nStop messages: ${unsubscribeUrl}\nYou can also reply STOP.`;
+    const privacyUrl = new URL("/privacy", this.options.applicationOrigin).toString();
+    const message =
+      `${input.message.trim()}\n\nFarmerBook.in · ${this.options.fromEmail}` +
+      `\nPrivacy: ${privacyUrl}` +
+      `\nStop messages: ${unsubscribeUrl}\nYou can also reply STOP.` +
+      `\n\n${this.options.postalAddress.trim()}`;
     let response: Response;
     try {
       response = await (this.options.fetcher ?? fetch)(
@@ -148,7 +180,7 @@ export class PostmarkOutreachProvider
             "x-postmark-server-token": this.options.serverToken,
           },
           body: JSON.stringify({
-            From: `FarmerBook <${this.options.fromEmail}>`,
+            From: `FarmerBook CEO <${this.options.fromEmail}>`,
             To: input.contact,
             ReplyTo: replyAddress(
               this.options.inboundAddress,
@@ -156,8 +188,8 @@ export class PostmarkOutreachProvider
             ),
             Subject: input.subject,
             TextBody: message,
-            MessageStream: this.options.messageStream,
-            Tag: "farmerbook-onboarding",
+            MessageStream: input.messageStream,
+            Tag: input.tag,
             TrackOpens: false,
             TrackLinks: "None",
             Metadata: { outboxId: input.idempotencyKey },
@@ -209,6 +241,7 @@ export class PostmarkOutreachProvider
     idempotencyKey: string;
     prospectId: string;
     contactCandidateId: string;
+    engagementType: OutreachEngagementType;
     requestedPurposes: Array<
       "farmerbook_introduction" | "onboarding_followup"
     >;
@@ -219,6 +252,7 @@ export class PostmarkOutreachProvider
     const token = await createEmailConsentToken({
       prospectId: input.prospectId,
       contactCandidateId: input.contactCandidateId,
+      engagementType: input.engagementType,
       requestedPurposes: input.requestedPurposes,
       expiresAt: Date.now() + EMAIL_CONSENT_TTL_MS,
       secret: this.options.actionSigningSecret,
@@ -229,13 +263,18 @@ export class PostmarkOutreachProvider
     ).toString();
     return this.send({
       contact: input.contact,
-      subject: "Confirm your FarmerBook request",
+      subject:
+        input.engagementType === "collaboration"
+          ? "Confirm your FarmerBook partnership request"
+          : "Confirm your FarmerBook request",
       message:
-        `You asked FarmerBook to contact you about its agriculture network. ` +
+        `You asked FarmerBook to contact you about ${input.engagementType === "collaboration" ? "a farming collaboration" : "its agriculture network"}. ` +
         `Confirm within 48 hours: ${confirmationUrl}\n\n` +
         `If you did not make this request, ignore this message. ` +
         `FarmerBook will not send an introduction without confirmation.`,
       idempotencyKey: input.idempotencyKey,
+      messageStream: this.options.transactionalMessageStream,
+      tag: "farmerbook-consent",
     });
   }
 
@@ -244,15 +283,30 @@ export class PostmarkOutreachProvider
     channel: OutreachChannel;
     message: string;
     idempotencyKey: string;
+    purpose: "farmerbook_introduction" | "onboarding_followup" | "onboarding_reply";
+    engagementType: OutreachEngagementType;
   }) {
     if (input.channel !== "email") {
       throw new Error("POSTMARK_EMAIL_ONLY");
     }
+    const messageStream =
+      input.purpose === "onboarding_followup"
+        ? this.options.broadcastMessageStream
+        : this.options.transactionalMessageStream;
+    if (!messageStream) throw new Error("POSTMARK_BROADCAST_STREAM_REQUIRED");
     return this.send({
       contact: input.contact,
-      subject: "Your FarmerBook invitation",
+      subject:
+        input.engagementType === "collaboration"
+          ? "Your FarmerBook collaboration introduction"
+          : "Your FarmerBook invitation",
       message: input.message,
       idempotencyKey: input.idempotencyKey,
+      messageStream,
+      tag:
+        input.purpose === "onboarding_followup"
+          ? "farmerbook-followup"
+          : "farmerbook-introduction",
     });
   }
 

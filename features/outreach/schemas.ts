@@ -8,9 +8,33 @@ import {
   outreachStatuses,
 } from "./types";
 
-export const OUTREACH_CONSENT_POLICY_VERSION = "2026-08-09.1";
+export const OUTREACH_CONSENT_POLICY_VERSION = "2026-08-17.1";
 export const OUTREACH_MAX_SOURCE_TEXT = 8_000;
 export const OUTREACH_MAX_SCREENSHOT_DATA_URL = 3_000_000;
+
+export const outreachEngagementTypes = ["membership", "collaboration"] as const;
+export const outreachFarmingApproaches = [
+  "natural",
+  "organic",
+  "regenerative",
+  "agroecological",
+  "sustainable",
+  "low_input",
+  "smallholder",
+  "general",
+] as const;
+export type OutreachEngagementType = (typeof outreachEngagementTypes)[number];
+export type OutreachFarmingApproach = (typeof outreachFarmingApproaches)[number];
+
+export function outreachPriorityTier(approach: OutreachFarmingApproach) {
+  if (["natural", "organic", "regenerative", "agroecological"].includes(approach)) {
+    return 10;
+  }
+  if (["sustainable", "low_input", "smallholder"].includes(approach)) {
+    return 20;
+  }
+  return 30;
+}
 
 const categorySlugs = new Set<string>(
   AGRICULTURE_CATEGORIES.map((category) => category.slug),
@@ -80,11 +104,16 @@ export const outreachTransitionSchema = z
   .strict();
 
 const consentLeadShape = {
+  engagementType: z.enum(outreachEngagementTypes),
   role: z.enum(outreachRoles.filter((role) => role !== "unknown")),
   fullName: boundedText(2, 100),
   businessName: boundedText(2, 120).optional(),
-  state: z.string().refine(isIndiaStateOrUnionTerritory, "Select an Indian state or union territory."),
-  district: boundedText(2, 100),
+  organizationWebsite: sourceUrlSchema.optional(),
+  countryCode: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
+  state: boundedText(2, 100).optional(),
+  district: boundedText(2, 100).optional(),
+  region: boundedText(2, 100).optional(),
+  farmingApproach: z.enum(outreachFarmingApproaches),
   preferredLocale: z.enum(SUPPORTED_LOCALES),
   preferredChannel: z.enum(outreachChannels),
   email: z.email().max(254).optional(),
@@ -96,11 +125,23 @@ const consentLeadShape = {
   introductionConsent: z.literal(true),
   followupConsent: z.boolean().default(false),
   consentPolicyVersion: z.literal(OUTREACH_CONSENT_POLICY_VERSION),
-  campaignCode: z.string().trim().regex(/^[a-z0-9][a-z0-9_-]{0,63}$/).optional(),
+  campaignCode: z
+    .enum(["direct-join", "farmer-interest", "partner-interest", "google-lead-form"])
+    .optional(),
 } as const;
 
 function validateConsentContact(
-  value: { preferredChannel: string; email?: string; phone?: string },
+  value: {
+    engagementType: OutreachEngagementType;
+    preferredChannel: string;
+    email?: string;
+    phone?: string;
+    countryCode: string;
+    state?: string;
+    district?: string;
+    region?: string;
+    businessName?: string;
+  },
   context: z.RefinementCtx,
 ) {
   if (value.preferredChannel === "email" && !value.email) {
@@ -108,6 +149,24 @@ function validateConsentContact(
   }
   if (value.preferredChannel !== "email" && !value.phone) {
     context.addIssue({ code: "custom", path: ["phone"], message: "A verified mobile number is required for this channel." });
+  }
+  if (value.engagementType === "membership") {
+    if (value.countryCode !== "IN") {
+      context.addIssue({ code: "custom", path: ["countryCode"], message: "Membership intake currently supports India." });
+    }
+    if (!value.state || !isIndiaStateOrUnionTerritory(value.state)) {
+      context.addIssue({ code: "custom", path: ["state"], message: "Select an Indian state or union territory." });
+    }
+    if (!value.district) {
+      context.addIssue({ code: "custom", path: ["district"], message: "District is required." });
+    }
+  } else {
+    if (!value.businessName) {
+      context.addIssue({ code: "custom", path: ["businessName"], message: "Organization or group name is required." });
+    }
+    if (!value.region) {
+      context.addIssue({ code: "custom", path: ["region"], message: "Region is required." });
+    }
   }
 }
 

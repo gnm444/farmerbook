@@ -1,14 +1,16 @@
 import { z } from "zod";
 import { constantTimeEqual } from "./crypto";
+import { outreachEngagementTypes } from "./schemas";
 
 export const EMAIL_CONSENT_TTL_MS = 48 * 60 * 60 * 1_000;
 export const EMAIL_UNSUBSCRIBE_TTL_MS = 400 * 24 * 60 * 60 * 1_000;
 
 const consentPayloadSchema = z.object({
-  version: z.literal(1),
+  version: z.literal(2),
   action: z.literal("confirm_consent"),
   prospectId: z.uuid(),
   contactCandidateId: z.uuid(),
+  engagementType: z.enum(outreachEngagementTypes),
   requestedPurposes: z
     .array(z.enum(["farmerbook_introduction", "onboarding_followup"]))
     .min(1)
@@ -99,6 +101,7 @@ async function verifyToken<T>(input: {
 export function createEmailConsentToken(input: {
   prospectId: string;
   contactCandidateId: string;
+  engagementType: (typeof outreachEngagementTypes)[number];
   requestedPurposes: Array<
     "farmerbook_introduction" | "onboarding_followup"
   >;
@@ -107,10 +110,11 @@ export function createEmailConsentToken(input: {
 }) {
   return createToken(
     consentPayloadSchema.parse({
-      version: 1,
+      version: 2,
       action: "confirm_consent",
       prospectId: input.prospectId,
       contactCandidateId: input.contactCandidateId,
+      engagementType: input.engagementType,
       requestedPurposes: [...new Set(input.requestedPurposes)],
       expiresAt: input.expiresAt,
     }),

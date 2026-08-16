@@ -16,6 +16,7 @@ describe("outreach email action tokens", () => {
     const token = await createEmailConsentToken({
       prospectId,
       contactCandidateId,
+      engagementType: "collaboration",
       requestedPurposes: [
         "farmerbook_introduction",
         "onboarding_followup",
@@ -25,10 +26,11 @@ describe("outreach email action tokens", () => {
       secret,
     });
     await expect(verifyEmailConsentToken(token, secret, 1_000)).resolves.toEqual({
-      version: 1,
+      version: 2,
       action: "confirm_consent",
       prospectId,
       contactCandidateId,
+      engagementType: "collaboration",
       requestedPurposes: [
         "farmerbook_introduction",
         "onboarding_followup",

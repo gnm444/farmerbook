@@ -29,6 +29,21 @@ flags. Production messaging is disabled because the production database,
 sender/provider, processor secrets, consent campaign, and staged release gates
 are not yet complete.
 
+## Professional sender decision
+
+`ceo@farmerbook.in` is FarmerBook's canonical professional outreach and reply
+identity. Cloudflare Email Routing currently forwards it to the product owner's
+Gmail and a controlled inbound test was recorded as `Forwarded`. It is not a
+Gmail `Send mail as` identity and is therefore receive-only today.
+
+The application must not spoof that address or send through the owner Gmail.
+It may become the configured `From` address only after the approved outbound
+provider verifies `farmerbook.in` and the required SPF, DKIM, Return-Path and
+DMARC alignment. Provider readiness also requires a valid business postal
+address, transactional and optional Broadcast streams, signed lifecycle and
+inbound webhooks, and a successful owner-controlled canary. Until all gates
+pass, delivery remains paused and the public intake fails closed.
+
 ## Recommended low-budget pilot
 
 Do not create a large autonomous fleet. Add one bounded discovery role and keep
@@ -103,6 +118,9 @@ Rules:
   notice, and clear opt-out.
 - Suppress duplicates, withdrawals, complaints, bounces, and `STOP` replies.
 - Keep immutable provider receipts and source/consent evidence.
+- Process confirmed natural, organic, regenerative and agroecological interests
+  before other confirmed introductions. Never delay email confirmation itself,
+  and never infer the priority from a public profile or discovery result.
 
 ### 4. Reply and Onboarding Handler — event-driven function
 

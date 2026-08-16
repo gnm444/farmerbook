@@ -127,9 +127,13 @@ database-owned runtime pause that defaults to paused even when the feature flag
 is enabled. The admin console has no force-send or consent-bypass control.
 
 The first concrete email adapter targets Postmark with a verified FarmerBook
-domain, Broadcast Message Stream, signed double opt-in, per-message inbound
-reply routing, bounce/complaint suppression and one-click unsubscribe. A Gmail
-address may be an owner mailbox but is never used as the autonomous sender.
+domain, separate transactional and optional Broadcast Message Streams, signed
+double opt-in, per-message inbound reply routing, bounce/complaint suppression
+and one-click unsubscribe. `ceo@farmerbook.in` is the selected professional
+identity and currently forwards inbound mail to the owner Gmail. It remains
+receive-only and cannot be used as `From` until Postmark verifies the domain and
+outbound SPF/DKIM/DMARC alignment; the owner Gmail is never used as the
+autonomous sender.
 
 The private Farmer database at `/admin/farmer-database` is a founder-owner-only
 contact store for direct interest, existing-member, approved partner, and

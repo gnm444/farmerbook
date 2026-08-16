@@ -1,7 +1,7 @@
 ---
 title: FarmerBook production runbook
 status: Release gate
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-17
 ---
 
 # FarmerBook production runbook
@@ -171,17 +171,18 @@ flags. `ENABLE_BUSINESS_OFFERS` must not be enabled before
 `ENABLE_AGRI_BUSINESSES`.
 
 The Worker flags are rollout controls, not authorization boundaries. The
-database also owns eleven private controls in
+database also owns twelve private controls in
 `public.ecosystem_release_controls`: `extended_locales`,
 `resumable_onboarding`, `agri_businesses`, `business_offers`,
 `outreach_agent`, `inc_sourcing`, `profile_research_agents`,
 `managed_operations_agents`, `featured_farmer_profiles`,
-`private_farmer_contacts`, and `sourced_farmer_research`. Every row is
+`private_farmer_contacts`, `sourced_farmer_research`, and
+`support_social_pilot`. Every row is
 seeded `false`; `anon` and `authenticated` have no privileges on the control
 table. Change them only through a reviewed SQL console/session running as the
 database owner or service role, and record the operator and change ticket.
 
-Before and after every rollout or rollback, verify all eleven rows:
+Before and after every rollout or rollback, verify all twelve rows:
 
 ```sql
 select control_key, enabled, updated_at
@@ -223,11 +224,13 @@ roll back the Worker. Never enable all controls as a convenience.
 | `OUTREACH_PROVIDER_WEBHOOK_SECRET` | **REQUIRED:** at least 32 random bytes; HMAC webhook verification; secret store only |
 | `OUTREACH_PROVIDER_KIND` | Set to `postmark` only for the reviewed native email adapter; omit it to retain the generic fail-closed gateway |
 | `POSTMARK_SERVER_TOKEN` | **REQUIRED for email:** server-scoped token; secret store only; never use the account token |
-| `POSTMARK_FROM_EMAIL` | **REQUIRED for email:** verified FarmerBook-domain sender; SPF, DKIM and DMARC evidence required |
+| `POSTMARK_FROM_EMAIL` | **REQUIRED for email:** `ceo@farmerbook.in`; currently receive-only, so outbound use is prohibited until Postmark verification plus SPF, DKIM, Return-Path and DMARC evidence pass |
 | `POSTMARK_INBOUND_ADDRESS` | **REQUIRED for email replies:** exact private inbound Postmark address used with per-outbox plus addressing |
-| `POSTMARK_MESSAGE_STREAM` | **REQUIRED for email:** reviewed Broadcast Message Stream identifier for consented introductions |
+| `POSTMARK_TRANSACTIONAL_MESSAGE_STREAM` | **REQUIRED for email:** transactional stream for requested confirmations, introductions and bounded replies |
+| `POSTMARK_BROADCAST_MESSAGE_STREAM` | **REQUIRED only for the optional follow-up:** reviewed Broadcast stream; leave unset to keep follow-ups unavailable |
 | `POSTMARK_WEBHOOK_USERNAME` | **REQUIRED for email:** random Basic-auth username of at least 12 characters; secret store only |
 | `POSTMARK_WEBHOOK_PASSWORD` | **REQUIRED for email:** random Basic-auth password of at least 32 characters; secret store only |
+| `OUTREACH_SENDER_POSTAL_ADDRESS` | **REQUIRED for email:** valid FarmerBook business postal address included in every message; placeholders fail configuration |
 | `OUTREACH_EMAIL_ACTION_SIGNING_SECRET` | **REQUIRED for email:** separate value of at least 32 random bytes for double-opt-in and unsubscribe links |
 | `GOOGLE_LEAD_WEBHOOK_SECRET` | **REQUIRED only when Google lead forms are enabled:** per-form secret, owner and rotation evidence |
 | `BRAVE_SEARCH_API_KEY` | **REQUIRED for name discovery:** install directly with `wrangler secret put BRAVE_SEARCH_API_KEY`; never expose through a Vite/public variable, logs, source, or support transcript |
@@ -770,18 +773,21 @@ message delivery or upload of third-party contact lists.
 
 ### Required staging evidence
 
-1. Apply `20260809140000_outreach_agent.sql` followed by the forward-only
-   `20260810100000_outreach_invitation_linkage.sql`,
-   `20260810110000_outreach_provider_lifecycle.sql` and
-   `20260810120000_outreach_admin_operations.sql` while both the Worker flag,
-   private `outreach_agent` control and delivery runtime control remain off or
-   paused. Prove `anon` and
+1. On a clean installation, apply the full migration history. On the current
+   production-shaped installation, apply only the reviewed
+   `20260817120000_outreach_production_compatibility.sql` and
+   `20260817130000_outreach_production_safety_completion.sql` bridges, in that
+   order and in one transaction; do not run unrestricted `db push`. Rehearse both shapes first
+   and verify the Worker flag and private `outreach_agent` control remain off
+   while the delivery runtime control remains paused. Prove `anon` and
    `authenticated` cannot read contact candidates, consent receipts, outbox
    rows, suppressions, events or agent runs.
-2. Verify `/join` fails closed unless Supabase, the HMAC signing secret,
-   Turnstile site key and Turnstile secret are all configured. Verify an expired
-   or tampered nonce, replay, invalid hostname and failed Turnstile token write
-   nothing.
+2. Verify `/join` and `/partner-interest` fail closed unless Supabase, the
+   service role, HMAC signing secret, exact-action/hostname Turnstile site and
+   secret keys, concrete Postmark provider, verified FarmerBook sender and
+   postal footer are configured together. Verify an expired or tampered nonce,
+   replay, missing/mismatched hostname or action, and failed Turnstile token
+   write nothing.
 3. Test website intake against private IPs, localhost, credentials in URLs,
    non-HTTPS production URLs, cross-origin redirects, oversized bodies and
    non-text content. For YouTube and social URLs, prove the application never
@@ -801,18 +807,20 @@ message delivery or upload of third-party contact lists.
    question may create one bounded answer.
    For native Postmark email, replace the generic `/consents` and `/messages`
    gateway checks with its API contract, signed 48-hour double-opt-in page and
-   one-click unsubscribe. Verify the FarmerBook sender domain, dedicated
-   Broadcast Message Stream, server token and private inbound address. Postmark
+   one-click unsubscribe. Verify `ceo@farmerbook.in`, the dedicated
+   transactional stream, optional Broadcast follow-up stream, valid postal
+   footer, server token and private inbound address. Postmark
    webhooks use random HTTP Basic credentials because Postmark does not provide
    HMAC signatures; bind every inbound/bounce/complaint event back to the exact
    outbox and contact hash. Configure inbound, bounce, spam-complaint and
    subscription-change triggers without open/click tracking or raw bounce
    content.
-6. Prove each delivered introduction/follow-up receives a one-time 14-day HMAC
-   invitation containing no contact data. Verify tampering, expiry, replay and
-   cross-account reuse fail; the browser moves the token to an HTTP-only
-   SameSite cookie; email, OAuth and password authentication link the account;
-   and onboarding completion atomically marks the prospect joined.
+6. Prove each membership introduction/follow-up receives a one-time 14-day HMAC
+   invitation containing no contact data. Collaboration interests must never
+   create a signup invitation. Verify tampering, expiry, replay and cross-account
+   reuse fail; the browser moves membership tokens to an HTTP-only SameSite
+   cookie; email, OAuth and password authentication link the account; and
+   onboarding completion atomically marks the membership prospect joined.
 7. Obtain legal/privacy approval for the exact consent statement, expiry,
    retention, deletion, sender identification and complaint/withdrawal path.
    For SMS or WhatsApp in India, record the approved registered sender,
@@ -822,6 +830,24 @@ message delivery or upload of third-party contact lists.
 8. Complete native-speaker review for every locale called production-ready.
    Unreviewed fallback copy must remain visibly Beta and must not be used for a
    real consent campaign.
+9. Confirm priority comes only from the requester's self-declared farming
+   approach. Confirmations are always claimed first; among confirmed
+   introductions, natural/organic/regenerative/agroecological tier 10 precedes
+   sustainable/low-input/smallholder tier 20 and general tier 30. Never infer
+   this field from discovery research or a public profile.
+
+### Daily outreach operator checklist
+
+1. Check delivery remains paused unless an approved canary or active release
+   window exists; compare the Worker flag and database control.
+2. Review queue age, ambiguous sends and terminal failures without opening or
+   exporting private contact values.
+3. Review every complaint, hard bounce, unsubscribe and STOP event; verify its
+   suppression and cancellation state before any resume.
+4. Hand interested or ambiguous replies to the named administrator; never
+   retain raw reply bodies in logs or audit JSON.
+5. Confirm introduction/follow-up counts remain within one plus one and that no
+   WhatsApp job, discovery CSV import, or recurring cold campaign exists.
 
 ### Enablement and autonomous processing
 

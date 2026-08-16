@@ -1,0 +1,134 @@
+-- Rehearse the compatibility migration with the outreach domain absent, as in
+-- the current production database. The transaction rollback restores the full
+-- local schema before the next pgTAP file runs.
+begin;
+
+create extension if not exists pgtap with schema extensions;
+select extensions.plan(1);
+
+do $$
+declare
+  relation record;
+begin
+  for relation in
+    select format('%I.%I', namespace.nspname, class.relname) as qualified_name
+    from pg_catalog.pg_class class
+    join pg_catalog.pg_namespace namespace on namespace.oid = class.relnamespace
+    where namespace.nspname = 'public'
+      and class.relkind in ('r', 'p')
+      and class.relname like 'outreach\_%' escape '\'
+  loop
+    execute 'drop table ' || relation.qualified_name || ' cascade';
+  end loop;
+  delete from public.ecosystem_release_controls where control_key = 'outreach_agent';
+end;
+$$;
+
+\ir /tmp/farmerbook-outreach-production-compatibility.sql
+\ir /tmp/farmerbook-outreach-production-safety-completion.sql
+
+do $$
+declare
+  required_relation text;
+  required_function text;
+begin
+  foreach required_relation in array array[
+    'outreach_prospects', 'outreach_contact_candidates', 'outreach_consents',
+    'outreach_outbox', 'outreach_events', 'outreach_suppressions',
+    'outreach_provider_events', 'outreach_runtime_controls',
+    'outreach_invitations', 'outreach_account_links',
+    'outreach_agent_runs', 'outreach_admin_events'
+  ]::text[]
+  loop
+    if to_regclass('public.' || required_relation) is null then
+      raise exception 'Compatibility bridge did not create public.%', required_relation;
+    end if;
+    if not exists (
+      select 1
+      from pg_catalog.pg_class class
+      join pg_catalog.pg_namespace namespace on namespace.oid = class.relnamespace
+      where namespace.nspname = 'public'
+        and class.relname = required_relation
+        and class.relrowsecurity
+    ) then
+      raise exception 'Compatibility bridge did not enable RLS on public.%', required_relation;
+    end if;
+    if pg_catalog.has_table_privilege('anon', 'public.' || required_relation, 'SELECT')
+      or pg_catalog.has_table_privilege(
+        'authenticated', 'public.' || required_relation, 'SELECT'
+      )
+    then
+      raise exception 'Compatibility bridge exposed public.% to browsers', required_relation;
+    end if;
+  end loop;
+
+  foreach required_function in array array[
+    'submit_outreach_consent_lead(jsonb,uuid)',
+    'record_verified_outreach_consent(uuid,jsonb,uuid)',
+    'record_verified_email_double_opt_in(uuid,jsonb,uuid,uuid)',
+    'claim_outreach_outbox(integer)',
+    'record_outreach_delivery_result(uuid,jsonb,uuid)',
+    'prepare_outreach_invitation(uuid,text,timestamp with time zone,uuid)',
+    'validate_outreach_invitation(text)',
+    'redeem_outreach_invitation(text,uuid,uuid)',
+    'schedule_due_outreach_followups(integer)',
+    'withdraw_outreach_consent(uuid,text,uuid)',
+    'record_outreach_provider_event(uuid,jsonb,uuid)',
+    'list_outreach_prospects(integer)',
+    'outreach_dashboard_summary()',
+    'outreach_runtime_health()',
+    'list_outreach_failures(integer)',
+    'outreach_prospect_history(uuid)',
+    'set_outreach_delivery_pause(boolean,text,uuid,uuid)',
+    'admin_suppress_outreach_prospect(uuid,text,uuid,uuid)',
+    'admin_privacy_delete_outreach_prospect(uuid,text,uuid,uuid)',
+    'admin_retry_outreach_failure(uuid,text,uuid,uuid)'
+  ]::text[]
+  loop
+    if to_regprocedure('public.' || required_function) is null then
+      raise exception 'Compatibility bridge did not create public.%', required_function;
+    end if;
+  end loop;
+
+  if not exists (
+    select 1 from public.ecosystem_release_controls
+    where control_key = 'outreach_agent' and not enabled
+  ) or not exists (
+    select 1 from public.outreach_runtime_controls
+    where singleton and delivery_paused
+  ) then
+    raise exception 'Compatibility bridge did not preserve default-off controls';
+  end if;
+
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'outreach_prospects'
+      and column_name = 'engagement_type'
+  ) or not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'outreach_prospects'
+      and column_name = 'priority_tier'
+  ) then
+    raise exception 'Compatibility bridge omitted collaboration priority columns';
+  end if;
+
+  if not exists (
+    select 1 from pg_catalog.pg_trigger trigger
+    join pg_catalog.pg_class class on class.oid = trigger.tgrelid
+    join pg_catalog.pg_namespace namespace on namespace.oid = class.relnamespace
+    where namespace.nspname = 'public'
+      and class.relname = 'outreach_outbox'
+      and trigger.tgname = 'outreach_outbox_requires_active_consent'
+      and not trigger.tgisinternal
+  ) then
+    raise exception 'Compatibility bridge omitted outbox consent enforcement';
+  end if;
+end;
+$$;
+
+select extensions.pass(
+  'production-shaped outreach compatibility bridge is complete and default-off'
+);
+select * from extensions.finish();
+
+rollback;

@@ -205,6 +205,7 @@ begin
         'email-opt-in@farmerbook.invalid'
       ),
       'channel', 'email',
+      'engagementType', 'membership',
       'requestedPurposes', jsonb_build_array(
         'farmerbook_introduction', 'onboarding_followup'
       ),

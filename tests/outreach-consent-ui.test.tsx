@@ -19,6 +19,8 @@ describe("public consent-first join experience", () => {
           consentNonce=""
           turnstileSiteKey=""
           locales={["en-IN"]}
+          engagementType="membership"
+          campaignCode="direct-join"
         />
       </LocaleProvider>,
     );
@@ -34,6 +36,8 @@ describe("public consent-first join experience", () => {
           consentNonce=""
           turnstileSiteKey=""
           locales={["en-IN", "hi-IN"]}
+          engagementType="membership"
+          campaignCode="direct-join"
         />
       </LocaleProvider>,
     );
@@ -48,6 +52,8 @@ describe("public consent-first join experience", () => {
           consentNonce={token}
           turnstileSiteKey="site-key"
           locales={["en-IN", "hi-IN", "mr-IN"]}
+          engagementType="membership"
+          campaignCode="direct-join"
         />
       </LocaleProvider>,
     );
@@ -57,5 +63,30 @@ describe("public consent-first join experience", () => {
     expect(
       screen.getByLabelText(/preferred language/i).querySelectorAll("option"),
     ).toHaveLength(3);
+  });
+
+  it("uses a separate international collaboration intake without implying membership", () => {
+    render(
+      <LocaleProvider locale="en-IN" messages={englishMessages}>
+        <ConsentJoinExperience
+          configured
+          consentNonce={token}
+          turnstileSiteKey="site-key"
+          locales={["en-IN"]}
+          engagementType="collaboration"
+          campaignCode="partner-interest"
+        />
+      </LocaleProvider>,
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: /build useful farming collaborations across borders/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/organization or group name/i)).toBeRequired();
+    expect(screen.getByLabelText(/two-letter country code/i)).toBeRequired();
+    expect(
+      screen.queryByLabelText(/^state or union territory$/i),
+    ).not.toBeInTheDocument();
   });
 });

@@ -4,17 +4,22 @@ import type { SupportedLocale } from "@/lib/i18n/locales";
 import { localeNeedsNativeReview } from "@/lib/i18n/review-status";
 import { useLocale, useTranslations } from "@/components/locale-provider";
 import { ConsentJoinForm } from "./consent-join-form";
+import type { OutreachEngagementType } from "./schemas";
 
 export function ConsentJoinExperience({
   configured,
   consentNonce,
   turnstileSiteKey,
   locales,
+  engagementType,
+  campaignCode,
 }: {
   configured: boolean;
   consentNonce: string;
   turnstileSiteKey: string;
   locales: readonly SupportedLocale[];
+  engagementType: OutreachEngagementType;
+  campaignCode: "direct-join" | "farmer-interest" | "partner-interest";
 }) {
   const t = useTranslations("outreach");
   const locale = useLocale();
@@ -23,9 +28,13 @@ export function ConsentJoinExperience({
       <section className="consent-hero">
         <div className="container consent-hero__grid">
           <div>
-            <p className="eyebrow">{t("heroEyebrow")}</p>
-            <h1>{t("heroTitle")}</h1>
-            <p className="consent-hero__lede">{t("heroLede")}</p>
+            <p className="eyebrow">
+              {engagementType === "collaboration" ? t("partnerHeroEyebrow") : t("heroEyebrow")}
+            </p>
+            <h1>{engagementType === "collaboration" ? t("partnerHeroTitle") : t("heroTitle")}</h1>
+            <p className="consent-hero__lede">
+              {engagementType === "collaboration" ? t("partnerHeroLede") : t("heroLede")}
+            </p>
             {localeNeedsNativeReview(locale) ? (
               <p className="beta-notice beta-notice--inverse" role="status">
                 {t("betaDisclosure")}
@@ -46,6 +55,8 @@ export function ConsentJoinExperience({
             consentNonce={consentNonce}
             turnstileSiteKey={turnstileSiteKey}
             locales={locales}
+            engagementType={engagementType}
+            campaignCode={campaignCode}
           />
         ) : (
           <section className="card consent-unavailable">

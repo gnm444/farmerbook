@@ -3196,6 +3196,249 @@ YouTube research loop plus a separate durable, independently evidenced or
 consented founder-only workspace achieves the underlying discovery goal while
 preserving FarmerBook's contact, consent and provider boundaries.
 
+## 2026-08-17 research: production consent intake and consented collaboration email
+
+### Requested outcome and authority boundary
+
+The product owner approved moving the outreach pilot toward production and
+asked that natural/organic farming people be served before general farmers,
+including international farmer groups. The authorized production outcome is a
+public, abuse-protected opt-in path plus verified email delivery for people who
+ask FarmerBook to contact them. It is not authorization to import the 134
+discovery rows, reveal or persist public email/phone values, send cold email,
+use WhatsApp Web, or start a 500-recipient campaign. The discovery CSVs remain
+research-only and contain no contact values.
+
+Natural/organic preference must therefore be based on a person's own form
+selection, not inferred from a public profile. Email confirmation should be
+processed promptly for every requester; queue priority applies only to the
+post-confirmation collaboration/introduction work:
+
+- priority 10: natural, organic, regenerative or agroecological;
+- priority 20: sustainable, low-input or smallholder-focused;
+- priority 30: other/general agriculture.
+
+The current implementation already limits ongoing automation to one optional
+follow-up, scheduled three days after a delivered introduction
+(`supabase/migrations/20260809140000_outreach_agent.sql:1049-1126`). That bounded
+cadence is the appropriate meaning of maintained communication for this
+release. Further replies are inbound and human- or allowlist-assisted; there is
+no perpetual sequence.
+
+### Live environment audit
+
+Read-only production checks on 2026-08-17 established:
+
+- the active Cloudflare deployment is the sourced-Farmer activation release;
+- the Worker secret store contains the existing founder owner ID, Supabase
+  service-role credential and YouTube key, but none of the Turnstile,
+  outreach-signing or Postmark credentials;
+- the linked Supabase project is healthy, but its recorded/applied schema is
+  the original five-migration baseline plus the three isolated sourced-Farmer
+  production migrations;
+- production has `ecosystem_release_controls` with only the sourced-Farmer
+  control. It has no `supported_locales`, `agriculture_categories`,
+  `outreach_*` tables or outreach functions;
+- the live `/admin/outreach` page consequently reports no research, consent or
+  delivery rows, and delivery is unavailable;
+- Gmail contains no response from the nine earlier pilot recipients.
+
+`supabase db push --dry-run` is not a safe production mechanism in this state:
+the CLI would attempt every locally pending migration, including unrelated
+agriculture, Inc, managed-agent, private-contact and support/social domains.
+Supabase documents that `db push` applies all migrations absent from remote
+history and that `migration repair` is the supported history-reconciliation
+tool: <https://supabase.com/docs/reference/cli/v0/supabase-migration>.
+
+The prior sourced-Farmer release provides the repository precedent. It took a
+protected backup, recorded the structurally matched baseline, applied an
+isolated idempotent compatibility bridge and only the requested domain, then
+added forward grant hardening (`implementation-log.md:122-123`). Outreach needs
+the same production-shaped rehearsal and isolated forward migration.
+
+### Existing application flow
+
+The current India-only flow is:
+
+```text
+/join + HMAC nonce + Turnstile
+        |
+        v
+submitAcquisitionConsentAction
+        |
+        v
+service-only submit_outreach_consent_lead RPC
+        |
+        +--> private candidate + pending confirmation outbox
+                                      |
+                                      v
+                            Postmark confirmation email
+                                      |
+                                      v
+                         signed 48-hour confirmation page
+                                      |
+                                      v
+                  purpose-specific consent + introduction outbox
+                                      |
+                                      v
+                 one introduction + optional one follow-up
+                                      |
+                    STOP/reply/bounce/complaint webhook
+                                      |
+                                      v
+                         cancel, suppress, or human reply
+```
+
+`app/join/page.tsx:16-29` fails closed unless the feature, Supabase, HMAC secret
+and public Turnstile key exist. `features/outreach/actions.ts:207-312` verifies
+the signed nonce and Turnstile, writes through a service-only RPC, and returns
+only a prospect reference. `features/outreach/processor.ts:51-226` claims at
+most 25 rows, stops after three consecutive provider failures, and refuses to
+run with an unconfigured provider. `features/outreach/postmark-provider.ts:119-203`
+uses one-recipient API calls, correlation metadata, no open/click tracking,
+one-click unsubscribe and ambiguous-delivery no-retry behavior. Provider
+replies, complaints, bounces and subscription changes are authenticated and
+bound to a receipt or outbox before database mutation.
+
+### Gaps found before production
+
+1. **Production migration incompatibility.** The original outreach migration
+   assumes the much broader agriculture foundation. It references
+   `supported_locales.locale_code` and `agriculture_categories`
+   (`20260809140000_outreach_agent.sql:43,405-419,666-667`). Production has
+   neither. The original foundation actually calls its canonical locale column
+   `locale_tag`; a later compatibility migration adds `locale_code`
+   (`20260809135000_supported_locale_compatibility.sql:1-9`). The outreach
+   discovery RPC also queries `agriculture_categories.active`, while the table
+   exposes `status`, so that code path requires forward repair even in a full
+   local schema. Applying the original outreach migration would also replace
+   the release-control constraint with a key list that omits the live
+   `sourced_farmer_research` row and would fail or regress that release.
+
+2. **India-only intake.** The public form requires an Indian state, district
+   and optional `+91` phone (`features/outreach/consent-join-form.tsx:187-235`;
+   `features/outreach/schemas.ts:82-129`). The SQL RPC independently enforces
+   the same India-only contract (`20260809140000_outreach_agent.sql:653-680`).
+   International associations and farmer groups need a separate collaboration
+   interest path with country/region, organization type, website and farming
+   approach. Email remains the only channel.
+
+3. **Membership and collaboration are conflated.** Every introduction is
+   prepared as a one-time `/signup` invitation
+   (`features/outreach/processor.ts:119-166` and
+   `20260810100000_outreach_invitation_linkage.sql:50-188`). A farmer group or
+   educator may want a partnership conversation without creating an account.
+   The prospect needs an explicit `engagement_type` so membership requests can
+   receive a signed signup invitation while collaboration requests receive an
+   honest reply-oriented collaboration introduction with no account token.
+
+4. **Turnstile response binding is incomplete.** The form renders action
+   `farmerbook_join`, but `verifyTurnstileToken` checks a returned hostname only
+   when one happens to be present and does not verify the returned action
+   (`features/outreach/turnstile.ts:3-40`). Production must require exact action
+   and hostname values. Cloudflare says server-side validation is mandatory,
+   tokens expire after five minutes and are single-use, and widgets should be
+   hostname-restricted:
+   <https://developers.cloudflare.com/turnstile/get-started/> and
+   <https://developers.cloudflare.com/turnstile/additional-configuration/hostname-management/>.
+
+5. **Provider configuration is not part of public readiness.** `/join` may
+   render as configured even if the provider cannot send the promised
+   confirmation. `app/join/page.tsx:21-25` should require the concrete provider
+   too, and the success copy must say accepted only after the outbox row is
+   committed. Missing provider configuration must keep both intake pages
+   unavailable.
+
+6. **Message-stream semantics are too coarse.** The Postmark adapter accepts
+   one stream for confirmation, introduction and follow-up
+   (`features/outreach/postmark-provider.ts:94-175`). Postmark classifies an
+   immediate response to a submitted form and email verification as
+   transactional, while list-like announcements and optional campaigns belong
+   on a Broadcast stream:
+   <https://postmarkapp.com/support/article/transactional-vs-broadcast> and
+   <https://postmarkapp.com/support/article/how-to-create-and-send-through-message-streams>.
+   The adapter should require a transactional stream for the requested
+   confirmation/introduction and a separate Broadcast stream only before an
+   optional follow-up/campaign is enabled.
+
+7. **Sender identification is incomplete.** Current email text includes an
+   unsubscribe URL but no validated physical sender address
+   (`features/outreach/postmark-provider.ts:129-175`). Because international
+   collaboration mail may be commercial, production should conservatively
+   require a valid FarmerBook business postal address in the footer and obtain
+   privacy/legal review. The U.S. CAN-SPAM text expressly includes a valid
+   physical postal address for commercial messages:
+   <https://search.ftc.gov/sites/default/files/documents/cases/2007/11/canspam.pdf>.
+
+8. **Provider account work is external.** Postmark requires a verified Sender
+   Signature or domain before mail can be sent
+   (<https://postmarkapp.com/support/article/adding-sender-signatures>). Its
+   webhooks do not supply HMAC signatures; Postmark recommends HTTPS plus HTTP
+   Basic authentication and payload/idempotency validation
+   (<https://postmarkapp.com/developer/webhooks/webhooks-overview>). The code
+   already implements Basic authentication and payload binding, but a real
+   Postmark server, verified `farmerbook.in` sending domain, server-scoped
+   token, inbound address, streams and webhook configuration do not exist in
+   the current environment. Account creation, billing/terms acceptance and the
+   business postal address require the product owner.
+
+### Production-compatible design
+
+Use a new forward-only outreach production-compatibility migration; never edit
+or replay the historical migrations against live production. The migration
+must be tested in two shapes: after the full local history and after an exact
+clone of the five-migration production baseline plus sourced-Farmer bridge. In
+both shapes it must converge on the same outreach tables, functions, grants,
+RLS, release-control key set and default-paused runtime. It must not create the
+unrelated agriculture/Inc/managed-agent/support domains.
+
+The public interfaces should be separate but share server primitives:
+
+- `/join`: India-oriented individual/member request, current localized fields,
+  explicit membership introduction, optional single onboarding follow-up;
+- `/partner-interest`: international or Indian farmer group, cooperative,
+  association, natural/organic network, creator/educator, NGO or agriculture
+  business; country and region; organization/site; self-declared farming
+  approach; explicit one-time collaboration introduction plus optional single
+  follow-up.
+
+The confirmation token must bind the prospect, contact candidate, exact
+requested purposes and engagement type. A confirmed collaboration interest
+must not issue a signup token. Both paths use the same suppression, withdrawal,
+bounce, complaint, retention and immutable audit boundaries. Phone may be
+accepted only as optional private context after a separate data review; it is
+never a messaging channel in this release. WhatsApp remains disabled pending a
+separate Meta Business account, template/opt-in and webhook release.
+
+### Release and rollback boundary
+
+The deployment can safely deliver code and schema while all live controls
+remain off. Production activation requires, in order: protected database
+backup; production-shaped migration rehearsal; isolated migration apply and
+catalog/RLS smoke; Turnstile widget restricted to `farmerbook.in` and
+`www.farmerbook.in`; Postmark sender/domain and stream verification; encrypted
+Worker secrets; provider webhook canaries; staged Worker version; one
+owner-designated opt-in canary; exact consent/STOP/bounce evidence; then a
+gradual Worker rollout. Runtime delivery stays paused until the canary row is
+explicitly approved.
+
+Rollback does not drop consent or suppression evidence. Pause delivery, disable
+the database control, disable the Worker flag or return traffic to the current
+known-good version, stop schedules, revoke the Postmark token and confirm no
+pending row is claimable. This is safer and more auditable than reversing live
+tables.
+
+### Research checkpoint conclusion
+
+The existing consent-first provider core is suitable, but the live database
+cannot receive the historical migration chain and the current form/provider
+contract is not ready for international collaboration. Implementation should
+first create the dual-shape compatibility migration, separate membership from
+collaboration, add self-declared natural/organic priority, harden Turnstile and
+sender identity, and split Postmark stream semantics. Real sending remains
+blocked on a product-owner-managed Postmark account/domain and a valid business
+postal address.
+
 ## 2026-08-16 research: supervised customer support and social-content agents
 
 ### Requested outcome and bounded pilot

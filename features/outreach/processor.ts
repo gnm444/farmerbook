@@ -37,6 +37,11 @@ const preparedProfilePreviewSchema = z.object({
   message_body: z.string().min(20).max(2_000),
 });
 
+const prospectDeliverySchema = z.object({
+  followup_requested: z.boolean(),
+  engagement_type: z.enum(["membership", "collaboration"]),
+});
+
 type ConfiguredProvider = ConsentAcquisitionProvider & OutreachDeliveryProvider;
 
 function failureCode(error: unknown) {
@@ -97,19 +102,20 @@ export async function processOutreachBatch(options: {
       if (contactResult.error || !contactResult.data?.private_value) {
         throw new Error("CONTACT_NOT_FOUND");
       }
+      const prospectResult = await options.supabase
+        .from("outreach_prospects")
+        .select("followup_requested, engagement_type")
+        .eq("id", job.prospect_id)
+        .maybeSingle();
+      if (prospectResult.error || !prospectResult.data) {
+        throw new Error("PROSPECT_NOT_FOUND");
+      }
+      const prospect = prospectDeliverySchema.parse(prospectResult.data);
       let requestedPurposes: Array<
         "farmerbook_introduction" | "onboarding_followup"
       > = ["farmerbook_introduction"];
       if (job.purpose === "consent_confirmation") {
-        const prospectResult = await options.supabase
-          .from("outreach_prospects")
-          .select("followup_requested")
-          .eq("id", job.prospect_id)
-          .maybeSingle();
-        if (prospectResult.error || !prospectResult.data) {
-          throw new Error("PROSPECT_NOT_FOUND");
-        }
-        if (prospectResult.data.followup_requested === true) {
+        if (prospect.followup_requested) {
           requestedPurposes = [
             "farmerbook_introduction",
             "onboarding_followup",
@@ -118,8 +124,9 @@ export async function processOutreachBatch(options: {
       }
       let message = job.message_body;
       if (
-        job.purpose === "farmerbook_introduction" ||
-        job.purpose === "onboarding_followup"
+        prospect.engagement_type === "membership" &&
+        (job.purpose === "farmerbook_introduction" ||
+          job.purpose === "onboarding_followup")
       ) {
         const expiresAt =
           new Date(job.created_at).getTime() + OUTREACH_INVITATION_TTL_MS;
@@ -173,6 +180,7 @@ export async function processOutreachBatch(options: {
               idempotencyKey: job.id,
               prospectId: job.prospect_id,
               contactCandidateId: job.contact_candidate_id,
+              engagementType: prospect.engagement_type,
               requestedPurposes,
             })
           : await options.provider.deliver({
@@ -180,6 +188,8 @@ export async function processOutreachBatch(options: {
               channel: job.channel,
               message,
               idempotencyKey: job.id,
+              purpose: job.purpose,
+              engagementType: prospect.engagement_type,
             });
       const recorded = await options.supabase.rpc(
         "record_outreach_delivery_result",
