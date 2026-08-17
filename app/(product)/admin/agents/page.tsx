@@ -16,7 +16,7 @@ export default async function ManagedAgentsPage() {
         eyebrow="Administrator · managed operations"
         title="FarmerBook agent fleet"
         description="Six purpose-limited managed agents handle consented growth, private Farmer profile drafts, verification routing, supervised support and social drafts, and fleet health without sharing one unrestricted identity."
-        action={<div className="report-actions"><Link className="button button--secondary" href="/admin/operations">Support & social review</Link><Link className="button button--secondary" href="/admin/sourced-farmers">Sourced farmer research</Link><Link className="button button--secondary" href="/admin/farmer-database">Private Farmer database</Link><Link className="button button--secondary" href="/admin/outreach">Open outreach evidence</Link></div>}
+        action={<div className="report-actions"><Link className="button button--secondary" href="/admin/blog">Blog Writing Agent</Link><Link className="button button--secondary" href="/admin/operations">Support & social review</Link><Link className="button button--secondary" href="/admin/sourced-farmers">Sourced farmer research</Link><Link className="button button--secondary" href="/admin/farmer-database">Private Farmer database</Link><Link className="button button--secondary" href="/admin/outreach">Open outreach evidence</Link></div>}
       />
       <ManagedAgentConsole {...dashboard} />
     </div>

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { loadFeaturedFarmerPublications } from "@/features/featured-farmers/queries";
+import { loadBlogPublications } from "@/features/blog/queries";
 import { getSiteUrl } from "@/lib/env";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
@@ -13,11 +14,15 @@ const publicPaths = [
   "/terms",
   "/license",
   "/data-deletion",
+  "/blog",
 ] as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = getSiteUrl();
-  const featuredPublications = await loadFeaturedFarmerPublications();
+  const [featuredPublications, blogPublications] = await Promise.all([
+    loadFeaturedFarmerPublications(),
+    loadBlogPublications(),
+  ]);
   const paths: readonly string[] = [
     ...publicPaths,
     ...(isFeatureEnabled("ENABLE_AGRI_BUSINESSES") ? ["/companies"] : []),
@@ -44,6 +49,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ).toString(),
       lastModified: new Date(publication.fact_checked_at),
       changeFrequency: "yearly" as const,
+      priority: 0.8,
+    })),
+    ...blogPublications.map((publication) => ({
+      url: new URL(`/blog/${publication.slug}`, origin).toString(),
+      lastModified: new Date(publication.updatedAt),
+      changeFrequency: "monthly" as const,
       priority: 0.8,
     })),
   ];

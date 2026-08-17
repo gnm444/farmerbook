@@ -8,6 +8,7 @@ import type { WebsiteGreetingAgent } from "../features/website-greeter/agent";
 
 export { FarmerProfileAgent } from "../features/profile-agent/managed-agent";
 export { WebsiteGreetingAgent } from "../features/website-greeter/agent";
+export { BlogWritingAgent } from "../features/blog/agent";
 export { FarmerProfileApprovalWorkflow } from "../features/profile-agent/approval-workflow";
 export {
   CustomerSupportAgent,

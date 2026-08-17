@@ -54,6 +54,9 @@ for (const [name, value] of Object.entries({
     process.env.WEBSITE_GREETER_DAILY_AI_REPLY_LIMIT,
   WEBSITE_GREETER_MONTHLY_BUDGET_USD:
     process.env.WEBSITE_GREETER_MONTHLY_BUDGET_USD,
+  BLOG_WRITING_MODEL: process.env.BLOG_WRITING_MODEL,
+  BLOG_WRITING_MONTHLY_BUDGET_USD:
+    process.env.BLOG_WRITING_MONTHLY_BUDGET_USD,
 })) {
   if (value) publicWorkerVars[name] = value;
 }
@@ -110,6 +113,10 @@ const localBindingConfig = {
         name: "WEBSITE_GREETING_AGENT",
         class_name: "WebsiteGreetingAgent",
       },
+      {
+        name: "BLOG_WRITING_AGENT",
+        class_name: "BlogWritingAgent",
+      },
     ],
   },
   migrations: [
@@ -136,6 +143,10 @@ const localBindingConfig = {
     {
       tag: "website-greeting-agent-v1",
       new_sqlite_classes: ["WebsiteGreetingAgent"],
+    },
+    {
+      tag: "blog-writing-agent-v1",
+      new_sqlite_classes: ["BlogWritingAgent"],
     },
   ],
   workflows: [

@@ -17,6 +17,7 @@ const publicPrefixes = [
   "/manifest.webmanifest",
   "/marketplace",
   "/featured-farmers",
+  "/blog",
   "/robots.txt",
   "/sitemap.xml",
   "/companies",

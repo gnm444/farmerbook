@@ -23,6 +23,7 @@ const messages = {
     homeAria: "FarmerBook home",
     marketplace: "Marketplace",
     featuredFarmers: "Featured Farmers",
+    blog: "Farming Blog",
     companiesOffers: "Incs & offers",
     whoFor: "Who it is for",
     howWorks: "How it works",

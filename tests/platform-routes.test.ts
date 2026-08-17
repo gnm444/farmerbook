@@ -37,6 +37,8 @@ describe("platform metadata and health routes", () => {
     expect(urls).toContain("/");
     expect(urls).toContain("/marketplace");
     expect(urls).toContain("/featured-farmers");
+    expect(urls).toContain("/blog");
+    expect(urls).toContain("/blog/calculated-transition-to-natural-farming");
     expect(urls).toContain("/license");
     expect(urls).toContain("/featured-farmers/narayana-reddy");
     expect(urls).not.toContain("/marketplace/demo");

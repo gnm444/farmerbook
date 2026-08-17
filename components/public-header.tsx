@@ -19,6 +19,7 @@ export async function PublicHeader() {
         <div className="public-links">
           <Link href="/marketplace">{t("marketplace")}</Link>
           <Link href="/featured-farmers">{t("featuredFarmers")}</Link>
+          <Link href="/blog">{t("blog")}</Link>
           {incSourcingEnabled ? <Link href="/sourcing">{t("sourcingNeeds")}</Link> : null}
           {companiesEnabled ? <Link href="/companies">{t("companiesOffers")}</Link> : null}
           <Link href="/#segments">{t("whoFor")}</Link>

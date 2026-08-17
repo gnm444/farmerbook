@@ -25,6 +25,7 @@ export async function PublicFooter() {
           <strong>{t("explore")}</strong>
           <Link href="/marketplace">{t("marketplace")}</Link>
           <Link href="/featured-farmers">{t("featuredFarmers")}</Link>
+          <Link href="/blog">{t("blog")}</Link>
           {companiesEnabled ? <Link href="/companies">{t("companiesOffers")}</Link> : null}
           <Link href="/#segments">{t("whoFor")}</Link>
           <Link href="/signup">{t("join")}</Link>

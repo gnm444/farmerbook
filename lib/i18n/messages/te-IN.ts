@@ -5,7 +5,7 @@ const messages = {
   offers: englishMessages.offers,
   profilePreview: englishMessages.profilePreview,
   incSourcing: englishMessages.incSourcing,
-  navigation: englishMessages.navigation,
+  navigation: { ...englishMessages.navigation, blog: "వ్యవసాయ బ్లాగ్" },
   home: englishMessages.home,
   publicProfile: englishMessages.publicProfile,
   settings: englishMessages.settings,

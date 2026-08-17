@@ -121,6 +121,15 @@ environment:
 English are selectable. Set it to `false` only as an emergency rollback;
 unreviewed strings disclose their Indian-English fallback.
 
+The public farming library is at `/blog`. A dedicated Cloudflare
+`BlogWritingAgent` prepares one evidence-bounded draft each Tuesday at 09:00
+IST, stores it privately, and requires an authenticated administrator to
+publish it from `/admin/blog`. Its cheapest allowlisted Workers AI model has a
+hard default USD 4/month inference cap inside the shared USD 50 fleet budget.
+Reviewed Telugu and Indian English articles are canonical; the other supported
+Indian languages receive cached, clearly disclosed AI-assisted translations
+with an honest English fallback. See `docs/BLOG_WRITING_AGENT.md`.
+
 The acquisition agent is consent-first. Administrators may analyze a bounded
 public website or supply a public social description/screenshot, but FarmerBook
 does not scrape YouTube or social profiles and never treats a visible contact
