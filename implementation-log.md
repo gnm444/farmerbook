@@ -166,3 +166,46 @@
   Postmark/domain setup, a valid FarmerBook postal address, canary inbox,
   human-reviewed localized copy, staged evidence and separate activation
   approval.
+- 2026-08-17: Completed the protected production database gate. Created a
+  mode-700 roles/schema/data backup under
+  `/Users/ngonapa/Documents/code/farmerbook-backups/2026-08-17-outreach-pre-migration`,
+  recorded SHA-256 checksums (`roles.sql`
+  `168a95a9c745af5ed4679751f90419ac9dc434240a213b03e32a06d5664c2308`,
+  `schema.sql`
+  `7edfafce849f303a94b776fe5c7d166029f8aaa04aa12627e0f18ce13af4c218`,
+  `data.sql`
+  `92698c1a53fa54d4733e8ce03c72dbb67733d2418a9bc40e939505a962c675e0`),
+  restored it into a disposable database, and
+  passed the production-shaped compatibility test. Applied only
+  `20260817120000_outreach_production_compatibility.sql` and
+  `20260817130000_outreach_production_safety_completion.sql` in one hosted
+  transaction and repaired only those two migration-history entries. The live
+  audit found 12 outreach tables with RLS, no browser SELECT grants, no
+  outreach rows, `outreach_enabled=false`, and `delivery_paused=true`; existing
+  Auth/profile/application counts were preserved.
+- 2026-08-17: Completed the external consent-delivery configuration without
+  enabling traffic. Created the restricted managed Turnstile widget for the
+  production and local hostnames, validated its metadata/siteverify behavior,
+  and installed its public site key plus encrypted secret. Created the
+  dedicated Postmark server and transactional, Broadcast and inbound streams;
+  verified `farmerbook.in` DKIM and custom Return-Path; added a monitoring-only
+  DMARC policy; and configured authenticated inbound, bounce, spam-complaint
+  and subscription-change webhooks for both outbound streams. Raw inbound
+  content retention and open/click tracking are off. The displayed Postmark
+  server token was treated as exposed, replaced, validated against server
+  `20346797`, installed only as an encrypted Worker secret, and revoked; the
+  temporary Cloudflare Turnstile setup token and its local file were also
+  revoked/removed. No email was sent.
+- 2026-08-17: Re-ran the complete release gate successfully: ESLint,
+  TypeScript, 134 Vitest files/595 tests, and the Vinext production build.
+  Uploaded the exact release artifact and complete encrypted/plain binding set
+  as no-traffic Worker version `7f977d6f-931e-41b3-b5cb-ba49b6c33915` (script
+  etag `09926645c29beb93a7ad77c414f8a94d8e6b3460f9129981229de08d28586b74`).
+  Production remains 100% on version
+  `07d43829-8af5-4439-91cb-8f03a8993f5c`; health returned 200 and the outreach
+  webhook returned 404 `FEATURE_DISABLED`. Postmark remains in Test mode while
+  its account review is pending, so the owner canary, canary lifecycle review,
+  localized human review, and explicit activation remain open. The application
+  flag and database control were not enabled, delivery was not resumed, the
+  untracked `outreach/` data was not imported, and no contact or message
+  occurred.

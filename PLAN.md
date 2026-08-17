@@ -6522,7 +6522,7 @@ or provider-authentication failure:
 ### Detailed todo list
 
 - [x] Receive explicit approval for this written plan. [DONE 2026-08-17]
-- [ ] Receive/confirm Postmark account authority, postal address and canary inbox (`ceo@farmerbook.in` is the selected sender, inbound forwarding verified).
+- [x] Receive/confirm Postmark account authority, postal address and canary inbox (`ceo@farmerbook.in` is the selected sender; `gnm444@gmail.com` is the canary; inbound forwarding verified). [DONE 2026-08-17]
 - [x] Add the dual-shape forward-only compatibility migrations. [DONE 2026-08-17]
 - [x] Add production-shape migration rehearsal and schema-convergence tests. [DONE 2026-08-17]
 - [x] Add prospect engagement, international location and farming-approach fields. [DONE 2026-08-17]
@@ -6537,11 +6537,12 @@ or provider-authentication failure:
 - [ ] Complete human review of localized consent, confirmation, unsubscribe and collaboration copy (English fallback is implemented).
 - [x] Update environment, architecture, runbook, requirements, log and state docs. [DONE 2026-08-17]
 - [x] Run all focused/full application, database, RLS, E2E and diff gates. [DONE 2026-08-17]
-- [ ] Take a protected production backup and rehearse the exact migration.
-- [ ] Apply only the two isolated migrations; verify controls remain off/paused.
-- [ ] Create restricted Turnstile widget and install encrypted secrets.
-- [ ] Configure and verify Postmark domain, streams, inbound and lifecycle webhooks.
-- [ ] Upload a no-traffic Worker version and run one owner-controlled canary.
+- [x] Take a protected production backup and rehearse the exact migration. [DONE 2026-08-17]
+- [x] Apply only the two isolated migrations; verify controls remain off/paused. [DONE 2026-08-17]
+- [x] Create restricted Turnstile widget and install encrypted secrets. [DONE 2026-08-17]
+- [x] Configure and verify Postmark domain, streams, inbound and lifecycle webhooks. [DONE 2026-08-17; vendor account review remains pending]
+- [x] Upload a no-traffic Worker version with all release bindings and controls disabled. [DONE 2026-08-17]
+- [ ] After Postmark approval, run exactly one owner-controlled canary to `gnm444@gmail.com`.
 - [ ] Review canary consent, receipt, STOP/bounce/unsubscribe and audit evidence.
 - [ ] Obtain explicit activation approval before gradual production traffic.
 
