@@ -10,6 +10,7 @@ import {
   safeHandoffAnswer,
   WEBSITE_GREETER_SYSTEM_PROMPT,
 } from "./knowledge";
+import { aiText } from "./response";
 
 const DEFAULT_MODEL = "@cf/ibm-granite/granite-4.0-h-micro";
 const SUPPORTED_MODELS = new Set([DEFAULT_MODEL]);
@@ -72,15 +73,33 @@ function configuredModel(value: string | undefined) {
   return requested && SUPPORTED_MODELS.has(requested) ? requested : DEFAULT_MODEL;
 }
 
-function aiText(value: unknown) {
-  if (!value || typeof value !== "object") return null;
-  const response = (value as { response?: unknown }).response;
-  if (typeof response !== "string") return null;
-  const text = response.replace(/\s+/g, " ").trim().slice(0, 650);
-  if (!text || /(?:password|payment credentials|send me your|guaranteed|certified organic status confirmed)/i.test(text)) {
-    return null;
+function aiFailureCode(error: unknown): `AI_${string}` {
+  const message = error instanceof Error ? error.message : "";
+  const upstreamCode = message.match(/(?:code\D{0,4})?(\d{3,6})/i)?.[1];
+  if (upstreamCode) return `AI_ERROR_${upstreamCode}`;
+  if (/billing|credit|payment|quota|rate.?limit/i.test(message)) {
+    return "AI_QUOTA_UNAVAILABLE";
   }
-  return text;
+  if (/model|not found|unsupported/i.test(message)) {
+    return "AI_MODEL_UNAVAILABLE";
+  }
+  if (/binding|undefined|not a function/i.test(message)) {
+    return "AI_BINDING_UNAVAILABLE";
+  }
+  return "AI_INFERENCE_UNAVAILABLE";
+}
+
+function aiEmptyResponseCode(result: unknown): `AI_${string}` {
+  if (!result || typeof result !== "object") {
+    return `AI_EMPTY_${typeof result}`.toUpperCase() as `AI_${string}`;
+  }
+  const responseType = typeof (result as { response?: unknown }).response;
+  const keys = Object.keys(result)
+    .slice(0, 6)
+    .map((key) => key.replace(/[^A-Za-z0-9]/g, "").toUpperCase())
+    .filter(Boolean)
+    .join("_") || "NO_KEYS";
+  return `AI_EMPTY_${responseType.toUpperCase()}_${keys}`;
 }
 
 export class WebsiteGreetingAgent extends Agent<
@@ -251,17 +270,35 @@ export class WebsiteGreetingAgent extends Agent<
         temperature: 0.2,
       });
       const text = aiText(result);
+      if (!text) {
+        console.warn("WEBSITE_GREETER_AI_EMPTY_RESPONSE", {
+          responseType:
+            result && typeof result === "object"
+              ? typeof (result as { response?: unknown }).response
+              : typeof result,
+          resultKeys:
+            result && typeof result === "object"
+              ? Object.keys(result).slice(0, 8)
+              : [],
+        });
+      }
       const answer = text
         ? { text, actions: [], source: "workers_ai" as const }
         : { ...safeHandoffAnswer(), source: "handoff" as const };
       return {
         ...answer,
+        ...(!text ? { diagnosticCode: aiEmptyResponseCode(result) } : {}),
         remainingSessionReplies: Math.max(0, MAX_SESSION_REPLIES - replyCount),
       };
-    } catch {
+    } catch (error) {
+      console.error(
+        "WEBSITE_GREETER_AI_FAILED",
+        error instanceof Error ? `${error.name}: ${error.message}` : "Unknown error",
+      );
       return {
         ...safeHandoffAnswer(),
         source: "handoff",
+        diagnosticCode: aiFailureCode(error),
         remainingSessionReplies: Math.max(0, MAX_SESSION_REPLIES - replyCount),
       };
     }

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { websiteGreeterRequestSchema } from "@/features/website-greeter/contracts";
 import { approvedGreeterAnswer } from "@/features/website-greeter/knowledge";
+import { aiText } from "@/features/website-greeter/response";
 
 describe("24/7 managed website greeting agent", () => {
   const agent = readFileSync("features/website-greeter/agent.ts", "utf8");
@@ -29,6 +30,13 @@ describe("24/7 managed website greeting agent", () => {
     expect(approvedGreeterAnswer("What about organic certification?")?.text).toContain(
       "Non-certified organic farmer (paperwork not yet completed to prove certification).",
     );
+  });
+
+  it("accepts both Workers AI response shapes", () => {
+    expect(aiText({ response: "Managed answer" })).toBe("Managed answer");
+    expect(aiText({
+      choices: [{ message: { content: "OpenAI-compatible answer" } }],
+    })).toBe("OpenAI-compatible answer");
   });
 
   it("rejects oversized or malformed visitor messages", () => {

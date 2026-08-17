@@ -17,6 +17,7 @@ export type WebsiteGreeterReply = {
   actions: WebsiteGreeterAction[];
   source: "approved_answer" | "workers_ai" | "handoff";
   remainingSessionReplies: number;
+  diagnosticCode?: `AI_${string}`;
 };
 
 export type WebsiteGreeterState = {
