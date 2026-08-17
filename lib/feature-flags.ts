@@ -17,7 +17,15 @@ export const featureFlagNames = [
 export type FeatureFlagName = (typeof featureFlagNames)[number];
 
 export function isFeatureEnabled(name: FeatureFlagName) {
-  return process.env[name]?.trim().toLowerCase() === "true";
+  const configuredValue = process.env[name]?.trim().toLowerCase();
+
+  // The 23-locale catalog is a shipped accessibility capability, not an
+  // experimental product surface. Keep an explicit `false` rollback switch,
+  // while making every Scheduled Indian language available on installations
+  // that do not carry a legacy rollout value.
+  if (!configuredValue && name === "ENABLE_EXTENDED_LOCALES") return true;
+
+  return configuredValue === "true";
 }
 
 export function getFeatureFlags() {

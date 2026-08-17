@@ -12,6 +12,7 @@ import { agricultureCompanySectorBySlug } from "@/lib/agriculture/company-sector
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { ReportTargetButton } from "@/features/moderation/report-target-button";
 import { formatDate, formatNumber, getServerTranslations, type MessageName } from "@/lib/i18n";
+import { EcoFriendlyClaimNotice } from "@/features/organizations/eco-friendly-claim-notice";
 
 const kindMessageNames = { product: "kindProduct", service: "kindService", rental: "kindRental", promotion: "kindPromotion", finance: "kindFinance", insurance: "kindInsurance", advisory: "kindAdvisory", training: "kindTraining", support: "kindSupport" } as const satisfies Record<OfferKind, MessageName<"offers">>;
 
@@ -82,6 +83,7 @@ export default async function OfferPage({
                   <li key={slug}>{agricultureCompanySectorBySlug(slug)?.name ?? slug}</li>
                 ))}
               </ul>
+              <EcoFriendlyClaimNotice sectorSlugs={offer.categorySlugs} />
               <h2>{t("serviceAreas")}</h2>
               <ul>
                 {offer.serviceAreas.map((area) => (

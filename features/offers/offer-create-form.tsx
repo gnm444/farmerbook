@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
-import { AGRICULTURE_COMPANY_SECTORS } from "@/lib/agriculture/company-sectors";
 import { useTranslations } from "@/components/locale-provider";
 import { SUPPORTED_LOCALES } from "@/lib/i18n/locales";
 import type { OrganizationSummary } from "@/features/organizations/types";
+import { EcoFriendlyClaimNotice } from "@/features/organizations/eco-friendly-claim-notice";
+import { CompanySectorOptions } from "@/features/organizations/company-sector-options";
 import { createBusinessOfferAction } from "./actions";
 import {
   OFFER_KINDS,
@@ -103,11 +104,10 @@ export function OfferCreateForm({ organization }: { organization: OrganizationSu
       <label className="field">
         <span>{t("categories")}</span>
         <select className="input" name="categorySlugs" multiple required size={6}>
-          {AGRICULTURE_COMPANY_SECTORS.map((sector) => (
-            <option key={sector.slug} value={sector.slug}>{sector.name}</option>
-          ))}
+          <CompanySectorOptions />
         </select>
       </label>
+      <EcoFriendlyClaimNotice alwaysVisible />
       <div className="form-row">
         <label className="field">
           <span>{t("validFrom")}</span>

@@ -23,6 +23,7 @@ import { ListingCard } from "@/features/marketplace/listing-card";
 import { ListingImage } from "@/features/marketplace/listing-image";
 import { ReviewList } from "@/features/reviews/review-list";
 import { loadReviewsForListing } from "@/features/reviews/queries";
+import { OrganicCertificationLabel } from "@/features/profiles/organic-certification";
 import {
   loadListingById,
   loadPublicListings,
@@ -187,6 +188,7 @@ export default async function MarketplaceListingPage({
                           : ""}{" "}
                         · @{seller.handle}
                       </p>
+                      <OrganicCertificationLabel profile={seller} />
                     </div>
                   </div>
                   <p dir="auto">{seller.bio}</p>

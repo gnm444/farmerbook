@@ -19,7 +19,10 @@ const produceTaxonomyMigration = readFileSync(resolve(
 const additiveTaxonomyMigrations = `${migration}\n${readFileSync(resolve(
   process.cwd(),
   "supabase/migrations/20260811120000_inc_sourcing.sql",
-), "utf8")}\n${produceTaxonomyMigration}`;
+), "utf8")}\n${produceTaxonomyMigration}\n${readFileSync(resolve(
+  process.cwd(),
+  "supabase/migrations/20260818123000_eco_friendly_product_catalog.sql",
+), "utf8")}`;
 
 describe("agriculture ecosystem foundation migration", () => {
   it("adds the locale registry and backfills the compatible profile field", () => {

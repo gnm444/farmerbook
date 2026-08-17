@@ -5,6 +5,7 @@ import { BadgeCheck, Building2, MapPin } from "lucide-react";
 import { useTranslations } from "@/components/locale-provider";
 import { agricultureCompanySectorBySlug } from "@/lib/agriculture/company-sectors";
 import { type OrganizationSummary } from "./types";
+import { EcoFriendlyClaimNotice } from "./eco-friendly-claim-notice";
 
 const typeMessageNames = {
   manufacturer_brand: "typeManufacturerBrand", dealer_distributor: "typeDealerDistributor",
@@ -56,6 +57,7 @@ export function OrganizationCard({
           <strong>{t("sectors")}:</strong> {sectors.join(" · ")}
         </p>
       ) : null}
+      <EcoFriendlyClaimNotice sectorSlugs={organization.sectorSlugs} />
       <Link className="button button--secondary" href={`/companies/${organization.slug}`}>
         {t("viewProfile")}
       </Link>

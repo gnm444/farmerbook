@@ -12,6 +12,7 @@ import {
 import { Avatar, VerifiedBadge } from "@/components/ui";
 import type { AccountRole, FarmingMethod, ProduceListing } from "@/lib/types";
 import { ListingImage } from "./listing-image";
+import { OrganicCertificationLabel } from "@/features/profiles/organic-certification";
 import { useLocale, useTranslations } from "@/components/locale-provider";
 import {
   formatCurrency,
@@ -150,6 +151,7 @@ export function ListingCard({
                   ? ` · ${t("farmingLabel", { method: t(methodKeys[seller.farmingMethod]) })}`
                   : ""}
               </span>
+              <OrganicCertificationLabel profile={seller} compact />
               {listing.reviewSummary.count ? (
                 <span className="rating-inline">
                   <Star size={12} fill="currentColor" aria-hidden="true" />

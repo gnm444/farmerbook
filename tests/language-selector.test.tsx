@@ -52,6 +52,16 @@ describe("language selector release boundary", () => {
     expect(screen.getByRole("option", { name: /Tamil/i })).toBeVisible();
   });
 
+  it("offers all supported Indian locales by default", () => {
+    render(
+      <LocaleProvider locale="en-IN" messages={englishMessages}>
+        <LanguageSelector />
+      </LocaleProvider>,
+    );
+
+    expect(screen.getAllByRole("option")).toHaveLength(SUPPORTED_LOCALES.length);
+  });
+
   it("keeps a previously selected beta locale visible during rollback", () => {
     renderSelector("ta-IN", false);
 
@@ -70,6 +80,14 @@ describe("language selector release boundary", () => {
       expect(mocks.saveLocale).toHaveBeenCalledWith("hi-IN");
       expect(mocks.refresh).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("discloses the Indian English fallback for unreviewed locales", () => {
+    renderSelector("ta-IN", true);
+
+    expect(
+      screen.getByText(/falls back to Indian English/i),
+    ).toHaveAttribute("lang", "en-IN");
   });
 
   it("does not refresh when persistence fails and exposes a stable error", async () => {

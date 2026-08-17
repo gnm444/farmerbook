@@ -10,11 +10,11 @@ describe("ecosystem feature flags", () => {
     vi.unstubAllEnvs();
   });
 
-  it("keeps every release flag disabled by default", () => {
+  it("ships the locale catalog on while keeping unreleased features off", () => {
     for (const name of featureFlagNames) vi.stubEnv(name, "");
 
     expect(Object.values(getFeatureFlags())).toEqual(
-      featureFlagNames.map(() => false),
+      featureFlagNames.map((name) => name === "ENABLE_EXTENDED_LOCALES"),
     );
   });
 
@@ -24,5 +24,11 @@ describe("ecosystem feature flags", () => {
 
     expect(isFeatureEnabled("ENABLE_AGRI_BUSINESSES")).toBe(true);
     expect(isFeatureEnabled("ENABLE_BUSINESS_OFFERS")).toBe(false);
+  });
+
+  it("retains an explicit rollback switch for extended locales", () => {
+    vi.stubEnv("ENABLE_EXTENDED_LOCALES", "false");
+
+    expect(isFeatureEnabled("ENABLE_EXTENDED_LOCALES")).toBe(false);
   });
 });

@@ -35,6 +35,7 @@ import {
   type SupportedLocale,
 } from "@/lib/i18n";
 import { ShareProfileButton } from "./share-profile-button";
+import { OrganicCertificationLabel } from "./organic-certification";
 
 type PublicProfileTranslator = (
   name: MessageName<"publicProfile">,
@@ -178,6 +179,7 @@ export function PublicFarmerProfile({
                   <p className="public-farmer-headline">
                     {professionalHeadline(profile, locale, t)}
                   </p>
+                  <OrganicCertificationLabel profile={profile} />
                   <p className="public-farmer-location">
                     <MapPin size={15} aria-hidden="true" /> {profile.district},{" "}
                     {profile.state} · <a href="#contact">{t("contactLinks")}</a>

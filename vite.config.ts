@@ -47,6 +47,13 @@ for (const [name, value] of Object.entries({
     process.env.BRAVE_SEARCH_STORAGE_RIGHTS_CONFIRMED,
   NEXT_PUBLIC_TURNSTILE_SITE_KEY:
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+  WEBSITE_GREETER_MODEL: process.env.WEBSITE_GREETER_MODEL,
+  WEBSITE_GREETER_MONTHLY_REPLY_LIMIT:
+    process.env.WEBSITE_GREETER_MONTHLY_REPLY_LIMIT,
+  WEBSITE_GREETER_DAILY_AI_REPLY_LIMIT:
+    process.env.WEBSITE_GREETER_DAILY_AI_REPLY_LIMIT,
+  WEBSITE_GREETER_MONTHLY_BUDGET_USD:
+    process.env.WEBSITE_GREETER_MONTHLY_BUDGET_USD,
 })) {
   if (value) publicWorkerVars[name] = value;
 }
@@ -65,16 +72,9 @@ const localBindingConfig = {
     custom_domain: true,
   })),
   vars: publicWorkerVars,
-  ...(process.env.ENABLE_OUTREACH_AGENT?.toLowerCase() === "true" ||
-  process.env.ENABLE_PROFILE_RESEARCH_AGENT?.toLowerCase() === "true"
-  || process.env.ENABLE_MANAGED_OPERATIONS_AGENTS?.toLowerCase() === "true"
-  || process.env.ENABLE_SUPPORT_SOCIAL_PILOT?.toLowerCase() === "true"
-    ? {
-        ai: { binding: "AI" },
-        ...(process.env.ENABLE_OUTREACH_AGENT?.toLowerCase() === "true"
-          ? { images: { binding: "IMAGES" } }
-          : {}),
-      }
+  ai: { binding: "AI" },
+  ...(process.env.ENABLE_OUTREACH_AGENT?.toLowerCase() === "true"
+    ? { images: { binding: "IMAGES" } }
     : {}),
   durable_objects: {
     bindings: [
@@ -106,6 +106,10 @@ const localBindingConfig = {
         name: "SOCIAL_CONTENT_AGENT",
         class_name: "SocialContentAgent",
       },
+      {
+        name: "WEBSITE_GREETING_AGENT",
+        class_name: "WebsiteGreetingAgent",
+      },
     ],
   },
   migrations: [
@@ -128,6 +132,10 @@ const localBindingConfig = {
         "CustomerSupportAgent",
         "SocialContentAgent",
       ],
+    },
+    {
+      tag: "website-greeting-agent-v1",
+      new_sqlite_classes: ["WebsiteGreetingAgent"],
     },
   ],
   workflows: [

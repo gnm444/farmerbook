@@ -1,11 +1,16 @@
 import Link from "next/link";
+import { WebsiteGreetingAgent } from "@/components/website-greeting-agent";
 import { Brand } from "@/components/ui";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { getServerTranslations } from "@/lib/i18n";
+import {
+  FARMERBOOK_CONTACT_EMAIL,
+  FARMERBOOK_CONTACT_PHONE,
+  FARMERBOOK_CONTACT_PHONE_DISPLAY,
+} from "@/lib/contact";
 
 export async function PublicFooter() {
   const { t } = await getServerTranslations("navigation");
-  const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
   const companiesEnabled = isFeatureEnabled("ENABLE_AGRI_BUSINESSES");
   const outreachEnabled = isFeatureEnabled("ENABLE_OUTREACH_AGENT");
   return (
@@ -30,17 +35,23 @@ export async function PublicFooter() {
           <Link href="/community-rules">{t("communityRules")}</Link>
           <Link href="/privacy">{t("privacy")}</Link>
           <Link href="/terms">{t("terms")}</Link>
-          {supportEmail ? (
-            <a href={`mailto:${supportEmail}`}>{t("supportPrivacy")}</a>
-          ) : (
-            <Link href="/data-deletion">{t("accountData")}</Link>
-          )}
+          <Link href="/data-deletion">{t("accountData")}</Link>
+          <Link href="/license">Open-source licence</Link>
         </nav>
+        <address className="footer-column footer-contact" aria-label="Contact FarmerBook">
+          <strong>Contact</strong>
+          <a href={`mailto:${FARMERBOOK_CONTACT_EMAIL}`}>{FARMERBOOK_CONTACT_EMAIL}</a>
+          <a href={`tel:${FARMERBOOK_CONTACT_PHONE}`}>{FARMERBOOK_CONTACT_PHONE_DISPLAY}</a>
+          <span>Customer greeting agent available 24/7</span>
+        </address>
       </div>
       <div className="container footer-bottom">
-        <span>© 2026 FarmerBook</span>
-        <span>{t("footerMotto")}</span>
+        <span>© 2026 FarmerBook. All rights reserved.</span>
+        <span>
+          Open source under AGPL-3.0 strong copyleft. Copying or redistribution is allowed only under its licence terms.
+        </span>
       </div>
+      <WebsiteGreetingAgent />
     </footer>
   );
 }

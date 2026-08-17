@@ -22,6 +22,7 @@ import type {
   ProduceListing,
   ReviewSummary,
 } from "@/lib/types";
+import { isOrganicCertificationClaim } from "@/features/profiles/organic-certification";
 
 type ListingRow = {
   id: string;
@@ -100,7 +101,7 @@ function mapListing(
     grade: row.grade,
     deliveryOptions: row.delivery_options ?? [],
     deliveryRadiusKm: row.delivery_radius_km ?? undefined,
-    certifications: row.certifications ?? [],
+    certifications: (row.certifications ?? []).filter((claim) => !isOrganicCertificationClaim(claim)),
     status: row.status,
     viewCount: row.view_count ?? 0,
     saveCount: row.save_count ?? 0,

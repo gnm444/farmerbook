@@ -26,6 +26,7 @@ import {
   ORGANIZATION_TYPES,
   type OrganizationType,
 } from "@/features/organizations/types";
+import { EcoFriendlyClaimNotice } from "@/features/organizations/eco-friendly-claim-notice";
 import { AgricultureCategoryPicker } from "./category-picker";
 import { onboardingMutationSchema } from "./schemas";
 import {
@@ -76,6 +77,7 @@ const stepLabels = {
 
 const sectorGroupLabels = {
   machinery: "sectorGroupMachinery",
+  "eco-friendly-products": null,
   inputs: "sectorGroupInputs",
   "animal-aquaculture": "sectorGroupAnimalAquaculture",
   "supply-chain": "sectorGroupSupplyChain",
@@ -514,7 +516,11 @@ export function OnboardingFlow({
                 <p className="form-helper">{onboarding("companySectorsHelp")}</p>
                 {groupedSectors.map(([group, sectors]) => (
                   <section key={group} className="sector-group">
-                    <h3>{onboarding(sectorGroupLabels[group])}</h3>
+                    <h3>
+                      {group === "eco-friendly-products"
+                        ? "Eco-friendly products — seller-declared"
+                        : onboarding(sectorGroupLabels[group])}
+                    </h3>
                     <div className="checkbox-grid">
                       {sectors.map((sector) => (
                         <label key={sector.slug}>
@@ -525,6 +531,7 @@ export function OnboardingFlow({
                     </div>
                   </section>
                 ))}
+                <EcoFriendlyClaimNotice alwaysVisible />
               </fieldset>
 
               <fieldset className="compact-fieldset">

@@ -3,6 +3,7 @@ import { ProductHeader } from "@/components/product-header";
 import { requireAdmin } from "@/features/auth/require-admin";
 import { UserModeration } from "@/features/moderation/user-moderation";
 import { loadProfilesByIds } from "@/features/profiles/queries";
+import { loadOrganicCertificationForAdmin } from "@/features/profiles/organic-certification-queries";
 import { notFound } from "next/navigation";
 
 export const metadata: Metadata = { title: "Participant review" };
@@ -16,6 +17,7 @@ export default async function AdminUserPage({
   const { userId } = await params;
   const [profile] = await loadProfilesByIds([userId]);
   if (!profile) notFound();
+  const organicCertification = await loadOrganicCertificationForAdmin(userId);
 
   return (
     <div className="product-page">
@@ -24,7 +26,7 @@ export default async function AdminUserPage({
         title="Participant review"
         description="Verify a legitimate participant or restrict an account that threatens community safety."
       />
-      <UserModeration profile={profile} />
+      <UserModeration profile={profile} organicCertification={organicCertification} />
     </div>
   );
 }

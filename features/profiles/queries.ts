@@ -38,13 +38,25 @@ async function hydrateProfiles(
   const avatarUrls = new Map<string, string>();
   const coverUrls = new Map<string, string>();
   const affinitiesByProfile = new Map<string, ProfileCategoryAffinity[]>();
+  const organicVerifiedProfiles = new Set<string>();
 
-  const { data: affinityRows, error: affinityError } = await supabase
-    .from("profile_category_affinities")
-    .select("profile_id, category_slug, relationship, is_primary")
-    .in("profile_id", rows.map((row) => row.id));
+  const profileIds = rows.map((row) => row.id);
+  const [affinityResult, organicResult] = await Promise.all([
+    supabase
+      .from("profile_category_affinities")
+      .select("profile_id, category_slug, relationship, is_primary")
+      .in("profile_id", profileIds),
+    supabase
+      .from("public_organic_certification_status")
+      .select("profile_id, verified")
+      .in("profile_id", profileIds),
+  ]);
+  const { data: affinityRows, error: affinityError } = affinityResult;
   if (affinityError && !isMissingAffinitySchema(affinityError)) {
     throw new Error("Agriculture profile details are temporarily unavailable.");
+  }
+  if (organicResult.error && !isMissingAffinitySchema(organicResult.error)) {
+    throw new Error("Organic certification status is temporarily unavailable.");
   }
   for (const affinity of affinityRows ?? []) {
     const profileId = affinity.profile_id as string;
@@ -56,6 +68,9 @@ async function hydrateProfiles(
         isPrimary: Boolean(affinity.is_primary),
       },
     ]);
+  }
+  for (const status of organicResult.data ?? []) {
+    if (status.verified) organicVerifiedProfiles.add(status.profile_id as string);
   }
 
   await Promise.all(
@@ -94,6 +109,7 @@ async function hydrateProfiles(
       avatarSource: uploadedAvatar ? "uploaded" : options.avatarSource,
       coverUrl: coverUrls.get(row.id),
       categoryAffinities: affinitiesByProfile.get(row.id) ?? [],
+      organicCertificationVerified: organicVerifiedProfiles.has(row.id),
     });
   });
 }

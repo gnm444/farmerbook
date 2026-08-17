@@ -30,6 +30,7 @@ import { createReportAction } from "@/features/moderation/actions";
 import { setBlockAction, setFollowAction } from "@/features/network/actions";
 import { ReviewList } from "@/features/reviews/review-list";
 import { ShareProfileButton } from "./share-profile-button";
+import { OrganicCertificationLabel } from "./organic-certification";
 
 export function ProfileView({
   profile,
@@ -173,6 +174,7 @@ export function ProfileView({
               {profile.roleLabel} · @{profile.handle}
             </div>
             <p className="profile-bio">{profile.bio}</p>
+            <OrganicCertificationLabel profile={profile} />
             <div className="profile-meta">
               <span>
                 <MapPin size={15} aria-hidden="true" /> {profile.district},{" "}

@@ -13,6 +13,7 @@ import {
   listingSchema,
   listingStatusSchema,
 } from "./schemas";
+import { isOrganicCertificationClaim } from "@/features/profiles/organic-certification";
 
 export async function createListingAction(input: unknown) {
   const parsed = listingSchema.safeParse(input);
@@ -28,6 +29,12 @@ export async function createListingAction(input: unknown) {
     return {
       ok: false as const,
       message: "Only Farmers and Wholesalers can publish produce.",
+    };
+  }
+  if (parsed.data.certifications.some(isOrganicCertificationClaim)) {
+    return {
+      ok: false as const,
+      message: "Organic certification is shown automatically only after FarmerBook verifies uploaded paperwork. Remove this certification claim.",
     };
   }
   if (user.demo) {

@@ -3,9 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Building2, CheckCircle2 } from "lucide-react";
-import { AGRICULTURE_COMPANY_SECTORS } from "@/lib/agriculture/company-sectors";
 import { useTranslations } from "@/components/locale-provider";
 import { createOrganizationAction } from "./actions";
+import { EcoFriendlyClaimNotice } from "./eco-friendly-claim-notice";
+import { CompanySectorOptions } from "./company-sector-options";
 import { ORGANIZATION_TYPES } from "./types";
 
 const typeMessageNames = {
@@ -112,12 +113,11 @@ export function OrganizationCreateForm() {
       <label className="field">
         <span>{t("agricultureSectors")}</span>
         <select className="input" name="sectorSlugs" multiple required size={8}>
-          {AGRICULTURE_COMPANY_SECTORS.map((sector) => (
-            <option key={sector.slug} value={sector.slug}>{sector.name}</option>
-          ))}
+          <CompanySectorOptions />
         </select>
       </label>
       <p className="muted">{t("multiSelectHelp")}</p>
+      <EcoFriendlyClaimNotice alwaysVisible />
       <button className="button" type="submit" disabled={isPending}>
         {isPending ? t("creating") : t("createProfile")}
       </button>

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { ProductHeader } from "@/components/product-header";
 import { SettingsNav } from "@/components/settings-nav";
 import { ProfileSettingsForm } from "@/features/profiles/profile-settings-form";
+import { OrganicCertificationForm } from "@/features/profiles/organic-certification-form";
+import { loadCurrentOrganicCertification } from "@/features/profiles/organic-certification-queries";
 import { loadCurrentProfile } from "@/features/profiles/queries";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { getServerTranslations } from "@/lib/i18n";
@@ -13,6 +15,9 @@ export default async function ProfileSettingsPage() {
     loadCurrentProfile(),
     getServerTranslations("settings"),
   ]);
+  const organicCertification = profile.accountRole === "farmer"
+    ? await loadCurrentOrganicCertification()
+    : null;
 
   return (
     <div className="product-page">
@@ -23,10 +28,18 @@ export default async function ProfileSettingsPage() {
       />
       <div className="settings-layout">
         <SettingsNav current="profile" />
-        <ProfileSettingsForm
-          profile={profile}
-          extendedLocalesEnabled={isFeatureEnabled("ENABLE_EXTENDED_LOCALES")}
-        />
+        <div className="settings-content-stack">
+          <ProfileSettingsForm
+            profile={profile}
+            extendedLocalesEnabled={isFeatureEnabled("ENABLE_EXTENDED_LOCALES")}
+          />
+          {profile.accountRole === "farmer" ? (
+            <OrganicCertificationForm
+              farmingMethod={profile.farmingMethod}
+              initialSubmission={organicCertification}
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );

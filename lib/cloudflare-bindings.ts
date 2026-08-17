@@ -7,6 +7,7 @@ import type {
   SocialContentAgent,
   VerificationTriageAgent,
 } from "@/features/managed-agents/agents";
+import type { WebsiteGreetingAgent } from "@/features/website-greeter/agent";
 
 export interface WorkersAiBinding {
   run(model: string, input: Record<string, unknown>): Promise<unknown>;
@@ -35,6 +36,7 @@ export type FarmerBookBindings = {
   CUSTOMER_SUPPORT_AGENT?: DurableObjectNamespace<CustomerSupportAgent>;
   SOCIAL_CONTENT_AGENT?: DurableObjectNamespace<SocialContentAgent>;
   OPERATIONS_SUPERVISOR_AGENT?: DurableObjectNamespace<OperationsSupervisorAgent>;
+  WEBSITE_GREETING_AGENT?: DurableObjectNamespace<WebsiteGreetingAgent>;
 };
 
 export async function getCloudflareBindings(): Promise<FarmerBookBindings | null> {

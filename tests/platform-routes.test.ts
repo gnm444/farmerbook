@@ -37,6 +37,7 @@ describe("platform metadata and health routes", () => {
     expect(urls).toContain("/");
     expect(urls).toContain("/marketplace");
     expect(urls).toContain("/featured-farmers");
+    expect(urls).toContain("/license");
     expect(urls).toContain("/featured-farmers/narayana-reddy");
     expect(urls).not.toContain("/marketplace/demo");
     expect(manifest()).toMatchObject({
@@ -50,6 +51,7 @@ describe("platform metadata and health routes", () => {
     expect(isPublicPath("/robots.txt")).toBe(true);
     expect(isPublicPath("/sitemap.xml")).toBe(true);
     expect(isPublicPath("/manifest.webmanifest")).toBe(true);
+    expect(isPublicPath("/license")).toBe(true);
   });
 
   it("matches public subtrees without exposing prefix-confusable routes", () => {

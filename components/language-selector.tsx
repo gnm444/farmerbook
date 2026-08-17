@@ -15,7 +15,7 @@ import { useLocale, useTranslations } from "./locale-provider";
 export function LanguageSelector({
   className = "language-selector field",
   label,
-  extendedLocalesEnabled = false,
+  extendedLocalesEnabled = true,
 }: {
   className?: string;
   label?: string;
@@ -96,6 +96,12 @@ export function LanguageSelector({
       {error ? (
         <span className="form-error" id={`${id}-status`} role="alert">
           {error}
+        </span>
+      ) : null}
+      {localeReviewLabel(selected) === "beta" ? (
+        <span className="form-helper" lang="en-IN" dir="ltr">
+          Beta language support: text awaiting native-speaker review falls back
+          to Indian English.
         </span>
       ) : null}
     </div>

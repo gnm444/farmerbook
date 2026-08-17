@@ -1,7 +1,7 @@
 ---
 title: FarmerBook production runbook
 status: Release gate
-last_reviewed: 2026-08-17
+last_reviewed: 2026-08-18
 ---
 
 # FarmerBook production runbook
@@ -135,6 +135,10 @@ runtime guard](../lib/env.ts), [generated Worker inputs](../vite.config.ts),
 | `NEXT_PUBLIC_DEMO_MODE` | Public Worker variable | `true` permitted | Exactly `false` |
 | `FARMERBOOK_CUSTOM_DOMAINS` | Build-time route input | Empty | Required environment-specific comma-separated domains; inspect generated routes |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only Worker secret | Development project key only when needed | Required for moderation/account administration; secret store only |
+| `WEBSITE_GREETER_MODEL` | Server Worker variable | Cheapest allowlisted Workers AI model | Keep `@cf/ibm-granite/granite-4.0-h-micro` unless a priced allowlist change is reviewed |
+| `WEBSITE_GREETER_MONTHLY_BUDGET_USD` | Server Worker variable | `8` | At most `8`; never raise without a new fleet budget approval |
+| `WEBSITE_GREETER_MONTHLY_REPLY_LIMIT` | Server Worker variable | `25000` | At most `25000` for the first-agent release |
+| `WEBSITE_GREETER_DAILY_AI_REPLY_LIMIT` | Server Worker variable | `1000` | At most `1000`; the model call stops when reached |
 
 `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS. It must never have a `NEXT_PUBLIC_`
 prefix, appear in `.env.example` with a value, be printed in evidence, or appear
@@ -148,15 +152,16 @@ and compare them with the approved release record.
 
 ### Feature flags
 
-All feature flags are exact-string booleans: only a case-insensitive `true`
-enables a flag. Keep every flag `false` in production until its release gate
-passes.
+Feature flags are exact-string booleans. All unreleased product capabilities
+stay `false` until their release gate passes. The sole exception is the shipped
+locale catalog: `ENABLE_EXTENDED_LOCALES` defaults to enabled when unset and an
+explicit `false` is its emergency rollback.
 
 | Flag | Release | Enable only after |
 |---|---|---|
 | `ENABLE_CANONICAL_AGRICULTURE_TAXONOMY` | B | taxonomy migration, seed, compatibility, and RLS gates pass |
 | `ENABLE_RESUMABLE_ONBOARDING` | B | taxonomy/capability support and multi-role resume/finalization tests pass |
-| `ENABLE_EXTENDED_LOCALES` | B | complete catalogs, locale persistence, RTL, formatting, accessibility, and human review evidence pass |
+| `ENABLE_EXTENDED_LOCALES` | Shipped accessibility capability | enabled by default; unreviewed strings disclose their Indian-English fallback; set `false` only for emergency rollback |
 | `ENABLE_INC_SOURCING` | B | Inc organization/representative/licence claims, sourcing-request RLS, moderation, farmer-response, localization, and staged database evidence pass |
 | `ENABLE_AGRI_BUSINESSES` | C | organization membership/RLS, onboarding, moderation, privacy, and discovery gates pass |
 | `ENABLE_BUSINESS_OFFERS` | C | business foundation plus offer expiry, enquiry, moderation, abuse, and discovery gates pass |
@@ -166,8 +171,9 @@ passes.
 | `ENABLE_PRIVATE_FARMER_CONTACTS` | Founder-owned consent database | owner UUID, encryption/rotation plan, private migration/RLS, synthetic consent and deletion, transient YouTube, approved email provider and rollback evidence pass |
 | `ENABLE_SOURCED_FARMER_RESEARCH` | Founder-only sourced research | owner UUID, official YouTube key/privacy review, private migration/RLS, contact-redaction, 30-day refresh/purge and synthetic evidence-review rollback pass |
 
-Release A runs with all flags `false`. Release B must not enable Release C
-flags. `ENABLE_BUSINESS_OFFERS` must not be enabled before
+Release A runs with unreleased product flags `false`; the shipped locale catalog
+remains enabled. Release B must not enable Release C flags.
+`ENABLE_BUSINESS_OFFERS` must not be enabled before
 `ENABLE_AGRI_BUSINESSES`.
 
 The Worker flags are rollout controls, not authorization boundaries. The
@@ -250,6 +256,37 @@ projection](../vite.config.ts), [Cloudflare deploy/secret behavior](https://deve
 [Brave result-storage requirement](https://brave.com/search/api/),
 [YouTube search.list contract](https://developers.google.com/youtube/v3/docs/search/list),
 [YouTube API developer policies](https://developers.google.com/youtube/terms/developer-policies)
+
+### Managed Agent cost and organic-certificate gates
+
+For a hard provider-side ceiling, deploy the greeting Agent in a dedicated
+Cloudflare Workers Free account/project. Free-plan request and Workers AI
+allowances fail closed instead of creating paid overage. If the broader site
+requires Workers Paid, the release approver must record the $5 base plan,
+confirm all other agent flags remain false, configure Cloudflare usage/billing
+notifications, and accept that Cloudflare Paid has metered overage rather than
+an account-wide hard dollar stop. The in-application $8 AI reservation is a
+second guard, not a substitute for that provider decision.
+
+Before traffic, prove in staging that:
+
+- the Agent answers contact, licence and organic-certification questions from
+  reviewed zero-token answers;
+- the eighth session reply is the last and monthly/daily/budget exhaustion
+  returns contact details without calling a model;
+- an unsupported `WEBSITE_GREETER_MODEL` value falls back to the priced Granite
+  allowlist entry;
+- `ENABLE_MANAGED_OPERATIONS_AGENTS` and `ENABLE_SUPPORT_SOCIAL_PILOT` remain
+  `false` for the first-agent release;
+- Worker, Durable Object and Workers AI usage are reviewed weekly until a
+  stable traffic baseline exists.
+
+The organic-certification migration is a separate release gate. Rehearse an
+organic Farmer uploading a private PDF, verify that anonymous/authenticated
+outsiders cannot read it, confirm the public label remains non-certified while
+pending and after rejection, and approve it only through the administrator RPC.
+Then prove that changing away from organic practices revokes the status and
+that direct listing inserts cannot create an organic-certification claim.
 
 ## 4. Candidate and migration inventory
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { getServerTranslations } from "@/lib/i18n";
+import { FARMERBOOK_CONTACT_EMAIL } from "@/lib/contact";
 
 export async function PolicyLayout({
   eyebrow,
@@ -15,7 +16,7 @@ export async function PolicyLayout({
   children: React.ReactNode;
 }) {
   const { t } = await getServerTranslations("legal");
-  const email = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "pilot@farmerbook.example";
+  const email = FARMERBOOK_CONTACT_EMAIL;
   return (
     <div className="policy-page">
       <PublicHeader />

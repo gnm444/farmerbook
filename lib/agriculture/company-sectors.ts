@@ -1,5 +1,6 @@
 export type AgricultureCompanySectorGroup =
   | "machinery"
+  | "eco-friendly-products"
   | "inputs"
   | "animal-aquaculture"
   | "supply-chain"
@@ -32,7 +33,11 @@ const AGRICULTURE_COMPANY_SECTOR_DEFINITIONS = [
   { slug: "farm-tools-implements", name: "Farm tools and implements", group: "machinery", offerExamples: ["Hand tools", "Implements", "Spare parts"] },
   { slug: "equipment-rental-custom-hiring", name: "Equipment rental and custom hiring", group: "machinery", offerExamples: ["Hourly rental", "Operator service", "Seasonal packages"] },
   { slug: "irrigation-pumps", name: "Irrigation systems and pumps", group: "machinery", offerExamples: ["Drip systems", "Sprinklers", "Water pumps"] },
-  { slug: "solar-renewable-energy", name: "Solar and renewable farm energy", group: "machinery", offerExamples: ["Solar pumps", "Farm solar", "Biogas systems"] },
+  { slug: "solar-renewable-energy", name: "Solar and renewable farm energy", group: "eco-friendly-products", offerExamples: ["Solar pumps", "Farm solar", "Biogas systems"] },
+  { slug: "biodegradable-compostable-packaging", name: "Biodegradable and compostable packaging", group: "eco-friendly-products", offerExamples: ["Compostable produce bags", "Biodegradable nursery pots", "Agri-residue packaging"] },
+  { slug: "compost-bio-inputs", name: "Compost and biological farm inputs", group: "eco-friendly-products", offerExamples: ["Compost", "Vermicompost", "Biofertilizers"] },
+  { slug: "water-saving-irrigation-products", name: "Water-saving irrigation and farm products", group: "eco-friendly-products", offerExamples: ["Drip irrigation", "Moisture sensors", "Rainwater-harvesting products"] },
+  { slug: "reusable-repairable-farm-products", name: "Reusable and repairable farm products", group: "eco-friendly-products", offerExamples: ["Reusable crates", "Repairable hand tools", "Refillable farm containers"] },
   { slug: "drones-precision-agriculture", name: "Drones and precision agriculture", group: "machinery", offerExamples: ["Drone spraying", "Sensors", "Farm mapping"] },
   { slug: "seeds-planting-material", name: "Seeds and planting material", group: "inputs", offerExamples: ["Certified seed", "Saplings", "Nursery stock"] },
   { slug: "fertilizers-soil-inputs", name: "Fertilizers and soil inputs", group: "inputs", offerExamples: ["Fertilizer", "Biofertilizer", "Soil conditioners"] },
@@ -87,6 +92,26 @@ export const AGRICULTURE_COMPANY_SECTORS =
 
 export type AgricultureCompanySectorSlug =
   (typeof AGRICULTURE_COMPANY_SECTOR_DEFINITIONS)[number]["slug"];
+
+export const ECO_FRIENDLY_COMPANY_SECTOR_SLUGS = [
+  "solar-renewable-energy",
+  "biodegradable-compostable-packaging",
+  "compost-bio-inputs",
+  "water-saving-irrigation-products",
+  "reusable-repairable-farm-products",
+] as const satisfies readonly AgricultureCompanySectorSlug[];
+
+const ECO_FRIENDLY_COMPANY_SECTOR_SLUG_SET = new Set<string>(
+  ECO_FRIENDLY_COMPANY_SECTOR_SLUGS,
+);
+
+export function isEcoFriendlyCompanySector(slug: string) {
+  return ECO_FRIENDLY_COMPANY_SECTOR_SLUG_SET.has(slug);
+}
+
+export function hasEcoFriendlyCompanySector(slugs: readonly string[]) {
+  return slugs.some(isEcoFriendlyCompanySector);
+}
 
 export function agricultureCompanySectorBySlug(slug: string) {
   return AGRICULTURE_COMPANY_SECTORS.find((sector) => sector.slug === slug);

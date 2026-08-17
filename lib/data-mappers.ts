@@ -87,6 +87,7 @@ export function mapProfile(
     avatarSource?: "oauth" | "uploaded";
     coverUrl?: string;
     categoryAffinities?: ProfileCategoryAffinity[];
+    organicCertificationVerified?: boolean;
   } = {},
 ): FarmerProfile {
   return {
@@ -105,6 +106,7 @@ export function mapProfile(
     crops: row.crops ?? [],
     bio: row.bio,
     farmingMethod: row.farming_method ?? undefined,
+    organicCertificationVerified: options.organicCertificationVerified ?? false,
     socialLinks: {
       website: row.website_url ?? undefined,
       linkedin: row.linkedin_url ?? undefined,

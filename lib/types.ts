@@ -68,6 +68,7 @@ export interface ParticipantProfile {
   crops: string[];
   bio: string;
   farmingMethod?: FarmingMethod;
+  organicCertificationVerified?: boolean;
   socialLinks: SocialLinks;
   reviewSummary: ReviewSummary;
   verified: boolean;

@@ -52,6 +52,7 @@ export const profiles: FarmerProfile[] = [
     crops: ["Tomato", "Chilli"],
     bio: "Growing open-field and protected tomatoes. Interested in disease prevention and low-cost irrigation.",
     farmingMethod: "organic",
+    organicCertificationVerified: false,
     socialLinks: {},
     reviewSummary: { average: 4.6, count: 8 },
     verified: true,

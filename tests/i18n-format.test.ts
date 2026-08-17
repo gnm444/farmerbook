@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  SUPPORTED_LOCALES,
   formatCurrency,
   formatDate,
   formatList,
@@ -39,5 +40,16 @@ describe("locale-aware formatting", () => {
   it("formats conjunction lists and safely falls back for unsupported locales", () => {
     expect(formatList(["बीज", "औज़ार"], "hi-IN")).toContain("और");
     expect(formatNumber(1000, "fr-FR")).toBe("1,000");
+  });
+
+  it("formats core values without throwing for every supported Indian locale", () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      expect(formatNumber(123_456.78, locale), locale).not.toBe("");
+      expect(
+        formatDate("2026-08-18T00:00:00.000Z", locale),
+        locale,
+      ).not.toBe("");
+      expect(formatList(["one", "two"], locale), locale).not.toBe("");
+    }
   });
 });

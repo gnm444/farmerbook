@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/i18n/format";
 import type { MessageName } from "@/lib/i18n/messages";
 import { type BusinessOffer, type OfferKind } from "./types";
 import { formatOfferPrice } from "./format";
+import { EcoFriendlyClaimNotice } from "@/features/organizations/eco-friendly-claim-notice";
 
 const kindMessageNames = { product: "kindProduct", service: "kindService", rental: "kindRental", promotion: "kindPromotion", finance: "kindFinance", insurance: "kindInsurance", advisory: "kindAdvisory", training: "kindTraining", support: "kindSupport" } as const satisfies Record<OfferKind, MessageName<"offers">>;
 export function OfferCard({
@@ -53,6 +54,7 @@ export function OfferCard({
       ) : null}
       <p dir="auto">{offer.description}</p>
       {categoryLabel ? <p><strong>{t("category")}:</strong> {categoryLabel}</p> : null}
+      <EcoFriendlyClaimNotice sectorSlugs={offer.categorySlugs} />
       <p>
         <CalendarRange size={15} aria-hidden="true" /> {t("validRange", { from: formatDate(offer.validFrom, locale), until: formatDate(offer.validUntil, locale) })}
       </p>

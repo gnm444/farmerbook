@@ -14,6 +14,61 @@ a Supabase-backed application boundary with email authentication, PostgreSQL Row
 Security, storage policies, seller/customer authorization, purchase reviews,
 and administrator moderation actions.
 
+## Managed website greeting agent and the $50 ceiling
+
+The public site includes a Cloudflare Agent named `WebsiteGreetingAgent`. It is
+available on demand 24/7 through a SQLite-backed Durable Object; it does not run
+an always-on server while idle. Common questions use reviewed, zero-token
+answers. Unmatched questions use Cloudflare-hosted
+`@cf/ibm-granite/granite-4.0-h-micro`, the least expensive suitable
+instruction/agent model in the current Workers AI catalogue.
+
+Use a dedicated Cloudflare Workers Free account/project when the provider bill
+must fail closed instead of producing overage. The app adds its own stricter
+limits: eight replies per visitor session, 25,000 answered requests per month,
+1,000 model calls per day, and an $8 monthly model-cost reserve. When any limit
+is reached, it stops model calls and gives the published email and phone number.
+The other managed operations agents remain disabled by default, leaving the
+growth-planning workstream a separate $5 maximum and leaving $37 of the $50
+monthly ceiling unallocated. No growth Agent or outbound channel is enabled by
+this release.
+
+Cloudflare AI Gateway can later route this Agent to newer Anthropic, Google or
+Workers AI models. A new model must not be enabled merely by changing an
+environment value: add its reviewed input/output pricing to the server-side
+allowlist, recalculate the conservative reservation, run the budget tests, and
+keep the $50 fleet ceiling. This avoids silently turning “latest” into an
+uncapped bill.
+
+The Agent stores only a random session identifier, counters and timestamps in
+its Durable Object. It does not store visitor message text.
+
+## Organic certification labels
+
+“Organic practices” is a self-described farming method, not proof of
+certification. A Farmer remains labelled exactly `Non-certified organic farmer
+(paperwork not yet completed to prove certification).` until they upload a PDF,
+JPEG or PNG certificate through profile settings and an administrator approves
+the private document. Only the reviewed database view can produce the public
+`Certified organic` status. Listing certification arrays cannot self-declare or
+override it.
+
+Apply `20260818120000_organic_farmer_certification.sql` before enabling this
+workflow. The migration creates the private 10 MB evidence bucket, owner-only
+upload policy, administrator review RPC, public status-only view, revocation
+trigger and marketplace claim guard.
+
+## Copyright, source licence and contact
+
+Copyright © 2026 FarmerBook contributors. The code is copyrighted open-source
+software under `AGPL-3.0-only`, a strong copyleft licence. Use, copying,
+modification and redistribution are allowed only under those terms, including
+the network-source obligation; unlicensed copying is not authorised. The
+FarmerBook name and visual identity are reserved separately. See
+[`LICENSE.md`](LICENSE.md), [`TRADEMARKS.md`](TRADEMARKS.md), and `/license`.
+
+Contact: `ceo@farmerbook.in` · `+91 91779 01022`.
+
 ## Run locally
 
 ```bash
@@ -44,9 +99,10 @@ configuration. Cloudflare custom domains are supplied through the
 comma-separated `FARMERBOOK_CUSTOM_DOMAINS` environment value; project URLs,
 keys, routes, and feature flags are not hard-coded in `vite.config.ts`.
 
-Agriculture ecosystem releases are additive and disabled by default. Enable
-only after the corresponding migration and verification gate succeeds in the
-target environment:
+Agriculture ecosystem releases are additive and disabled by default, except the
+shipped 23-locale catalog. Enable product capabilities only after the
+corresponding migration and verification gate succeeds in the target
+environment:
 
 - `ENABLE_CANONICAL_AGRICULTURE_TAXONOMY`
 - `ENABLE_RESUMABLE_ONBOARDING`
@@ -60,6 +116,10 @@ target environment:
 - `ENABLE_FEATURED_FARMER_PROFILES`
 - `ENABLE_PRIVATE_FARMER_CONTACTS`
 - `ENABLE_SOURCED_FARMER_RESEARCH`
+
+`ENABLE_EXTENDED_LOCALES` defaults on so all 22 Scheduled Languages plus Indian
+English are selectable. Set it to `false` only as an emergency rollback;
+unreviewed strings disclose their Indian-English fallback.
 
 The acquisition agent is consent-first. Administrators may analyze a bounded
 public website or supply a public social description/screenshot, but FarmerBook
@@ -224,6 +284,8 @@ journeys.
 
 - [MVP product design](docs/MVP_PRODUCT_DESIGN.md)
 - [Secrets and GitHub deployment](docs/SECRETS_AND_GITHUB_DEPLOYMENT.md)
+- [Consent-first growth plan](docs/CONSENT_FIRST_GROWTH_PLAN.md)
+- [Eco-friendly product onboarding](docs/ECO_FRIENDLY_PRODUCTS.md)
 - [Living implementation plan](PLAN.md)
 - [Implementation research](research.md)
 

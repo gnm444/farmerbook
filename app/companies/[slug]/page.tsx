@@ -11,6 +11,7 @@ import { agricultureCompanySectorBySlug } from "@/lib/agriculture/company-sector
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { ReportTargetButton } from "@/features/moderation/report-target-button";
 import { formatNumber, getServerTranslations } from "@/lib/i18n";
+import { EcoFriendlyClaimNotice } from "@/features/organizations/eco-friendly-claim-notice";
 
 const typeMessageNames = {
   manufacturer_brand: "typeManufacturerBrand", dealer_distributor: "typeDealerDistributor",
@@ -93,6 +94,7 @@ export default async function CompanyPage({
                 ))}
               </ul>
             ) : <p>{t("noSectors")}</p>}
+            <EcoFriendlyClaimNotice sectorSlugs={organization.sectorSlugs} />
             <h2>{t("serviceAreas")}</h2>
             {organization.serviceAreas.length ? (
               <ul>

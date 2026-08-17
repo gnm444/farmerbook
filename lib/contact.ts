@@ -1,0 +1,3 @@
+export const FARMERBOOK_CONTACT_EMAIL = "ceo@farmerbook.in";
+export const FARMERBOOK_CONTACT_PHONE = "+919177901022";
+export const FARMERBOOK_CONTACT_PHONE_DISPLAY = "+91 91779 01022";

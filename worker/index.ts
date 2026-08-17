@@ -1,9 +1,13 @@
 /** Cloudflare Worker entry point for FarmerBook. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { getAgentByName } from "agents";
 import { withSecurityHeaders } from "../lib/security-headers";
+import { websiteGreeterRequestSchema } from "../features/website-greeter/contracts";
+import type { WebsiteGreetingAgent } from "../features/website-greeter/agent";
 
 export { FarmerProfileAgent } from "../features/profile-agent/managed-agent";
+export { WebsiteGreetingAgent } from "../features/website-greeter/agent";
 export { FarmerProfileApprovalWorkflow } from "../features/profile-agent/approval-workflow";
 export {
   CustomerSupportAgent,
@@ -26,6 +30,7 @@ interface Env {
       };
     };
   };
+  WEBSITE_GREETING_AGENT: DurableObjectNamespace<WebsiteGreetingAgent>;
 }
 
 interface ExecutionContext {
@@ -42,6 +47,36 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/api/website-greeter") {
+      const respond = (body: unknown, status = 200) => withSecurityHeaders(
+        request,
+        Response.json(body, {
+          status,
+          headers: { "cache-control": "no-store" },
+        }),
+        env.NEXT_PUBLIC_SUPABASE_URL,
+      );
+      if (request.method !== "POST") return respond({ code: "METHOD_NOT_ALLOWED" }, 405);
+      if (request.headers.get("sec-fetch-site") === "cross-site") {
+        return respond({ code: "FORBIDDEN" }, 403);
+      }
+      const origin = request.headers.get("origin");
+      if (origin && origin !== url.origin) return respond({ code: "FORBIDDEN" }, 403);
+      const contentLength = Number(request.headers.get("content-length") ?? 0);
+      if (contentLength > 2_048) return respond({ code: "PAYLOAD_TOO_LARGE" }, 413);
+      const parsed = websiteGreeterRequestSchema.safeParse(await request.json().catch(() => null));
+      if (!parsed.success) return respond({ code: "INVALID_INPUT" }, 400);
+      try {
+        const agent = await getAgentByName(
+          env.WEBSITE_GREETING_AGENT,
+          "farmerbook-website-greeting",
+        );
+        return respond(await agent.reply(parsed.data));
+      } catch {
+        return respond({ code: "GREETER_UNAVAILABLE" }, 503);
+      }
+    }
 
     if (url.pathname === "/_vinext/image") {
       if (!env.IMAGES) {

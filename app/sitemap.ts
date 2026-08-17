@@ -11,6 +11,7 @@ const publicPaths = [
   "/community-rules",
   "/privacy",
   "/terms",
+  "/license",
   "/data-deletion",
 ] as const;
 

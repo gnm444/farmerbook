@@ -16,6 +16,7 @@ import { ListingCard } from "@/features/marketplace/listing-card";
 import { loadStorefront } from "@/features/marketplace/queries";
 import { ReviewList } from "@/features/reviews/review-list";
 import { loadReviewsForSeller } from "@/features/reviews/queries";
+import { OrganicCertificationLabel } from "@/features/profiles/organic-certification";
 import { formatNumber, getServerTranslations } from "@/lib/i18n";
 import type { AccountRole, FarmingMethod } from "@/lib/types";
 
@@ -88,6 +89,7 @@ export default async function StorefrontPage({
                   {profile.farmingMethod ? ` · ${t("farmingLabel", { method: t(methodKeys[profile.farmingMethod]) })}` : ""}
                   {" "}· @{profile.handle}
                 </p>
+                <OrganicCertificationLabel profile={profile} />
                 <div className="storefront-meta">
                   <span><MapPin size={15} aria-hidden="true" /> {profile.district}, {profile.state}</span>
                   {profile.experienceYears != null ? (
