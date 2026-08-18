@@ -299,3 +299,14 @@
   allowed inference. The USD 10 fleet cap and every route, secret, flag and
   migration were preserved. Rollback target is
   `7a5dad0d-425c-4868-a59c-e3ab984127e6`.
+- 2026-08-19: Ran an isolated, bounded Cloudflare Workers AI quota experiment
+  with a temporary route-free Worker, then deleted that Worker. Successful
+  requests reported 10,990.866 measured Neurons including a tiny post-boundary
+  probe; the probe and a subsequent production `workers_ai` greeting both
+  succeeded. The account therefore behaved as paid or credit-enabled after the
+  daily 10,000-Neuron free allocation instead of returning a Free-plan quota
+  error. The experiment did not use or mutate FarmerBook's USD 10 fleet ledger;
+  no prompt or generated conversation was retained. Added a generated
+  FarmerBook F-and-leaf favicon, Apple touch icon, 192/512 installable-app
+  icons, metadata/manifest declarations and automated asset checks because the
+  former production `/favicon.ico` returned 404.

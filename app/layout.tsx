@@ -28,6 +28,15 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s · FarmerBook",
     },
     description,
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "64x64" },
+        { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      ],
+      apple: [
+        { url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" },
+      ],
+    },
     openGraph: {
       type: "website",
       siteName: "FarmerBook",
