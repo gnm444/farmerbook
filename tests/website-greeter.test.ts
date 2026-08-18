@@ -19,7 +19,7 @@ describe("24/7 managed website greeting agent", () => {
   it("defaults to the cheapest allowlisted model and has layered hard stops", () => {
     expect(agent).toContain('@cf/ibm-granite/granite-4.0-h-micro');
     expect(agent).toContain("SUPPORTED_MODELS");
-    expect(agent).toContain("DEFAULT_MONTHLY_AI_BUDGET_USD = 8");
+    expect(agent).toContain("DEFAULT_MONTHLY_AI_BUDGET_USD = 5");
     expect(agent).toContain("DEFAULT_MONTHLY_REPLY_LIMIT = 25_000");
     expect(agent).toContain("MAX_SESSION_REPLIES = 8");
     expect(agent).toContain("DEFAULT_DAILY_AI_REPLY_LIMIT = 1_000");

@@ -13,6 +13,7 @@ import {
 import type { FarmerProfileAgent } from "@/features/profile-agent/managed-agent";
 import type { ManagedProfileAgentInput } from "@/features/profile-agent/schemas";
 import { getCloudflareBindings } from "@/lib/cloudflare-bindings";
+import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import { DEFAULT_LOCALE, normalizeLocale } from "@/lib/i18n/locales";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -403,13 +404,14 @@ export async function runCustomerSupport(
     candidatesResult.data ?? [],
   );
   const bindings = await getCloudflareBindings();
+  const aiRuntime = await createBudgetedAiRuntime(bindings);
   let succeeded = 0;
   let failed = 0;
   let escalated = 0;
   let fallbacks = 0;
 
   for (const candidate of candidates) {
-    const draft = await buildSupportReplyDraft(candidate, bindings?.AI);
+    const draft = await buildSupportReplyDraft(candidate, aiRuntime);
     const idempotencyKey = await uuidFromText(
       `support-proposal:${candidate.id}:${candidate.updated_at}:${draft.promptVersion}`,
     );
@@ -473,12 +475,13 @@ export async function runSocialContent(
     candidatesResult.data ?? [],
   );
   const bindings = await getCloudflareBindings();
+  const aiRuntime = await createBudgetedAiRuntime(bindings);
   let succeeded = 0;
   let failed = 0;
   let fallbacks = 0;
 
   for (const candidate of candidates) {
-    const draft = await buildSocialContentDraft(candidate, bindings?.AI);
+    const draft = await buildSocialContentDraft(candidate, aiRuntime);
     const idempotencyKey = await uuidFromText(
       `social-proposal:${candidate.id}:${candidate.revision}:${draft.promptVersion}`,
     );

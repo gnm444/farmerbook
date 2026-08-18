@@ -1,4 +1,6 @@
 import { Agent, type AgentContext } from "agents";
+import type { AiFleetBudgetAgent } from "@/features/ai-budget/agent";
+import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import type { WorkersAiBinding } from "@/lib/cloudflare-bindings";
 import { buildManagedFarmerProfileSample } from "./profile-builder";
 import {
@@ -26,6 +28,7 @@ export type FarmerProfileAgentState = {
 
 export interface FarmerProfileAgentEnv extends Cloudflare.Env {
   AI?: WorkersAiBinding;
+  AI_FLEET_BUDGET_AGENT?: DurableObjectNamespace<AiFleetBudgetAgent>;
   FARMER_PROFILE_AGENT: DurableObjectNamespace<FarmerProfileAgent>;
   FARMER_PROFILE_APPROVAL_WORKFLOW: Workflow<ApprovalWorkflowInput>;
 }
@@ -62,7 +65,7 @@ export class FarmerProfileAgent extends Agent<
     try {
       const result = await buildManagedFarmerProfileSample(
         input,
-        this.bindings.AI,
+        await createBudgetedAiRuntime(this.bindings),
       );
       this.setState({
         ...this.state,

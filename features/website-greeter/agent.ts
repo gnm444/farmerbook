@@ -11,19 +11,23 @@ import {
   WEBSITE_GREETER_SYSTEM_PROMPT,
 } from "./knowledge";
 import { aiText } from "./response";
+import type { AiFleetBudgetAgent } from "@/features/ai-budget/agent";
+import { runBudgetedAi } from "@/features/ai-budget/inference";
+import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 
 const DEFAULT_MODEL = "@cf/ibm-granite/granite-4.0-h-micro";
 const SUPPORTED_MODELS = new Set([DEFAULT_MODEL]);
 const MAX_SESSION_REPLIES = 8;
 const DEFAULT_MONTHLY_REPLY_LIMIT = 25_000;
 const DEFAULT_DAILY_AI_REPLY_LIMIT = 1_000;
-const DEFAULT_MONTHLY_AI_BUDGET_USD = 8;
+const DEFAULT_MONTHLY_AI_BUDGET_USD = 5;
 const MODEL_INPUT_USD_PER_MILLION = 0.017;
 const MODEL_OUTPUT_USD_PER_MILLION = 0.112;
 const MAX_MODEL_OUTPUT_TOKENS = 160;
 
 interface WebsiteGreetingAgentEnv extends Cloudflare.Env {
   AI?: WorkersAiBinding;
+  AI_FLEET_BUDGET_AGENT?: DurableObjectNamespace<AiFleetBudgetAgent>;
   WEBSITE_GREETER_MODEL?: string;
   WEBSITE_GREETER_MONTHLY_REPLY_LIMIT?: string;
   WEBSITE_GREETER_DAILY_AI_REPLY_LIMIT?: string;
@@ -80,6 +84,7 @@ function aiFailureCode(error: unknown): `AI_${string}` {
   if (/billing|credit|payment|quota|rate.?limit/i.test(message)) {
     return "AI_QUOTA_UNAVAILABLE";
   }
+  if (/budget/i.test(message)) return "AI_BUDGET_UNAVAILABLE";
   if (/model|not found|unsupported/i.test(message)) {
     return "AI_MODEL_UNAVAILABLE";
   }
@@ -242,9 +247,10 @@ export class WebsiteGreetingAgent extends Agent<
       this.env.WEBSITE_GREETER_MONTHLY_BUDGET_USD,
       DEFAULT_MONTHLY_AI_BUDGET_USD,
       1,
-      20,
+      5,
     ) * 1_000_000);
     if (!this.env.AI
+      || !this.env.AI_FLEET_BUDGET_AGENT
       || aiToday >= dailyAiLimit
       || current.estimatedAiSpendMicros + reservedMicros > monthlyBudgetMicros) {
       const replyCount = this.recordReply(input.sessionId, now, false, 0);
@@ -261,14 +267,22 @@ export class WebsiteGreetingAgent extends Agent<
     const replyCount = this.recordReply(input.sessionId, now, true, reservedMicros);
     try {
       const model = configuredModel(this.env.WEBSITE_GREETER_MODEL);
-      const result = await this.env.AI.run(model, {
-        messages: [
-          { role: "system", content: WEBSITE_GREETER_SYSTEM_PROMPT },
-          { role: "user", content: `Visitor locale: ${input.locale}\nVisitor question: ${input.message}` },
-        ],
-        max_tokens: MAX_MODEL_OUTPUT_TOKENS,
-        temperature: 0.2,
-      });
+      const result = await runBudgetedAi(
+        await createBudgetedAiRuntime(this.env),
+        {
+          workstream: "website_greeting",
+          operation: "website_reply",
+          model,
+          input: {
+            messages: [
+              { role: "system", content: WEBSITE_GREETER_SYSTEM_PROMPT },
+              { role: "user", content: `Visitor locale: ${input.locale}\nVisitor question: ${input.message}` },
+            ],
+            max_tokens: MAX_MODEL_OUTPUT_TOKENS,
+            temperature: 0.2,
+          },
+        },
+      );
       const text = aiText(result);
       if (!text) {
         console.warn("WEBSITE_GREETER_AI_EMPTY_RESPONSE", {
@@ -314,7 +328,7 @@ export class WebsiteGreetingAgent extends Agent<
         this.env.WEBSITE_GREETER_MONTHLY_BUDGET_USD,
         DEFAULT_MONTHLY_AI_BUDGET_USD,
         1,
-        20,
+        5,
       ),
       monthlyReplyLimit: boundedInteger(
         this.env.WEBSITE_GREETER_MONTHLY_REPLY_LIMIT,

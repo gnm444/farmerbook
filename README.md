@@ -14,7 +14,7 @@ a Supabase-backed application boundary with email authentication, PostgreSQL Row
 Security, storage policies, seller/customer authorization, purchase reviews,
 and administrator moderation actions.
 
-## Managed website greeting agent and the $50 ceiling
+## Managed AI fleet and the $50 inference ceiling
 
 The public site includes a Cloudflare Agent named `WebsiteGreetingAgent`. It is
 available on demand 24/7 through a SQLite-backed Durable Object; it does not run
@@ -23,15 +23,29 @@ answers. Unmatched questions use Cloudflare-hosted
 `@cf/ibm-granite/granite-4.0-h-micro`, the least expensive suitable
 instruction/agent model in the current Workers AI catalogue.
 
-Use a dedicated Cloudflare Workers Free account/project when the provider bill
-must fail closed instead of producing overage. The app adds its own stricter
-limits: eight replies per visitor session, 25,000 answered requests per month,
-1,000 model calls per day, and an $8 monthly model-cost reserve. When any limit
-is reached, it stops model calls and gives the published email and phone number.
-The other managed operations agents remain disabled by default, leaving the
-growth-planning workstream a separate $5 maximum and leaving $37 of the $50
-monthly ceiling unallocated. No growth Agent or outbound channel is enabled by
-this release.
+One private singleton `AiFleetBudgetAgent` is the application-level circuit
+breaker for every Workers AI inference. A call must reserve its conservative
+maximum retail-value estimate before the model runs. The singleton atomically
+enforces a USD 10 UTC-month fleet ceiling and these code-reviewed allocations:
+website greeting USD 5, blog writing/translation USD 2, growth outreach/OCR
+USD 3, and USD 0 each for profile drafting, customer support and social
+content. The full USD 10 is allocated; no Agent can borrow another
+workstream's allocation.
+
+The greeting workstream also keeps its stricter local limits: eight replies per
+visitor session, 25,000 answered requests per month and 1,000 model calls per
+day. When any local or central limit is reached, it stops model calls and gives
+the published email and phone number. The administrator ledger is read-only at
+`/admin/agents`; it contains only model/cost/count metadata, never prompts,
+screenshots, outputs, users or source/customer content.
+
+The ledger is deliberately conservative and is not the Cloudflare invoice. It
+does not subtract the account-wide daily free Neuron allocation, so invoiced
+Workers AI spend can be lower. Cloudflare budget alerts are informational and
+do not stop usage; Worker requests, Durable Objects, storage and other platform
+charges are separate from this USD 10 model-inference ceiling. A dedicated
+Workers Free account/project remains an optional additional provider-side
+fail-closed boundary.
 
 Cloudflare AI Gateway can later route this Agent to newer Anthropic, Google or
 Workers AI models. A new model must not be enabled merely by changing an
@@ -125,7 +139,7 @@ The public farming library is at `/blog`. A dedicated Cloudflare
 `BlogWritingAgent` prepares one evidence-bounded draft each Tuesday at 09:00
 IST, stores it privately, and requires an authenticated administrator to
 publish it from `/admin/blog`. Its cheapest allowlisted Workers AI model has a
-hard default USD 4/month inference cap inside the shared USD 50 fleet budget.
+hard default USD 2/month inference cap inside the shared USD 10 fleet budget.
 Reviewed Telugu and Indian English articles are canonical; the other supported
 Indian languages receive cached, clearly disclosed AI-assisted translations
 with an honest English fallback. See `docs/BLOG_WRITING_AGENT.md`.

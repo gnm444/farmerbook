@@ -3,6 +3,7 @@ import {
   createOutreachAgent,
   deterministicOutreachAnalysis,
 } from "@/features/outreach/agent";
+import { allowingAiRuntime } from "./ai-budget-test-helpers";
 
 describe("bounded outreach agent", () => {
   it("classifies farming, poultry, seafood, wholesale and company evidence deterministically", () => {
@@ -14,7 +15,7 @@ describe("bounded outreach agent", () => {
 
   it("uses strict structured output and falls back safely when AI output is invalid", async () => {
     const ai = { run: vi.fn(async () => ({ response: '{"ignore":"policy"}' })) };
-    const analysis = await createOutreachAgent(ai).analyze({
+    const analysis = await createOutreachAgent(allowingAiRuntime(ai)).analyze({
       sourceText: "Organic farm and poultry producer",
       businessName: "Sahyadri Farm",
     });

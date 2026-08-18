@@ -6593,3 +6593,443 @@ application layer. Do not apply the two eco catalog migrations or enable
 controls, outreach, or automatic email. The authenticated catalog may be
 released later only after the agriculture foundation and both eco migrations
 are rehearsed and applied in order.
+
+## 2026-08-18 implementation plan addendum: centralized AI spend ledger and USD 50 circuit breaker
+
+### Outcome and bounded scope
+
+Add one private, singleton Cloudflare Agent Durable Object that authorizes every
+Workers AI inference before it occurs, records privacy-safe token/cost metadata
+and denies calls that would exceed either a workstream allocation or the USD 50
+monthly fleet ceiling. Keep the existing greeter and blog counters as layered
+local safeguards. Surface the central ledger to authenticated administrators at
+`/admin/agents` and document the difference between conservative application
+reservations and Cloudflare's authoritative invoice.
+
+This implementation is local and default-safe. It does not enable a paused
+Agent, allocate the reserved USD 33, activate a provider or schedule, apply a
+Supabase migration, send or publish anything, issue verification, upload a
+Worker version or change production traffic.
+
+### Architecture
+
+```text
+all model-capable features
+        |
+        | workstream + operation + model + estimated bounds
+        v
+AiFleetBudgetAgent (one named Durable Object instance)
+        |
+        +-- deny: return fallback / fail closed; do not call Workers AI
+        |
+        +-- reserve atomically: private SQLite metadata row
+                    |
+                    v
+               Workers AI
+                    |
+                    v
+          settle reported usage/outcome
+          without lowering reserved spend
+```
+
+The budget Agent is the only cross-feature authority. Its SQL contains no
+prompt, model output or user content. Model functions receive a small runtime
+object containing the Workers AI binding plus a private budget service; unit
+tests can inject both without instantiating a real Durable Object.
+
+### 1. Define exact budget, pricing and privacy contracts
+
+**Files:**
+
+- `features/ai-budget/contracts.ts` (new)
+- `features/ai-budget/pricing.ts` (new)
+- `features/ai-budget/ledger.ts` (new)
+- `tests/ai-fleet-budget.test.ts` (new)
+
+Create exact schemas/types for these workstreams:
+
+```ts
+type AiWorkstream =
+  | "website_greeting"
+  | "blog_writing"
+  | "growth_outreach"
+  | "profile_drafting"
+  | "customer_support"
+  | "social_content";
+```
+
+Use immutable allocations:
+
+```ts
+const FLEET_MONTHLY_BUDGET_MICROS = 50_000_000;
+const WORKSTREAM_BUDGET_MICROS = {
+  website_greeting: 8_000_000,
+  blog_writing: 4_000_000,
+  growth_outreach: 5_000_000,
+  profile_drafting: 0,
+  customer_support: 0,
+  social_content: 0,
+} as const;
+```
+
+The unallocated USD 33 is intentionally not spendable. A later reviewed code
+change must allocate it and prove that the allocation sum remains no more than
+USD 50 before the corresponding paused role can use a model. Deterministic
+fallbacks remain available for zero-budget roles.
+
+Add an exact price allowlist for Granite, IndicTrans2, Llama 3.1 8B Fast and
+Llama 3.2 11B Vision. Use the upward-rounded rates documented in research. An
+unknown model, unknown workstream, unknown operation, negative count,
+unbounded output or allocation sum above USD 50 is invalid and cannot reserve.
+
+Keep pricing and reservation decisions pure and unit-testable. A representative
+decision surface is:
+
+```ts
+evaluateReservation({
+  monthKey,
+  workstream,
+  fleetReservedMicros,
+  workstreamReservedMicros,
+  requestedMicros,
+})
+// -> ACCEPTED | WORKSTREAM_BUDGET_REACHED | FLEET_BUDGET_REACHED
+```
+
+Token estimation serializes the bounded model request and treats every UTF-8
+byte as a token plus fixed overhead. Text paths use
+their declared `max_tokens`; translation reserves 1.5 times estimated source
+tokens. The estimate includes a sanitized image data URL when OCR is requested,
+but the data URL itself is never passed to or stored by the budget Agent.
+
+### 2. Implement the singleton private budget Agent
+
+**Files:**
+
+- `features/ai-budget/agent.ts` (new)
+- `features/ai-budget/runtime.ts` (new)
+- `lib/cloudflare-bindings.ts`
+- `worker/index.ts`
+- `vite.config.ts`
+- `tests/ai-fleet-budget-config.test.ts` (new)
+
+Add `AiFleetBudgetAgent extends Agent` and bind exactly one named instance,
+`farmerbook-ai-fleet-budget`. Add a new Durable Object binding
+`AI_FLEET_BUDGET_AGENT`, Worker export and forward-only migration tag such as
+`ai-fleet-budget-agent-v1`. Do not edit or reuse an earlier migration tag.
+
+On first start, create a private SQLite table approximately shaped as:
+
+```sql
+CREATE TABLE IF NOT EXISTS ai_fleet_reservations (
+  id TEXT PRIMARY KEY,
+  month_key TEXT NOT NULL,
+  workstream TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  model TEXT NOT NULL,
+  estimated_input_tokens INTEGER NOT NULL,
+  max_output_tokens INTEGER NOT NULL,
+  reserved_micros INTEGER NOT NULL,
+  reported_input_tokens INTEGER,
+  reported_output_tokens INTEGER,
+  reported_cost_micros INTEGER,
+  outcome TEXT NOT NULL,
+  failure_code TEXT,
+  created_at TEXT NOT NULL,
+  settled_at TEXT
+);
+```
+
+Add month/workstream and created-time indexes. Retain only bounded operational
+history (approximately 13 months) during lifecycle/status maintenance. Do not
+add text/blob columns capable of retaining prompts, screenshots or output.
+
+`reserve()` validates its public metadata, calculates current-month fleet and
+workstream totals in the singleton, makes one decision and inserts an accepted
+reservation before returning. Repeated reservation IDs are idempotent and
+cannot change their original metadata. `settle()` can attach validated
+provider-reported tokens and a bounded outcome, but the circuit-breaker total
+continues to use at least the original reserved amount. Failed model calls and
+missing settlement retain the reservation. There is no method to delete,
+reduce, bypass or administratively force a reservation during the month.
+
+`status()` returns only aggregates: UTC month, cap, conservative spend,
+remaining amount, accepted/failed/pending counts and one row per workstream.
+All Agent methods remain reachable only through server-side Durable Object
+bindings; do not add `routeAgentRequest` or a public HTTP route.
+
+### 3. Add the only permitted Workers AI execution wrapper
+
+**Files:**
+
+- `features/ai-budget/inference.ts` (new)
+- `lib/cloudflare-bindings.ts`
+- `tests/ai-budget-inference.test.ts` (new)
+
+Define injected interfaces so production can use the singleton stub and unit
+tests can use small fakes:
+
+```ts
+type BudgetedAiRuntime = {
+  ai?: WorkersAiBinding;
+  budget?: AiFleetBudgetService;
+};
+
+runBudgetedAi(runtime, {
+  workstream,
+  operation,
+  model,
+  input,
+})
+```
+
+The wrapper must:
+
+1. reject a missing AI binding or budget service;
+2. compute bounded input/output reservation metadata locally;
+3. call the singleton `reserve()`;
+4. stop without calling AI on any denial or malformed response;
+5. call `runtime.ai.run()` only after acceptance;
+6. parse known Workers AI usage shapes without trusting them;
+7. attempt `settle()` after success or failure;
+8. keep the original reservation charged if inference or settlement fails.
+
+Tests use spies to prove a denied or unavailable budget produces zero model
+calls, an accepted reservation produces exactly one, successful usage settles,
+and inference failure records a bounded failure without leaking the prompt.
+After integration, repository search must find a raw `.run(model, input)` only
+inside this wrapper (tests and documentation excluded).
+
+### 4. Route every inference path through the wrapper
+
+**Files:**
+
+- `features/website-greeter/agent.ts`
+- `features/blog/agent.ts`
+- `features/outreach/agent.ts`
+- `features/outreach/ocr.ts`
+- `features/outreach/actions.ts`
+- `features/profile-agent/profile-builder.ts`
+- `features/profile-agent/managed-agent.ts`
+- `features/profile-agent/actions.ts`
+- `features/profile-agent/known-farmer-actions.ts`
+- `features/featured-farmers/actions.ts`
+- `features/customer-operations/ai.ts`
+- `features/managed-agents/processor.ts`
+- associated existing unit tests
+
+Assign exact metadata:
+
+| Operation | Workstream |
+|---|---|
+| `website_reply` | `website_greeting` |
+| `blog_draft`, `blog_translation` | `blog_writing` |
+| `outreach_qualification`, `screenshot_ocr` | `growth_outreach` |
+| `profile_sample` | `profile_drafting` |
+| `support_reply` | `customer_support` |
+| `social_content_draft` | `social_content` |
+
+The greeter and blog keep their current local reservation logic and caps. The
+central reservation becomes an additional prerequisite, so either layer can
+stop a call. Common greeter answers and cached/reviewed blog content continue
+without a central reservation because they do not call a model.
+
+Change pure builders to accept `BudgetedAiRuntime` rather than a naked AI
+binding. Direct server actions obtain one runtime from the Cloudflare bindings.
+Scheduled processors construct it once per bounded batch. Agent Durable Objects
+construct it from their own environment. Existing behavior on budget denial is:
+
+- greeter: safe contact handoff;
+- blog: `BLOG_MONTHLY_BUDGET_REACHED`-style private failure/fallback;
+- outreach/profile/support/social: existing deterministic fallback;
+- screenshot OCR: fail closed because visible text cannot be fabricated.
+
+Do not loosen validation, increase output bounds, change prompts, publish a
+draft or introduce automatic sending while touching these call sites.
+
+### 5. Show honest fleet spend to administrators
+
+**Files:**
+
+- `features/ai-budget/budget-panel.tsx` (new)
+- `features/ai-budget/queries.ts` (new)
+- `app/(product)/admin/agents/page.tsx`
+- `features/managed-agents/managed-agent-console.tsx` if shared layout is useful
+- `app/globals.css`
+- `tests/ai-budget-panel.test.tsx` (new)
+
+Load budget status only after `requireAdmin()`, independently of whether the
+six scheduled operations roles are enabled. Show:
+
+- UTC month and USD 50 fleet ceiling;
+- conservative reserved value and remaining amount;
+- call outcomes;
+- each workstream allocation, reserved value and remaining value;
+- a clear `USD 33 unallocated` state;
+- unavailable status when the binding cannot be reached;
+- disclosure that this is a conservative application ledger, not an invoice;
+- links to Cloudflare Workers AI usage and account Billable Usage.
+
+Do not display reservation IDs, prompt-derived token strings, user identifiers,
+model output or any source/customer content. The panel is read-only and must not
+contain an override/reset control.
+
+### 6. Documentation and operational state
+
+**Files:**
+
+- `README.md`
+- `.env.example`
+- `docs/BLOG_WRITING_AGENT.md`
+- `docs/CONSENT_FIRST_GROWTH_PLAN.md`
+- `docs/PRODUCTION_RUNBOOK.md`
+- `docs/REQUIREMENTS.md`
+- `implementation-log.md`
+- `.structured-dev-state`
+
+Correct the budget language: USD 50 is enforced by the application singleton
+for allowlisted inference after this implementation, while Cloudflare budget
+alerts remain informational and platform/request/storage charges remain
+separate. Document that retail-value reservations are conservative and do not
+subtract the account-wide daily free Neuron allocation. Explain the zero-dollar
+allocations and separate approval required before drawing from USD 33.
+
+No new environment variable is necessary for increasing budget. Avoid a
+dashboard variable that could silently raise USD 50; lowering/allocating limits
+should also remain a reviewed code release until an authenticated, audited
+configuration mechanism is separately designed.
+
+### 7. Verification strategy
+
+Run focused tests after pricing/contracts, the singleton/wrapper, each model
+integration and the administrator panel. Then run:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+git diff --check
+```
+
+Also run a strict Wrangler dry run and inspect the generated configuration for
+the AI binding, tenth Agent namespace, additive migration tag and unchanged
+feature flags. No Supabase reset is required because the design adds no
+PostgreSQL migration; existing SQL/RLS tests must remain green in the normal
+suite. If the local Worker runtime can initialize the new Durable Object without
+credentials, smoke its private status through the authenticated server path;
+do not add a public diagnostic endpoint merely to make a test easier.
+
+Required evidence:
+
+- exact four-model price allowlist and upward rounding;
+- no unknown-model or unbounded-output inference;
+- atomic workstream and fleet denials;
+- zero-budget profile/support/social fallback with zero model calls;
+- USD 8/USD 4/USD 5 workstream enforcement and USD 50 fleet enforcement;
+- no raw Workers AI call outside the wrapper;
+- no prompt/output/content field in the private ledger contract;
+- provider usage cannot lower charged reservation value;
+- failed/missing settlement stays charged;
+- UTC month isolation and bounded retention;
+- private Agent binding only;
+- admin-only, read-only, responsive spend panel;
+- all production feature flags remain unchanged in the build input;
+- no external call, migration, message, publication, Agent activation or deploy.
+
+### Rollback
+
+Before production release, rollback is ordinary source reversion of this
+addendum's files. After a future production deployment, immediately return
+traffic to the recorded prior Worker version if legitimate inference is denied
+incorrectly or reservations misbehave. Retain the private Durable Object
+namespace and ledger rows; a Durable Object class migration is forward-only and
+must not be removed destructively. The prior Worker will ignore the extra
+namespace. Do not respond to a budget defect by raising a cap, bypassing the
+singleton or enabling direct `AI.run` calls.
+
+### Detailed todo list
+
+- [x] Deeply inventory all Workers AI calls, entry points, flags, models, limits, current counters and live bindings. [DONE 2026-08-18]
+- [x] Verify current Cloudflare model pricing, Neuron billing/free allocation and informational-only account alerts. [DONE 2026-08-18]
+- [x] Record the architecture, privacy boundary, failure semantics and rollback analysis in `research.md`. [DONE 2026-08-18]
+- [x] Write this self-contained implementation plan with code sketches and test gates. [DONE 2026-08-18]
+- [x] Receive product-owner approval for the exact plan and zero-dollar allocations. [DONE 2026-08-18]
+- [x] Add budget/pricing/ledger contracts and focused tests. [DONE 2026-08-18]
+- [x] Add the private singleton `AiFleetBudgetAgent`, binding, export and migration tag. [DONE 2026-08-18]
+- [x] Add the injected budgeted-inference wrapper and denial/settlement tests. [DONE 2026-08-18]
+- [x] Replace every raw Workers AI call with the wrapper. [DONE 2026-08-18]
+- [x] Preserve and retest all deterministic/fail-closed paths. [DONE 2026-08-18]
+- [x] Add the administrator spend panel and UI tests. [DONE 2026-08-18]
+- [x] Update budget, runbook, requirements, log and structured state documentation. [DONE 2026-08-18]
+- [x] Run focused tests, lint, TypeScript, full Vitest, build, Wrangler dry run and diff checks. [DONE 2026-08-18]
+- [x] Inspect the final diff for prompt/content retention, direct inference bypasses and unrelated changes. [DONE 2026-08-18]
+- [x] Report local evidence and keep production deployment/activation pending separate approval. [DONE 2026-08-18]
+
+### Approval checkpoint
+
+The product owner approved this exact plan on 2026-08-18. Local implementation
+and verification may proceed, including the choice to keep profile drafting,
+customer support and social content at USD 0 model spend while preserving the
+USD 33 unallocated reserve. Production deployment and Agent activation remain
+separate decisions.
+
+## 2026-08-18 production addendum: USD 10 fleet ceiling and deployment
+
+The product owner explicitly approved production deployment and replaced the
+earlier USD 50 proposal with a maximum USD 10 of model-inference spend for the
+whole fleet in each UTC month. Allocate the entire ceiling conservatively:
+
+| Workstream | Hard monthly allocation |
+|---|---:|
+| Website greeting | USD 5 |
+| Blog writing and translation | USD 2 |
+| Growth outreach and screenshot OCR | USD 3 |
+| Profile drafting, customer support, social content | USD 0 |
+| **Fleet maximum** | **USD 10** |
+
+The ceiling and allocations remain immutable code constants. Existing local
+greeting and blog caps must be lowered to USD 5 and USD 2 as defense in depth.
+No feature flag, database control, provider, scheduled outreach, message or
+publication is activated by this release. Preserve every production variable,
+secret, route, binding and existing Durable Object migration; append only the
+new private fleet-ledger class migration.
+
+Release procedure:
+
+1. Run focused budget/agent tests, lint, TypeScript and the full test suite.
+2. Rebuild from the current production plain-text settings, explicitly set the
+   two lowered local caps, and retain the two production custom domains.
+3. Inspect the generated routes, controls, bindings and ordered migrations,
+   then pass a strict Wrangler dry run.
+4. Record the active production version as the rollback target, deploy with
+   `--keep-vars`, and confirm the new version receives 100 percent traffic.
+5. Verify health, both custom domains, the public site and an authenticated-
+   admin redirect. Use only a reviewed zero-token greeting for smoke testing.
+6. Roll back to the recorded prior version if health, routing, bindings,
+   controls or deterministic fallbacks regress. Retain the additive Durable
+   Object namespace because class migrations are forward-only.
+
+Deployment checklist:
+
+- [x] Product owner approved production deployment and the USD 10 whole-fleet limit. [DONE 2026-08-18]
+- [x] Lower immutable central/local allocations and update focused tests/documentation. [DONE 2026-08-18]
+- [x] Run focused tests, ESLint, TypeScript and diff validation. [DONE 2026-08-18]
+- [x] Run the full test suite, production build and strict Wrangler dry run. [DONE 2026-08-18]
+- [x] Deploy while preserving production settings and routes. [DONE 2026-08-18]
+- [x] Verify the live version, bindings, controls, health and deterministic smoke path. [DONE 2026-08-18]
+- [x] Record production evidence and rollback details. [DONE 2026-08-18]
+
+Production deployment `4e6ecde5-b22d-401e-888e-944eb2f581d9` placed Worker
+version `7a5dad0d-425c-4868-a59c-e3ab984127e6` at 100 percent traffic. The
+release has ten private Durable Object bindings, the Workers AI binding, the
+existing approval Workflow and all 12 existing secrets. The USD 5 greeting and
+USD 2 blog local variables are live; the source-checked USD 10 singleton also
+enforces the USD 3 growth/OCR and three USD 0 allocations. Both custom-domain
+health checks and the homepage returned 200, unauthenticated `/admin/agents`
+returned the expected 307 login redirect, and a reviewed `Namaste` greeting
+returned `approved_answer` without a model call. All existing safety controls
+kept their pre-release values. The direct workers.dev hostname returned the
+same corporate-network 403 seen in earlier releases; both production custom
+domains passed. Rollback target:
+`661dfe1a-3158-49b2-8659-efe336272e53`.

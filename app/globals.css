@@ -8941,6 +8941,130 @@ img {
   gap: 1.25rem;
 }
 
+.ai-budget-panel {
+  display: grid;
+  gap: 1.15rem;
+  margin-block-end: 1.25rem;
+}
+
+.ai-budget-panel .outreach-section-head p:last-child {
+  margin-block-end: 0;
+}
+
+.ai-budget-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 0.75rem;
+}
+
+.ai-budget-summary div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--leaf-50);
+}
+
+.ai-budget-summary span,
+.ai-budget-workstream dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.ai-budget-summary strong {
+  font-size: 1.15rem;
+  overflow-wrap: anywhere;
+}
+
+.ai-budget-progress {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.ai-budget-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--leaf-700);
+}
+
+.ai-budget-progress--fleet {
+  height: 0.75rem;
+}
+
+.ai-budget-allocation {
+  margin: -0.65rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.ai-budget-workstreams {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr));
+  gap: 0.8rem;
+}
+
+.ai-budget-workstream {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+}
+
+.ai-budget-workstream__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ai-budget-workstream__head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.ai-budget-workstream__metrics {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.ai-budget-workstream__metrics div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ai-budget-workstream__metrics dd {
+  margin: 0;
+  text-align: end;
+}
+
+.ai-budget-workstream > p,
+.ai-budget-disclosure p {
+  margin: 0;
+}
+
+.ai-budget-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+}
+
+.ai-budget-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
 .managed-agent-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));

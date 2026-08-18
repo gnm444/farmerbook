@@ -1,4 +1,5 @@
 import type { FarmerProfileAgent } from "@/features/profile-agent/managed-agent";
+import type { AiFleetBudgetAgent } from "@/features/ai-budget/agent";
 import type {
   CustomerSupportAgent,
   OperationsSupervisorAgent,
@@ -30,6 +31,7 @@ export type FarmerBookBindings = {
   MANAGED_AGENT_PROCESSOR_SECRET?: string;
   AI?: WorkersAiBinding;
   IMAGES?: ImagesBinding;
+  AI_FLEET_BUDGET_AGENT?: DurableObjectNamespace<AiFleetBudgetAgent>;
   FARMER_PROFILE_AGENT?: DurableObjectNamespace<FarmerProfileAgent>;
   OUTREACH_GROWTH_AGENT?: DurableObjectNamespace<OutreachGrowthAgent>;
   PROFILE_DRAFTING_AGENT?: DurableObjectNamespace<ProfileDraftingAgent>;

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/features/auth/require-admin";
 import { getCloudflareBindings } from "@/lib/cloudflare-bindings";
+import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import {
   getSiteUrl,
   isDemoMode,
@@ -95,6 +96,7 @@ export async function researchOutreachSourceAction(input: unknown) {
   }
 
   const bindings = await getCloudflareBindings();
+  const aiRuntime = await createBudgetedAiRuntime(bindings);
   const requestHeaders = await headers();
   const requestHost =
     requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
@@ -116,7 +118,10 @@ export async function researchOutreachSourceAction(input: unknown) {
       if (!bindings?.IMAGES || !bindings.AI) return outreachFailure("AI_UNAVAILABLE");
       const ocrStartedAt = Date.now();
       const sanitized = await sanitizeScreenshot(parsed.data.screenshotDataUrl, bindings.IMAGES);
-      sourceText = await extractVisibleBusinessTextFromScreenshot(sanitized, bindings.AI);
+      sourceText = await extractVisibleBusinessTextFromScreenshot(
+        sanitized,
+        aiRuntime,
+      );
       evidenceOrigin = "screenshot_ocr";
       agentRuns.push({
         runType: "ocr",
@@ -149,7 +154,7 @@ export async function researchOutreachSourceAction(input: unknown) {
     sourceUrl: normalizedSourceUrl,
     origin: evidenceOrigin,
   });
-  const analysis = await createOutreachAgent(bindings?.AI).analyze({
+  const analysis = await createOutreachAgent(aiRuntime).analyze({
     sourceText,
     businessName: parsed.data.businessName,
     preferredLocale: DEFAULT_LOCALE,

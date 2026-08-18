@@ -82,6 +82,10 @@ const localBindingConfig = {
   durable_objects: {
     bindings: [
       {
+        name: "AI_FLEET_BUDGET_AGENT",
+        class_name: "AiFleetBudgetAgent",
+      },
+      {
         name: "FARMER_PROFILE_AGENT",
         class_name: "FarmerProfileAgent",
       },
@@ -147,6 +151,10 @@ const localBindingConfig = {
     {
       tag: "blog-writing-agent-v1",
       new_sqlite_classes: ["BlogWritingAgent"],
+    },
+    {
+      tag: "ai-fleet-budget-agent-v1",
+      new_sqlite_classes: ["AiFleetBudgetAgent"],
     },
   ],
   workflows: [

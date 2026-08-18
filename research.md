@@ -3598,3 +3598,210 @@ its feature gates, 32-character secret minimum, constant-time comparison and
 input bounds. The same proxy change should replace broad `startsWith(prefix)`
 matching with exact-or-descendant matching so names such as
 `/api/outreach-admin` cannot inherit a neighboring public prefix.
+
+## 2026-08-18 research addendum: centralized AI spend ledger and fleet circuit breaker
+
+### Requested outcome and release boundary
+
+The product owner asked to proceed after reviewing the nine deployed Agent
+classes and their token-spend design. The bounded interpretation is to add the
+missing shared inference ledger and a real application-level USD 50 monthly
+circuit breaker across every Workers AI call. This work does not enable any
+paused Agent, database release control, provider, schedule, outbound message,
+social publication, verification grant or production deployment. Those remain
+separate release decisions.
+
+The current production Worker version `661dfe1a-3158-49b2-8659-efe336272e53`
+exports nine Agent classes and one approval Workflow. Its bindings show the AI
+catalog plus all nine Durable Object namespaces. Only the website greeter and
+blog paths are active; `ENABLE_OUTREACH_AGENT`,
+`ENABLE_PROFILE_RESEARCH_AGENT`, `ENABLE_MANAGED_OPERATIONS_AGENTS` and
+`ENABLE_SUPPORT_SOCIAL_PILOT` are false. `ENABLE_SOURCED_FARMER_RESEARCH` is
+true, but that workspace uses the official YouTube API and deterministic
+processing rather than Workers AI.
+
+### Complete inference-path inventory
+
+Repository-wide search finds seven direct `AI.run`/`ai.run` call sites and no
+OpenAI, Anthropic, Google model or developer-tool credential in the runtime:
+
+| Path | Model | Maximum output / pricing behavior | Current gate |
+|---|---|---|---|
+| `features/website-greeter/agent.ts:264` | `@cf/ibm-granite/granite-4.0-h-micro` | 160 output tokens; local USD 8/month conservative reserve | public, on demand |
+| `features/blog/agent.ts:444` | Granite 4.0 H Micro | 3,500 output tokens for a draft; shared local USD 4/month reserve | weekly/manual admin draft |
+| `features/blog/agent.ts:596` | `@cf/ai4bharat/indictrans2-en-indic-1B` | output estimated at 1.5 times bounded input; same blog reserve | uncached published translation |
+| `features/outreach/agent.ts:90` | `@cf/meta/llama-3.1-8b-instruct-fast` | 900 output tokens | outreach/profile research flags |
+| `features/outreach/ocr.ts:56` | `@cf/meta/llama-3.2-11b-vision-instruct` | 1,000 output tokens; bounded 2 MB sanitized image | administrator evidence routes |
+| `features/profile-agent/profile-builder.ts:278` | Llama 3.1 8B Fast | 1,800 output tokens | profile-research and managed-operation gates |
+| `features/customer-operations/ai.ts:178,254` | Llama 3.1 8B Fast | 1,000 output tokens per support/social proposal | support/social and managed-operation gates |
+
+The outreach qualification builder is called by direct outreach research,
+name-based profile research and known-Farmer intake. Screenshot OCR is also
+called by outreach, known-Farmer and Featured Farmer evidence actions. Profile
+generation is called both directly and through `ProfileDraftingAgent`.
+Customer-support and social-content generation run in bounded scheduled loops.
+Guarding only the nine Agent class methods would therefore miss administrator
+server-action inference; the guard must wrap the shared Workers AI binding at
+all seven raw call sites.
+
+### Existing budget behavior and gaps
+
+`WebsiteGreetingAgent` estimates input as characters divided by three, adds a
+small overhead, reserves the full 160-token output allowance, and records the
+reservation before awaiting inference (`features/website-greeter/agent.ts:60-68,
+258-270`). It also limits a visitor to eight replies, the fleet to 25,000
+answered requests per month and model use to 1,000 calls per day. Reviewed FAQ
+answers never call a model.
+
+`BlogWritingAgent` similarly reserves before a draft or translation and stops
+at its local USD 4 ceiling (`features/blog/agent.ts:184-202,407-430`). It caches
+translations by article, locale and fingerprint. These two local ledgers are
+useful defense in depth, but neither sees calls made by the other five model
+paths.
+
+The documented allocation is USD 8 for greetings, USD 4 for blog work, USD 5
+for consent-first growth and USD 33 unallocated. The growth document describes
+a USD 5 stop, but no runtime ledger currently enforces it. Profile generation,
+support drafting, social drafting and screenshot OCR have no price allowlist or
+spend counter. The existing Operations Supervisor observes run health and
+outbox attention, not model tokens or account spend.
+
+The repository also describes a USD 50 Cloudflare account budget as an outer
+guard. Current Cloudflare documentation states that account budget alerts are
+informational, calculated after usage, and do not cap or interrupt service.
+They cannot serve as the fleet circuit breaker. The authoritative invoice also
+applies the account-wide 10,000 Neurons/day free allocation, whereas an
+application ledger should conservatively track retail model value before free
+credits so another Worker cannot consume the allowance invisibly.
+
+### Current official price inputs
+
+Cloudflare's 2026-08-18 model and pricing documentation gives these token
+prices. The design should deliberately round upward where the existing source
+already does so:
+
+| Model | USD/M input tokens | USD/M output tokens | Conservative code rate |
+|---|---:|---:|---:|
+| Granite 4.0 H Micro | 0.017 | 0.110 | 0.017 / 0.112 |
+| IndicTrans2 English-to-Indic | 0.340 | 0.340 | 0.342 / 0.342 |
+| Llama 3.1 8B Instruct Fast | 0.045 | 0.384 | same |
+| Llama 3.2 11B Vision Instruct | 0.049 | 0.676 | 0.049 / 0.680 |
+
+An unknown model must be rejected rather than charged at a guessed rate.
+Changing a model or price therefore remains a reviewed code change with tests,
+not an unrestricted environment-variable edit.
+
+### Persistence and concurrency choice
+
+Supabase could atomically reserve spend, but it would add a network round trip
+and service-role dependency to every public greeting. It would also duplicate
+Cloudflare's private Agent state boundary. Per-Agent SQLite ledgers cannot
+serialize concurrent spend across namespaces.
+
+A singleton Cloudflare Agent Durable Object is the appropriate authority. The
+existing runtime already calls named Agent stubs with `getAgentByName`, and the
+Agents SDK exposes private SQLite storage through parameterized `this.sql`.
+All requests to one Durable Object instance are serialized. A named
+`AiFleetBudgetAgent` instance therefore provides one strongly consistent
+reservation point without publishing a browser Agent route or storing prompts.
+
+```text
+Website / blog / profile / outreach / support / social code
+                         |
+                         | bounded metadata only
+                         v
+              AiFleetBudgetAgent singleton
+              reserve atomically or deny
+                         |
+                  reservation accepted
+                         v
+                  Cloudflare AI.run
+                         |
+             settle token metadata if present
+```
+
+The Durable Object should store one reservation row per attempted inference:
+random call ID, calendar month, workstream, bounded operation name, exact
+allowlisted model, estimated input tokens, maximum output tokens, conservative
+reserved microdollars, optional provider-reported input/output tokens, optional
+settled estimate, outcome code and timestamps. It must never store prompt text,
+visitor text, screenshots, article text, support questions, campaign facts,
+profile evidence, contact data or model output. Old monthly rows can be removed
+after a bounded operational retention period.
+
+### Reservation and failure semantics
+
+The wrapper must inspect the complete serialized model input for a conservative
+token estimate and reserve maximum output before inference. Text-generation
+paths already declare `max_tokens`. Translation has no explicit output cap, so
+the existing 1.5-times-input bound should be used. The sanitized screenshot's
+bounded data URL may be counted conservatively as serialized input; over-count
+is safer than under-count and the actual provider token metadata can be stored
+separately when supplied.
+
+The singleton checks both the workstream allocation and the USD 50 fleet cap in
+the same serialized method. The existing allocations remain:
+
+- website greeting: USD 8;
+- blog writing/translation: USD 4;
+- consent-first growth, including qualification and OCR: USD 5;
+- profile drafting, customer support and social content: USD 0 until a later
+  explicit allocation draws from the USD 33 reserve;
+- fleet ceiling: USD 50.
+
+A zero workstream allocation does not break deterministic operation: profile,
+outreach, support and social builders already return reviewed deterministic
+fallbacks when AI is unavailable or invalid. OCR, which cannot safely invent
+visible text, fails closed. No paused role should be enabled as part of this
+change.
+
+If reservation is denied or the budget namespace is missing, no `AI.run` call
+may occur. If inference fails, the reservation remains charged conservatively.
+If settlement fails after a model call, the original reservation remains in
+the singleton and continues to count. Provider-reported usage can enrich the
+ledger but must never reduce the amount used for circuit-breaker decisions;
+this prevents crashes, missing usage fields or concurrent calls from freeing
+spend that may already have occurred. Monthly rollover is based on UTC, matching
+Cloudflare's daily reset boundary.
+
+### Administrator visibility and security boundary
+
+`/admin/agents` already requires `requireAdmin()` and is the natural fleet
+health surface. It should read the singleton through a server-only Agent stub
+and display the current UTC month, USD 50 ceiling, conservative reserved spend,
+remaining amount, call/failure counts and workstream allocations. The panel
+must distinguish conservative reserved value from Cloudflare invoice charges
+and link operators to the Cloudflare Billable Usage/Workers AI dashboards for
+the authoritative bill.
+
+The Worker should export and bind `AiFleetBudgetAgent` through a new additive
+Durable Object migration tag. The Agent is not routed with
+`routeAgentRequest`; browser clients cannot invoke reserve, settle or status.
+No Supabase migration, browser grant, new secret, OpenAI key or external
+provider is required.
+
+### Verification and rollback implications
+
+Tests need to prove exact workstream/model allowlists, upward-rounded pricing,
+unknown-model rejection, per-workstream denial, fleet denial, UTC rollover,
+idempotent settlement, privacy-safe stored fields, unavailable-budget failure,
+and that all seven former raw inference sites use the wrapper. Existing greeter,
+blog, outreach, profile and customer-operation fallback tests must continue to
+pass. Configuration tests must verify the new class export, binding and
+forward-only migration tag.
+
+The code change is locally reversible. A deployed Durable Object migration is
+forward-only, so production rollback returns traffic to the previous Worker
+version while retaining the unused private namespace; it must not delete
+ledger state. Production deployment, traffic change and allocation of the USD
+33 reserve require separate approval.
+
+### Research checkpoint
+
+All direct Workers AI call sites, their entry points, current feature gates,
+models, output bounds, local counters, fallback behavior, live bindings and
+official pricing have been traced. A singleton private Agent Durable Object
+plus one shared inference wrapper covers both named Agents and administrator
+server actions, preserves prompt privacy, serializes reservations before model
+use and can expose honest administrator telemetry. No implementation has been
+performed at this checkpoint.

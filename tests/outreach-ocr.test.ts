@@ -7,6 +7,7 @@ import type {
   ImagesBinding,
   WorkersAiBinding,
 } from "@/lib/cloudflare-bindings";
+import { allowingAiRuntime } from "./ai-budget-test-helpers";
 
 const onePixelPng =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
@@ -40,7 +41,7 @@ describe("transient screenshot OCR", () => {
       })),
     } as WorkersAiBinding;
     await expect(
-      extractVisibleBusinessTextFromScreenshot(sanitized, ai),
+      extractVisibleBusinessTextFromScreenshot(sanitized, allowingAiRuntime(ai)),
     ).resolves.toBe("For business enquiries: sales@example.com");
     expect(ai.run).toHaveBeenCalledWith(
       "@cf/meta/llama-3.2-11b-vision-instruct",
@@ -51,7 +52,7 @@ describe("transient screenshot OCR", () => {
   it("fails closed when the vision model does not return the expected schema", async () => {
     const ai = { run: vi.fn(async () => ({ result: "guessed" })) } as WorkersAiBinding;
     await expect(
-      extractVisibleBusinessTextFromScreenshot(onePixelPng, ai),
+      extractVisibleBusinessTextFromScreenshot(onePixelPng, allowingAiRuntime(ai)),
     ).rejects.toThrow();
   });
 });

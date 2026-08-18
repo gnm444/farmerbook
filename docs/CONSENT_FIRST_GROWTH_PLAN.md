@@ -365,24 +365,27 @@ not success metrics.
 
 ## Budget
 
-### Managed-agent budget — part of the existing USD 50/month cap
+### Managed-agent budget — part of the existing USD 10/month cap
 
-This growth workstream receives a hard **USD 5/month maximum**, not an extra
+This growth workstream receives a hard **USD 3/month maximum**, not an extra
 budget:
 
 | Use | Monthly hard limit |
 |---|---:|
 | Consent/suppression/deduplication | $0 model spend; deterministic code |
-| Ambiguous reply classification | $2; smallest approved model, only after rules |
-| Administrator-requested localization/content draft | $2; never automatic bulk generation |
+| Ambiguous reply classification | $1; smallest approved model, only after rules |
+| Administrator-requested localization/content draft | $1; never automatic bulk generation |
 | Spend/policy supervision | $1 |
-| **Growth-agent maximum** | **$5** |
+| **Growth-agent maximum** | **$3** |
 
-At $4 forecast spend, stop optional classification and drafting and route to a
-human. At $5 actual/reserved spend, all growth model calls stop. Consent intake,
-STOP, suppression, provider webhooks, and the preference centre must continue
-without AI. The fleet-wide supervisor must also stop this workstream if the
-shared USD 50 cap would be exceeded.
+At $2 forecast spend, stop optional classification and drafting and route to a
+human. At $3 conservative reserved spend, all growth model calls stop. Consent
+intake, STOP, suppression, provider webhooks, and the preference centre must
+continue without AI. The private singleton `AiFleetBudgetAgent` atomically
+reserves every allowlisted model call before inference and denies it when the
+growth allocation or shared USD 10 UTC-month cap would be exceeded. Its retail-
+value ledger does not subtract Cloudflare's account-wide daily free Neuron
+allocation and is therefore intentionally more conservative than the invoice.
 
 ### External channel spend — separate owner approval
 
@@ -396,7 +399,7 @@ a separate cap and approval:
 - Phase 3–4: provider delivery costs capped separately before activation.
 - Paid click-to-message/search ads: ₹0 until organic and partner landing-page
   activation is measured; then a separately approved small experiment, never
-  funded by increasing the USD 50 agent cap.
+  funded by increasing the USD 10 agent cap.
 
 ## Google and public-platform boundaries
 

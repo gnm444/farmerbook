@@ -29,7 +29,7 @@ describe("managed FarmerBook Blog Writing Agent", () => {
     expect(agent).toContain('@cf/ibm-granite/granite-4.0-h-micro');
     expect(agent).toContain('@cf/ai4bharat/indictrans2-en-indic-1B');
     expect(agent).toContain("SUPPORTED_MODELS");
-    expect(agent).toContain("DEFAULT_MONTHLY_AI_BUDGET_USD = 4");
+    expect(agent).toContain("DEFAULT_MONTHLY_AI_BUDGET_USD = 2");
     expect(agent).toContain("BLOG_MONTHLY_BUDGET_REACHED");
     expect(agent).toContain("estimatedAiSpendMicros");
   });

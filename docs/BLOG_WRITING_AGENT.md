@@ -66,31 +66,39 @@ Cloudflare's purpose-built `@cf/ai4bharat/indictrans2-en-indic-1B`, which
 supports the 22 Scheduled Indian languages and translates a fixed array of
 approved text fields without reconstructing article JSON. The blog agent
 reserves a conservative estimate before every model call and stops model work
-at a hard default **USD 4/month** ceiling.
-`BLOG_WRITING_MONTHLY_BUDGET_USD` may be set only from USD 1 through USD 8;
+at a hard default **USD 2/month** ceiling.
+`BLOG_WRITING_MONTHLY_BUDGET_USD` may be set only from USD 1 through USD 2;
 `BLOG_WRITING_MODEL` cannot select an unallowlisted writing model.
 
-Current internal allocations within the shared USD 50/month agent cap are:
+Current internal allocations within the shared USD 10/month agent cap are:
 
 | Workstream | Monthly limit |
 |---|---:|
-| Website Greeting Agent | $8 |
-| Consent-first Growth Agent | $5 |
-| Blog Writing Agent | $4 |
-| Unallocated fleet reserve | $33 |
-| **Shared maximum** | **$50** |
+| Website Greeting Agent | $5 |
+| Consent-first Growth Agent | $3 |
+| Blog Writing Agent | $2 |
+| Unallocated fleet reserve | $0 |
+| **Shared maximum** | **$10** |
 
-The Blog Writing Agent’s cap controls its Workers AI inference. Cloudflare
-account-level billing notifications and a USD 50 account budget remain the
-outer guard for Workers, Durable Objects, storage, and any other platform
-charges.
+The Blog Writing Agent’s local cap and the private singleton
+`AiFleetBudgetAgent` both control its inference. Every draft and translation
+reserves a conservative maximum estimate from the USD 2 workstream allocation
+before Workers AI is called. The central Agent also enforces the USD 10 UTC-
+month fleet ceiling atomically. Profile drafting, customer support and social
+content have USD 0 allocations and therefore use deterministic fallback paths.
+
+The application ledger is not the Cloudflare invoice: it prices reservations
+at the reviewed retail model rates and does not subtract the account-wide daily
+free Neuron allocation. Cloudflare billing notifications are informational and
+do not stop calls. Worker requests, Durable Objects, storage and other platform
+charges remain separate from the USD 10 model-inference ceiling.
 
 ## Operational checks
 
 1. Open `/blog` once after a new Durable Object class deploy. This initializes
    the singleton and its idempotent weekly schedule.
 2. Open `/admin/blog` as a FarmerBook administrator. Confirm the next scheduled
-   run, the model, the USD 4 cap, and reserved monthly estimate.
+   run, the model, the USD 2 cap, and reserved monthly estimate.
 3. Select **Prepare a draft now** only for a controlled test. Confirm the draft
    remains private.
 4. Read the full text and open every cited source before publishing.

@@ -139,6 +139,7 @@ runtime guard](../lib/env.ts), [generated Worker inputs](../vite.config.ts),
 | `WEBSITE_GREETER_MONTHLY_BUDGET_USD` | Server Worker variable | `8` | At most `8`; never raise without a new fleet budget approval |
 | `WEBSITE_GREETER_MONTHLY_REPLY_LIMIT` | Server Worker variable | `25000` | At most `25000` for the first-agent release |
 | `WEBSITE_GREETER_DAILY_AI_REPLY_LIMIT` | Server Worker variable | `1000` | At most `1000`; the model call stops when reached |
+| `AI_FLEET_BUDGET_AGENT` | Private SQLite Durable Object binding | Required for model inference | Bind `AiFleetBudgetAgent`; never expose it through an HTTP Agent route |
 
 `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS. It must never have a `NEXT_PUBLIC_`
 prefix, appear in `.env.example` with a value, be printed in evidence, or appear
@@ -259,14 +260,22 @@ projection](../vite.config.ts), [Cloudflare deploy/secret behavior](https://deve
 
 ### Managed Agent cost and organic-certificate gates
 
-For a hard provider-side ceiling, deploy the greeting Agent in a dedicated
-Cloudflare Workers Free account/project. Free-plan request and Workers AI
-allowances fail closed instead of creating paid overage. If the broader site
-requires Workers Paid, the release approver must record the $5 base plan,
-confirm all other agent flags remain false, configure Cloudflare usage/billing
-notifications, and accept that Cloudflare Paid has metered overage rather than
-an account-wide hard dollar stop. The in-application $8 AI reservation is a
-second guard, not a substitute for that provider decision.
+The private singleton `AiFleetBudgetAgent` is the hard application circuit
+breaker for all allowlisted Workers AI inference. It atomically reserves a
+conservative maximum model cost before every call and enforces USD 10 per UTC
+month across the fleet: greeting USD 5, blog USD 2, growth/OCR USD 3, and
+profile/support/social USD 0. No environment variable or
+administrator control can raise or reassign these caps. The private ledger
+stores only bounded cost/count/model metadata and has no public Agent route.
+
+This circuit breaker does not cap Worker requests, Durable Object operations,
+storage or other platform charges. Its retail-value reservations do not
+subtract Cloudflare's account-wide daily free Neuron allocation and can
+therefore exceed invoiced Workers AI spend. Cloudflare account budget alerts
+are informational, not a usage stop. A dedicated Cloudflare Workers Free
+account/project may be retained as an additional provider-side fail-closed
+boundary; on Workers Paid, the release owner must separately accept metered
+platform overage.
 
 Before traffic, prove in staging that:
 
@@ -276,6 +285,12 @@ Before traffic, prove in staging that:
   returns contact details without calling a model;
 - an unsupported `WEBSITE_GREETER_MODEL` value falls back to the priced Granite
   allowlist entry;
+- a denied workstream or fleet reservation results in zero Workers AI calls,
+  and a failed or missing settlement retains the full reservation;
+- `/admin/agents` shows the UTC month, USD 10 ceiling, full USD 10 allocation,
+  USD 0 unavailable reserve and only aggregate cost/call outcomes;
+- profile drafting, customer support and social content take their existing
+  deterministic fallback paths with zero model calls;
 - `ENABLE_MANAGED_OPERATIONS_AGENTS` and `ENABLE_SUPPORT_SOCIAL_PILOT` remain
   `false` for the first-agent release;
 - Worker, Durable Object and Workers AI usage are reviewed weekly until a

@@ -247,3 +247,40 @@
   `workers.dev` hostname through Umbrella, while both public custom domains
   passed. No database migration/control, automatic email, applicant row,
   outreach action, or product publication occurred.
+- 2026-08-18: Completed the structured research and implementation plan for a
+  centralized AI spend ledger. Traced all seven raw Workers AI calls across the
+  nine deployed Agent classes and administrator actions, verified current
+  Cloudflare model prices and the informational-only nature of account budget
+  alerts, and designed one private singleton `AiFleetBudgetAgent` that reserves
+  before inference and stops the fleet at USD 50/month without retaining
+  prompts or output. The proposed existing allocations remain USD 8 greeting,
+  USD 4 blog and USD 5 growth; profile, support and social model spend stays USD
+  0 until a later approved allocation draws from USD 33. Research and plan only
+  were changed; implementation, deployment and Agent activation await explicit
+  plan approval.
+- 2026-08-18: Implemented and locally verified the approved centralized AI
+  fleet budget. Added one private SQLite `AiFleetBudgetAgent`, an exact four-
+  model price allowlist, conservative UTF-8-byte/max-output reservations, USD
+  8/USD 4/USD 5 workstream enforcement, USD 0 deterministic fallbacks, the USD
+  50 UTC-month circuit breaker, privacy-safe settlement metadata and a read-
+  only administrator panel. All seven former Workers AI call sites now pass
+  through one wrapper; repository search finds no other raw model execution.
+  ESLint, TypeScript, 144 Vitest files/662 tests, Vinext production build,
+  Wrangler dry run, additive migration ordering and `git diff --check` pass.
+  The generated artifact contains ten private Agent namespaces and the AI
+  binding. No production deploy, traffic change, schedule, message, Agent
+  activation, feature/database control or USD 33 allocation occurred.
+- 2026-08-18: Deployed the centralized AI fleet ledger after the product owner
+  reduced the whole-fleet limit to USD 10 per UTC month and approved release.
+  The immutable allocations are USD 5 greeting, USD 2 blog writing/translation,
+  USD 3 growth/OCR, and USD 0 for profile drafting, customer support and social
+  content. Existing greeting/blog local guards were lowered to match. Focused
+  tests, ESLint, TypeScript, all 144 Vitest files/662 tests, production build,
+  generated binding/migration inspection, raw-call search, strict Wrangler dry
+  run and diff checks passed. Deployment `4e6ecde5-b22d-401e-888e-944eb2f581d9`
+  placed version `7a5dad0d-425c-4868-a59c-e3ab984127e6` at 100 percent while
+  preserving both custom domains, 12 secrets, the approval Workflow and all
+  existing safety-control values. Apex and www health, homepage, expected admin
+  redirect and a reviewed zero-token greeting passed. Rollback target is
+  `661dfe1a-3158-49b2-8659-efe336272e53`; no feature/database control, provider,
+  outreach message or publication was activated.

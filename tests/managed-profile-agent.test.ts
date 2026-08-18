@@ -5,6 +5,7 @@ import {
   PROFILE_SAMPLE_PROMPT_VERSION,
 } from "@/features/profile-agent/profile-builder";
 import { managedProfileAgentInputSchema } from "@/features/profile-agent/schemas";
+import { allowingAiRuntime } from "./ai-budget-test-helpers";
 
 const input = managedProfileAgentInputSchema.parse({
   sampleId: "00000000-0000-4000-8000-000000000201",
@@ -80,6 +81,24 @@ describe("managed Farmer profile agent", () => {
     );
   });
 
+  it("uses the zero-dollar profile fallback without a model call", async () => {
+    const run = vi.fn();
+    const runtime = allowingAiRuntime({ run });
+    runtime.budget!.reserve = vi.fn(async () => ({
+      code: "WORKSTREAM_BUDGET_REACHED" as const,
+      reservationId: null,
+      monthKey: "2026-08",
+      reservedMicros: 0 as const,
+      fleetReservedMicros: 0,
+      workstreamReservedMicros: 0,
+    }));
+
+    const result = await buildManagedFarmerProfileSample(input, runtime);
+
+    expect(result.run.status).toBe("fallback");
+    expect(run).not.toHaveBeenCalled();
+  });
+
   it("fails closed to a deterministic sample when AI invents a citation", async () => {
     const ai = {
       run: vi.fn().mockResolvedValue({
@@ -102,7 +121,10 @@ describe("managed Farmer profile agent", () => {
         }),
       }),
     };
-    const result = await buildManagedFarmerProfileSample(input, ai);
+    const result = await buildManagedFarmerProfileSample(
+      input,
+      allowingAiRuntime(ai),
+    );
     expect(result.run.status).toBe("fallback");
     expect(result.run.failureCode).toBe("AI_OUTPUT_INVALID");
     expect(result.sample.claims[0].sourceUrl).toBe(input.evidence[0].sourceUrl);

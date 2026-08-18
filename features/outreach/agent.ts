@@ -1,4 +1,7 @@
-import type { WorkersAiBinding } from "@/lib/cloudflare-bindings";
+import {
+  runBudgetedAi,
+  type BudgetedAiRuntime,
+} from "@/features/ai-budget/inference";
 import {
   agricultureCategoryBySlug,
   SELECTABLE_AGRICULTURE_CATEGORIES,
@@ -81,23 +84,32 @@ export function deterministicOutreachAnalysis(input: {
   };
 }
 
-export function createOutreachAgent(ai?: WorkersAiBinding): OutreachAgent {
+export function createOutreachAgent(
+  runtime: BudgetedAiRuntime = {},
+): OutreachAgent {
   return {
     async analyze(input) {
-      if (!ai) return deterministicOutreachAnalysis(input);
+      if (!runtime.ai || !runtime.budget) {
+        return deterministicOutreachAnalysis(input);
+      }
       const startedAt = Date.now();
       try {
-        const raw = await ai.run(OUTREACH_TEXT_MODEL, {
-          messages: outreachPrompt({
-            ...input,
-            preferredLocale: input.preferredLocale ?? DEFAULT_LOCALE,
-          }),
-          response_format: {
-            type: "json_schema",
-            json_schema: outreachAnalysisJsonSchema,
+        const raw = await runBudgetedAi(runtime, {
+          workstream: "growth_outreach",
+          operation: "outreach_qualification",
+          model: OUTREACH_TEXT_MODEL,
+          input: {
+            messages: outreachPrompt({
+              ...input,
+              preferredLocale: input.preferredLocale ?? DEFAULT_LOCALE,
+            }),
+            response_format: {
+              type: "json_schema",
+              json_schema: outreachAnalysisJsonSchema,
+            },
+            temperature: 0.1,
+            max_tokens: 900,
           },
-          temperature: 0.1,
-          max_tokens: 900,
         });
         const response =
           typeof raw === "object" && raw && "response" in raw

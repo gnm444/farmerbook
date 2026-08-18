@@ -26,6 +26,7 @@ import {
   youtubeSearchConfiguration,
 } from "@/features/profile-agent/youtube-search";
 import { getCloudflareBindings } from "@/lib/cloudflare-bindings";
+import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import { isDemoMode, isProductionSite, isSupabaseConfigured } from "@/lib/env";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -238,7 +239,7 @@ export async function addFeaturedFarmerSourceAction(input: unknown) {
       );
       sourceExcerpt = await extractVisibleBusinessTextFromScreenshot(
         screenshot,
-        bindings.AI,
+        await createBudgetedAiRuntime(bindings),
       );
     } else if (!sourceExcerpt && sourceMayBeFetched(sourceType)) {
       const fetched = await fetchPublicBusinessSource(sourceUrl, {

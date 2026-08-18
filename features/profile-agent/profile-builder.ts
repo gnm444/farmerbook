@@ -1,4 +1,7 @@
-import type { WorkersAiBinding } from "@/lib/cloudflare-bindings";
+import {
+  runBudgetedAi,
+  type BudgetedAiRuntime,
+} from "@/features/ai-budget/inference";
 import {
   agricultureCategoryBySlug,
   SELECTABLE_AGRICULTURE_CATEGORIES,
@@ -270,23 +273,28 @@ function outputSchema() {
 
 export async function buildManagedFarmerProfileSample(
   input: ManagedProfileAgentInput,
-  ai?: WorkersAiBinding,
+  runtime: BudgetedAiRuntime = {},
 ): Promise<ProfileSampleBuildResult> {
-  if (!ai) return deterministicProfileSample(input);
+  if (!runtime.ai || !runtime.budget) return deterministicProfileSample(input);
   const startedAt = Date.now();
   try {
-    const raw = await ai.run(PROFILE_SAMPLE_MODEL, {
-      messages: profilePrompt(input),
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "farmerbook_profile_sample",
-          strict: true,
-          schema: outputSchema(),
+    const raw = await runBudgetedAi(runtime, {
+      workstream: "profile_drafting",
+      operation: "profile_sample",
+      model: PROFILE_SAMPLE_MODEL,
+      input: {
+        messages: profilePrompt(input),
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "farmerbook_profile_sample",
+            strict: true,
+            schema: outputSchema(),
+          },
         },
+        temperature: 0.1,
+        max_tokens: 1_800,
       },
-      temperature: 0.1,
-      max_tokens: 1_800,
     });
     const response =
       typeof raw === "object" && raw && "response" in raw

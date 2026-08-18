@@ -1,4 +1,7 @@
 import { Agent, type AgentContext } from "agents";
+import type { AiFleetBudgetAgent } from "@/features/ai-budget/agent";
+import { runBudgetedAi } from "@/features/ai-budget/inference";
+import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import type { WorkersAiBinding } from "@/lib/cloudflare-bindings";
 import type { SupportedLocale } from "@/lib/i18n/locales";
 import {
@@ -16,7 +19,7 @@ import {
 const DEFAULT_MODEL = "@cf/ibm-granite/granite-4.0-h-micro";
 const SUPPORTED_MODELS = new Set([DEFAULT_MODEL]);
 const TRANSLATION_MODEL = "@cf/ai4bharat/indictrans2-en-indic-1B";
-const DEFAULT_MONTHLY_AI_BUDGET_USD = 4;
+const DEFAULT_MONTHLY_AI_BUDGET_USD = 2;
 const MODEL_INPUT_USD_PER_MILLION = 0.017;
 const MODEL_OUTPUT_USD_PER_MILLION = 0.112;
 const TRANSLATION_USD_PER_MILLION = 0.342;
@@ -50,6 +53,7 @@ const INDIC_TRANSLATION_LANGUAGE = {
 
 interface BlogWritingAgentEnv extends Cloudflare.Env {
   AI?: WorkersAiBinding;
+  AI_FLEET_BUDGET_AGENT?: DurableObjectNamespace<AiFleetBudgetAgent>;
   BLOG_WRITING_MODEL?: string;
   BLOG_WRITING_MONTHLY_BUDGET_USD?: string;
 }
@@ -172,7 +176,7 @@ function weekKey(date: Date) {
 
 function boundedMoney(value: string | undefined) {
   const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= 1 && parsed <= 8
+  return Number.isFinite(parsed) && parsed >= 1 && parsed <= 2
     ? parsed
     : DEFAULT_MONTHLY_AI_BUDGET_USD;
 }
@@ -413,6 +417,9 @@ export class BlogWritingAgent extends Agent<
     kind: "draft" | "translation",
   ) {
     if (!this.env.AI) throw new Error("BLOG_AI_BINDING_UNAVAILABLE");
+    if (!this.env.AI_FLEET_BUDGET_AGENT) {
+      throw new Error("BLOG_AI_BUDGET_UNAVAILABLE");
+    }
     const current = this.refreshedState(now);
     const budgetMicros = Math.floor(
       boundedMoney(this.env.BLOG_WRITING_MONTHLY_BUDGET_USD) * 1_000_000,
@@ -441,9 +448,13 @@ export class BlogWritingAgent extends Agent<
       conservativeDraftMicros(prompt, maxOutputTokens),
       kind,
     );
-    const result = await this.env.AI!.run(
-      configuredModel(this.env.BLOG_WRITING_MODEL),
+    const result = await runBudgetedAi(
+      await createBudgetedAiRuntime(this.env),
       {
+        workstream: "blog_writing",
+        operation: kind === "draft" ? "blog_draft" : "blog_translation",
+        model: configuredModel(this.env.BLOG_WRITING_MODEL),
+        input: {
         messages: [
           {
             role: "system",
@@ -454,6 +465,7 @@ export class BlogWritingAgent extends Agent<
         ],
         max_tokens: maxOutputTokens,
         temperature: kind === "translation" ? 0 : 0.15,
+      },
       },
     );
     const parsed = localizedBlogContentSchema.safeParse(jsonFromAi(result));
@@ -593,10 +605,21 @@ export class BlogWritingAgent extends Agent<
         conservativeTranslationMicros(sourceValues),
         "translation",
       );
-      const result = await this.env.AI!.run(TRANSLATION_MODEL, {
-        text: sourceValues,
-        target_language: INDIC_TRANSLATION_LANGUAGE[locale as Exclude<SupportedLocale, "en-IN">],
-      });
+      const result = await runBudgetedAi(
+        await createBudgetedAiRuntime(this.env),
+        {
+          workstream: "blog_writing",
+          operation: "blog_translation",
+          model: TRANSLATION_MODEL,
+          input: {
+            text: sourceValues,
+            target_language:
+              INDIC_TRANSLATION_LANGUAGE[
+                locale as Exclude<SupportedLocale, "en-IN">
+              ],
+          },
+        },
+      );
       const values = translatedTexts(result);
       if (!values || values.length !== sourceValues.length) {
         throw new Error("BLOG_TRANSLATION_OUTPUT_INVALID");

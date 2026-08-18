@@ -7,6 +7,7 @@ import { websiteGreeterRequestSchema } from "../features/website-greeter/contrac
 import type { WebsiteGreetingAgent } from "../features/website-greeter/agent";
 
 export { FarmerProfileAgent } from "../features/profile-agent/managed-agent";
+export { AiFleetBudgetAgent } from "../features/ai-budget/agent";
 export { WebsiteGreetingAgent } from "../features/website-greeter/agent";
 export { BlogWritingAgent } from "../features/blog/agent";
 export { FarmerProfileApprovalWorkflow } from "../features/profile-agent/approval-workflow";

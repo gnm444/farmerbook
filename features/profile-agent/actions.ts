@@ -11,6 +11,7 @@ import { createOutreachAgent } from "@/features/outreach/agent";
 import { sha256, uuidFromText } from "@/features/outreach/crypto";
 import { verifyOutreachInvitationToken } from "@/features/outreach/invitation-token";
 import { getCloudflareBindings } from "@/lib/cloudflare-bindings";
+import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import { getSiteUrl, isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { DEFAULT_LOCALE, normalizeLocale } from "@/lib/i18n/locales";
@@ -270,7 +271,9 @@ export async function discoverManagedFarmerProfileByNameAction(input: unknown) {
     })),
   );
   const bindings = await getCloudflareBindings();
-  const analysis = await createOutreachAgent(bindings?.AI).analyze({
+  const analysis = await createOutreachAgent(
+    await createBudgetedAiRuntime(bindings),
+  ).analyze({
     sourceText: evidence
       .map((item) => `${item.sourceTitle}\n${item.sourceText}`)
       .join("\n\n"),

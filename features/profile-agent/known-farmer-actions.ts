@@ -25,6 +25,7 @@ import {
 } from "@/features/outreach/source-policy";
 import { normalizeOutreachUrl } from "@/features/outreach/url-policy";
 import { getCloudflareBindings } from "@/lib/cloudflare-bindings";
+import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import {
   getSiteUrl,
   isDemoMode,
@@ -395,7 +396,7 @@ export async function addKnownFarmerSourceAction(input: unknown) {
       );
       sourceText = await extractVisibleBusinessTextFromScreenshot(
         screenshot,
-        bindings.AI,
+        await createBudgetedAiRuntime(bindings),
       );
     } else if (sourceMayBeFetched(sourceType)) {
       const fetched = await fetchPublicBusinessSource(sourceUrl, {
@@ -543,7 +544,9 @@ export async function buildKnownFarmerProfileAction(input: unknown) {
     }),
   );
   const bindings = await getCloudflareBindings();
-  const analysis = await createOutreachAgent(bindings?.AI).analyze({
+  const analysis = await createOutreachAgent(
+    await createBudgetedAiRuntime(bindings),
+  ).analyze({
     sourceText: evidence
       .map((item) => `${item.sourceTitle ?? ""}\n${item.sourceText}`)
       .join("\n\n"),
