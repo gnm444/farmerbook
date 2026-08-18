@@ -302,11 +302,21 @@
 - 2026-08-19: Ran an isolated, bounded Cloudflare Workers AI quota experiment
   with a temporary route-free Worker, then deleted that Worker. Successful
   requests reported 10,990.866 measured Neurons including a tiny post-boundary
-  probe; the probe and a subsequent production `workers_ai` greeting both
-  succeeded. The account therefore behaved as paid or credit-enabled after the
-  daily 10,000-Neuron free allocation instead of returning a Free-plan quota
-  error. The experiment did not use or mutate FarmerBook's USD 10 fleet ledger;
-  no prompt or generated conversation was retained. Added a generated
-  FarmerBook F-and-leaf favicon, Apple touch icon, 192/512 installable-app
-  icons, metadata/manifest declarations and automated asset checks because the
-  former production `/favicon.ico` returned 404.
+  probe. The immediate tiny probe succeeded during the provider's accounting
+  delay, but a later production inference was rejected with `AI_ERROR_4006` and
+  returned FarmerBook's safe human handoff; a reviewed zero-token answer still
+  worked. This confirms daily quota enforcement rather than paid overage. The
+  experiment did not use or mutate FarmerBook's USD 10 fleet ledger, and no
+  prompt or generated conversation was retained.
+- 2026-08-19: Added and deployed a generated FarmerBook F-and-leaf favicon,
+  Apple touch icon, 192/512 installable-app icons, metadata/manifest declarations
+  and automated asset checks because the former production `/favicon.ico`
+  returned 404. The first direct deploy omitted 24 plain-text variables and
+  made dynamic pages return 500; the post-deploy smoke check detected it and
+  production was rolled back to `0519d890-8923-46ec-a347-66b6b224dec9` within
+  one minute. A no-traffic replacement was then verified to match all 48
+  bindings byte-for-byte before deployment. Version
+  `a6b640b4-6fcf-41d0-a959-3b9817fb3a6d` is now at 100 percent. Apex/www home,
+  health, all icon assets, manifest, exact favicon hash, safe AI handoff,
+  reviewed zero-token greeting and default-off managed route passed. Rollback
+  remains `0519d890-8923-46ec-a347-66b6b224dec9`.
