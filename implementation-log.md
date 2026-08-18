@@ -236,3 +236,14 @@
   functional browser checks passed. No database migration, feature control,
   email, applicant record, external integration, or production state changed
   at this checkpoint.
+- 2026-08-18: Deployed commit `aec5d74` as Cloudflare Worker version
+  `661dfe1a-3158-49b2-8659-efe336272e53`. The apex and `www` public domains
+  returned HTTP 200 for `/eco-products`; the sitemap includes the eco and blog
+  URLs; health and the reviewed blog article remained healthy. Live Chromium
+  checks confirmed ten category controls, a prepared `mailto:ceo@farmerbook.in`
+  handoff for a neutral bagasse product, rejection of biodegradable one-time
+  plastic plates, and Urdu document RTL with the eco form explicitly tagged as
+  Indian-English fallback. The Cisco network blocked the optional raw
+  `workers.dev` hostname through Umbrella, while both public custom domains
+  passed. No database migration/control, automatic email, applicant row,
+  outreach action, or product publication occurred.
