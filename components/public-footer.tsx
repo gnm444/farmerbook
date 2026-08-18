@@ -8,9 +8,11 @@ import {
   FARMERBOOK_CONTACT_PHONE,
   FARMERBOOK_CONTACT_PHONE_DISPLAY,
 } from "@/lib/contact";
+import { ecoSupplierFallbackLanguageProps } from "@/lib/i18n/eco-suppliers";
 
 export async function PublicFooter() {
   const { t } = await getServerTranslations("navigation");
+  const { t: eco, locale: ecoLocale } = await getServerTranslations("ecoSuppliers");
   const companiesEnabled = isFeatureEnabled("ENABLE_AGRI_BUSINESSES");
   const outreachEnabled = isFeatureEnabled("ENABLE_OUTREACH_AGENT");
   return (
@@ -27,6 +29,7 @@ export async function PublicFooter() {
           <Link href="/featured-farmers">{t("featuredFarmers")}</Link>
           <Link href="/blog">{t("blog")}</Link>
           {companiesEnabled ? <Link href="/companies">{t("companiesOffers")}</Link> : null}
+          <Link href="/eco-products" {...ecoSupplierFallbackLanguageProps(ecoLocale)}>{eco("eyebrow")}</Link>
           <Link href="/#segments">{t("whoFor")}</Link>
           <Link href="/signup">{t("join")}</Link>
           {outreachEnabled ? <Link href="/join">{t("requestIntroduction")}</Link> : null}

@@ -2,6 +2,7 @@ import type { Messages } from "../messages";
 import englishMessages from "./en-IN";
 
 const messages = {
+  ecoSuppliers: englishMessages.ecoSuppliers,
   offers: englishMessages.offers,
   profilePreview: englishMessages.profilePreview,
   incSourcing: englishMessages.incSourcing,

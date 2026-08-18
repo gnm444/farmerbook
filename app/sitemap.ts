@@ -13,6 +13,7 @@ const publicPaths = [
   "/privacy",
   "/terms",
   "/license",
+  "/eco-products",
   "/data-deletion",
   "/blog",
 ] as const;

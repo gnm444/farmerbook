@@ -15,6 +15,10 @@ import {
 import { useTranslations } from "@/components/locale-provider";
 import { AGRICULTURE_COMPANY_SECTORS } from "@/lib/agriculture/company-sectors";
 import {
+  ecoSupplierFallbackLanguageProps,
+  ecoSupplierSectorMessageName,
+} from "@/lib/i18n/eco-suppliers";
+import {
   localeRegistry,
   SUPPORTED_LOCALES,
   type SupportedLocale,
@@ -131,6 +135,7 @@ export function OnboardingFlow({
   const common = useTranslations("common");
   const onboarding = useTranslations("onboarding");
   const profileMessages = useTranslations("profile");
+  const ecoMessages = useTranslations("ecoSuppliers");
   const legal = useTranslations("legal");
   const [progress, setProgress] = useState(initialProgress);
   const [step, setStep] = useState(initialProgress.currentStep);
@@ -515,19 +520,28 @@ export function OnboardingFlow({
                 <legend>{onboarding("companySectors")}</legend>
                 <p className="form-helper">{onboarding("companySectorsHelp")}</p>
                 {groupedSectors.map(([group, sectors]) => (
-                  <section key={group} className="sector-group">
+                  <section
+                    key={group}
+                    className="sector-group"
+                    {...(group === "eco-friendly-products"
+                      ? ecoSupplierFallbackLanguageProps(locale)
+                      : {})}
+                  >
                     <h3>
                       {group === "eco-friendly-products"
-                        ? "Eco-friendly products — seller-declared"
+                        ? ecoMessages("groupEcoFriendly")
                         : onboarding(sectorGroupLabels[group])}
                     </h3>
                     <div className="checkbox-grid">
-                      {sectors.map((sector) => (
-                        <label key={sector.slug}>
-                          <input type="checkbox" checked={companySectorSlugs.includes(sector.slug)} disabled={!companySectorSlugs.includes(sector.slug) && companySectorSlugs.length >= 12} onChange={() => toggleSector(sector.slug)} />
-                          <span dir="auto">{sector.name}</span>
-                        </label>
-                      ))}
+                      {sectors.map((sector) => {
+                        const messageName = ecoSupplierSectorMessageName(sector.slug);
+                        return (
+                          <label key={sector.slug}>
+                            <input type="checkbox" checked={companySectorSlugs.includes(sector.slug)} disabled={!companySectorSlugs.includes(sector.slug) && companySectorSlugs.length >= 12} onChange={() => toggleSector(sector.slug)} />
+                            <span dir="auto">{messageName ? ecoMessages(messageName) : sector.name}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   </section>
                 ))}

@@ -6555,3 +6555,41 @@ account/domain setup, a valid FarmerBook business postal address, an
 owner-controlled canary inbox, successful staged evidence, and a separate
 activation approval. Until those inputs exist, the public intake must fail
 closed and no outreach message may be sent.
+
+## 2026-08-18 release addendum: managed farming blog and public eco-supplier intake
+
+### Decisions
+
+- Use a named Cloudflare Agents SDK Durable Object for farming blog drafts and
+  cached translations. Keep every future article private until an
+  authenticated administrator publishes it; allocate USD 4/month inside the
+  existing USD 50 managed-agent ceiling.
+- Publish the supplied Telugu article only after replacing unsupported fixed
+  percentages, guarantees, and timelines with sourced, conditional guidance.
+- Keep the public eco-supplier path independent from the unfinished
+  organization database rollout. The browser prepares an email to the official
+  FarmerBook address and a copyable summary; it does not silently transmit,
+  persist, upload evidence, create an organization, or publish a product.
+- Accept manufacturer, distributor, or combined applicants for ten bounded
+  product categories, including clothing/textiles, reusable or compliant
+  compostable tableware, bamboo goods, farm-produce value addition, and
+  agricultural-residue/by-product products.
+- Treat every environmental claim as seller-declared until evidence is
+  separately accepted by a trusted reviewer. Applicant links can produce only
+  `evidence_submitted`; no client input can produce `verified`.
+- Reject explicit prohibited or unclassified plastic tableware. Require public
+  HTTPS evidence before accepting certified or compostable-plastic wording for
+  review, and still require exact CPCB/product-scope and current state-rule
+  review before any verified claim.
+- Serve the public eco journey for all 23 locale selections. Until native
+  speakers review the new copy, show Indian English with a visible fallback
+  notice and correct `lang`/`dir` metadata rather than claiming a translation.
+
+### Release boundary
+
+Deploy `/blog`, the reviewed founding article, and `/eco-products` at the
+application layer. Do not apply the two eco catalog migrations or enable
+`ENABLE_AGRI_BUSINESSES`, `ENABLE_BUSINESS_OFFERS`, their database release
+controls, outreach, or automatic email. The authenticated catalog may be
+released later only after the agriculture foundation and both eco migrations
+are rehearsed and applied in order.

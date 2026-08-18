@@ -209,3 +209,30 @@
   flag and database control were not enabled, delivery was not resumed, the
   untracked `outreach/` data was not imported, and no contact or message
   occurred.
+- 2026-08-18: Implemented and deployed FB-REQ-020. The named Cloudflare
+  `BlogWritingAgent` creates one evidence-bounded weekly draft, uses Granite
+  4.0 H Micro for writing, keeps all new drafts private until an authenticated
+  administrator explicitly publishes, and has a USD 4 monthly estimator inside
+  the shared USD 50 agent cap. Published `/blog` and the reviewed Telugu/Indian
+  English founding article, with cached IndicTrans2 translations for the other
+  Scheduled Language selections and an honest fallback. Commit `b92330f` became
+  Worker version `6ac84cbb-3d6b-4b4d-946e-9c3d867b84ad`; live HTTP and browser
+  checks passed for the collection, article, sitemap, private admin redirect,
+  Telugu, Hindi, and Urdu with RTL direction.
+- 2026-08-18: Completed the local FB-REQ-021 release candidate through three
+  delegated workstreams. Added public `/eco-products` onboarding for
+  manufacturers, distributors, or both, covering ten concrete categories that
+  include clothing/textiles, compliant tableware, bamboo, farm-produce value
+  addition, and agricultural residues/by-products. The route prepares a
+  validated email to `ceo@farmerbook.in` with a copy fallback and does not
+  persist, upload, publish, or require unfinished database/outreach controls.
+  The shared claims policy exposes seller-declared, evidence-submitted, and
+  verified states; applicant evidence remains pending; prohibited or
+  unclassified plastic tableware is rejected; and certified/compostable-plastic
+  wording needs a public HTTPS reference for later CPCB/scope/state review. All
+  23 locale selections work with visible Indian-English fallback where native
+  review is pending. ESLint, TypeScript, 141 Vitest files/643 tests, the exact
+  production build, Wrangler strict dry-run, desktop/mobile visual review, and
+  functional browser checks passed. No database migration, feature control,
+  email, applicant record, external integration, or production state changed
+  at this checkpoint.

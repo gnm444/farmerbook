@@ -18,6 +18,73 @@ const messages = {
     demoBanner: "Demonstration mode · Explore every journey with fictional pilot data",
   },
   agricultureCategories: AGRICULTURE_CATEGORY_ENGLISH_LABELS,
+  ecoSuppliers: {
+    metadataTitle: "Onboard eco-friendly products",
+    metadataDescription:
+      "Share an eco-friendly product with FarmerBook for a seller-declared supplier onboarding review.",
+    eyebrow: "Eco-friendly supplier onboarding",
+    title: "Bring useful eco-friendly products to farming communities",
+    intro:
+      "Manufacturers and distributors can prepare a structured introduction for FarmerBook. Submission starts a review; it does not certify the product or publish it automatically.",
+    roleHeading: "How do you supply these products?",
+    roleManufacturerBrand: "Manufacturer or brand",
+    roleDealerDistributor: "Dealer or distributor",
+    roleBoth: "Manufacturer and distributor",
+    categoriesHeading: "Eco-friendly product categories",
+    categoriesHelp: "Choose every category that accurately describes the products you supply.",
+    groupEcoFriendly: "Eco-friendly products — seller-declared",
+    groupOtherAgriculture: "Other agriculture sectors",
+    sellerDeclaredLabel: "Seller-declared eco-friendly category",
+    sellerDeclaredDisclosure:
+      "“Eco-friendly” is a seller-declared product description, not a FarmerBook certification. A named environmental standard or certificate is shown as reviewed only after its evidence claim is separately checked.",
+    claimDisclosureAria: "Eco-friendly claim disclosure",
+    sectorSolarRenewableEnergy: "Solar and renewable farm energy",
+    sectorBiodegradablePackaging:
+      "Biodegradable and compostable packaging",
+    sectorCompostBioInputs: "Compost and biological farm inputs",
+    sectorWaterSavingProducts:
+      "Water-saving irrigation and farm products",
+    sectorReusableRepairableProducts:
+      "Reusable and repairable farm products",
+    sectorSustainableClothingTextiles:
+      "Sustainable clothing and textiles",
+    sectorCompostableReusableTableware:
+      "Compostable and reusable tableware",
+    sectorBambooProducts: "Bamboo products",
+    sectorFarmProduceValueAdded:
+      "Farm-produce and value-added products",
+    sectorAgriculturalResidueByproduct:
+      "Agricultural-residue and by-product products",
+    businessName: "Business name",
+    contactName: "Contact person",
+    email: "Business email",
+    phone: "Phone number",
+    websiteOptional: "Website (optional)",
+    location: "City, district and state",
+    productName: "Product or product range",
+    productDescription: "What the product is made from and how it is used",
+    evidenceLinks: "Evidence links (optional)",
+    evidenceHelp:
+      "Add public links to named standards, test reports or certificates. FarmerBook reviews each evidence claim separately.",
+    consentLabel:
+      "I confirm that I am authorized to share these business details and ask FarmerBook to contact me about supplier onboarding.",
+    consentHelp:
+      "Do not include private identity documents, payment information or confidential certificates in this form.",
+    prepareEmail: "Prepare email to FarmerBook",
+    openEmail: "Open prepared email",
+    copySummary: "Copy submission summary",
+    copied: "Submission summary copied.",
+    copyFailed: "The summary could not be copied. Select and copy it manually.",
+    emailHelp:
+      "Your email app opens with the structured summary. Review it before sending.",
+    nextStepsTitle: "What happens next",
+    nextStepsBody:
+      "FarmerBook reviews product relevance, seller identity and any named evidence before deciding whether to onboard or publish the supplier.",
+    privacyDisclosure:
+      "The details you submit are used to respond to this onboarding request. Nothing is published without a separate review and approval step.",
+    fallbackNotice:
+      "This eco-supplier onboarding copy is currently shown in Indian English while translation into your selected language awaits native-speaker review.",
+  },
   navigation: {
     publicNavigation: "Public navigation",
     homeAria: "FarmerBook home",

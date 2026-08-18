@@ -177,6 +177,7 @@ const coreOffersMessages = {
 } as const;
 
 const messages = {
+  ecoSuppliers: englishMessages.ecoSuppliers,
   offers: coreOffersMessages,
   profilePreview: {
     ...englishMessages.profilePreview,

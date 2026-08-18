@@ -22,6 +22,9 @@ const additiveTaxonomyMigrations = `${migration}\n${readFileSync(resolve(
 ), "utf8")}\n${produceTaxonomyMigration}\n${readFileSync(resolve(
   process.cwd(),
   "supabase/migrations/20260818123000_eco_friendly_product_catalog.sql",
+), "utf8")}\n${readFileSync(resolve(
+  process.cwd(),
+  "supabase/migrations/20260818124500_expand_eco_friendly_product_catalog.sql",
 ), "utf8")}`;
 
 describe("agriculture ecosystem foundation migration", () => {

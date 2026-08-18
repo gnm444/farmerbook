@@ -38,6 +38,11 @@ const AGRICULTURE_COMPANY_SECTOR_DEFINITIONS = [
   { slug: "compost-bio-inputs", name: "Compost and biological farm inputs", group: "eco-friendly-products", offerExamples: ["Compost", "Vermicompost", "Biofertilizers"] },
   { slug: "water-saving-irrigation-products", name: "Water-saving irrigation and farm products", group: "eco-friendly-products", offerExamples: ["Drip irrigation", "Moisture sensors", "Rainwater-harvesting products"] },
   { slug: "reusable-repairable-farm-products", name: "Reusable and repairable farm products", group: "eco-friendly-products", offerExamples: ["Reusable crates", "Repairable hand tools", "Refillable farm containers"] },
+  { slug: "sustainable-clothing-textiles", name: "Sustainable clothing and natural-fibre textiles", group: "eco-friendly-products", offerExamples: ["Natural-fibre workwear", "Farm clothing", "Traceable textile products"] },
+  { slug: "compostable-reusable-tableware", name: "Compostable or reusable plates and tableware", group: "eco-friendly-products", offerExamples: ["Certified-compostable plates", "Reusable tableware", "Agricultural-fibre serving products"] },
+  { slug: "bamboo-products", name: "Bamboo products", group: "eco-friendly-products", offerExamples: ["Bamboo household items", "Bamboo farm products", "Bamboo packaging"] },
+  { slug: "farm-produce-value-added-products", name: "Products made from farm produce", group: "eco-friendly-products", offerExamples: ["Value-added foods", "Plant-fibre products", "Produce-based household products"] },
+  { slug: "agricultural-residue-byproduct-products", name: "Products made from agricultural residues or by-products", group: "eco-friendly-products", offerExamples: ["Bagasse products", "Crop-residue boards", "Husk and coir products"] },
   { slug: "drones-precision-agriculture", name: "Drones and precision agriculture", group: "machinery", offerExamples: ["Drone spraying", "Sensors", "Farm mapping"] },
   { slug: "seeds-planting-material", name: "Seeds and planting material", group: "inputs", offerExamples: ["Certified seed", "Saplings", "Nursery stock"] },
   { slug: "fertilizers-soil-inputs", name: "Fertilizers and soil inputs", group: "inputs", offerExamples: ["Fertilizer", "Biofertilizer", "Soil conditioners"] },
@@ -99,6 +104,11 @@ export const ECO_FRIENDLY_COMPANY_SECTOR_SLUGS = [
   "compost-bio-inputs",
   "water-saving-irrigation-products",
   "reusable-repairable-farm-products",
+  "sustainable-clothing-textiles",
+  "compostable-reusable-tableware",
+  "bamboo-products",
+  "farm-produce-value-added-products",
+  "agricultural-residue-byproduct-products",
 ] as const satisfies readonly AgricultureCompanySectorSlug[];
 
 const ECO_FRIENDLY_COMPANY_SECTOR_SLUG_SET = new Set<string>(

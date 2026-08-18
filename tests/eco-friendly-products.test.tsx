@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/components/locale-provider";
+import englishMessages from "@/lib/i18n/messages/en-IN";
 import {
   ECO_FRIENDLY_COMPANY_SECTOR_SLUGS,
   agricultureCompanySectorBySlug,
@@ -14,8 +17,18 @@ import {
   EcoFriendlyClaimNotice,
 } from "@/features/organizations/eco-friendly-claim-notice";
 
-const migrationPath =
-  "supabase/migrations/20260818123000_eco_friendly_product_catalog.sql";
+const migrationPaths = [
+  "supabase/migrations/20260818123000_eco_friendly_product_catalog.sql",
+  "supabase/migrations/20260818124500_expand_eco_friendly_product_catalog.sql",
+] as const;
+
+function inEnglish(children: ReactNode) {
+  return (
+    <LocaleProvider locale="en-IN" messages={englishMessages}>
+      {children}
+    </LocaleProvider>
+  );
+}
 
 describe("eco-friendly product onboarding", () => {
   it("provides concrete, selectable discovery sectors in the canonical catalog", () => {
@@ -25,6 +38,11 @@ describe("eco-friendly product onboarding", () => {
       "compost-bio-inputs",
       "water-saving-irrigation-products",
       "reusable-repairable-farm-products",
+      "sustainable-clothing-textiles",
+      "compostable-reusable-tableware",
+      "bamboo-products",
+      "farm-produce-value-added-products",
+      "agricultural-residue-byproduct-products",
     ]);
 
     for (const slug of ECO_FRIENDLY_COMPANY_SECTOR_SLUGS) {
@@ -43,9 +61,11 @@ describe("eco-friendly product onboarding", () => {
 
   it("makes the seller-declared eco group available in the shared onboarding selector", () => {
     render(
-      <select aria-label="Company sectors" multiple>
-        <CompanySectorOptions />
-      </select>,
+      inEnglish(
+        <select aria-label="Company sectors" multiple>
+          <CompanySectorOptions />
+        </select>,
+      ),
     );
 
     const group = screen.getByRole("group", {
@@ -117,7 +137,9 @@ describe("eco-friendly product onboarding", () => {
 
   it("labels eco-friendly as seller-declared and never as certified", () => {
     const { rerender } = render(
-      <EcoFriendlyClaimNotice sectorSlugs={["compost-bio-inputs"]} />,
+      inEnglish(
+        <EcoFriendlyClaimNotice sectorSlugs={["compost-bio-inputs"]} />,
+      ),
     );
 
     expect(
@@ -126,14 +148,21 @@ describe("eco-friendly product onboarding", () => {
     expect(screen.getByText(ECO_FRIENDLY_SELLER_DECLARATION)).toBeVisible();
     expect(screen.queryByText(/^certified eco-friendly$/i)).not.toBeInTheDocument();
 
-    rerender(<EcoFriendlyClaimNotice sectorSlugs={["farm-tools-implements"]} />);
+    rerender(
+      inEnglish(
+        <EcoFriendlyClaimNotice sectorSlugs={["farm-tools-implements"]} />,
+      ),
+    );
     expect(
       screen.queryByText("Seller-declared eco-friendly category"),
     ).not.toBeInTheDocument();
   });
 
   it("adds taxonomy rows without activating staged company or offer releases", () => {
-    const sql = readFileSync(migrationPath, "utf8").toLocaleLowerCase("en-IN");
+    const sql = migrationPaths
+      .map((path) => readFileSync(path, "utf8"))
+      .join("\n")
+      .toLocaleLowerCase("en-IN");
 
     expect(sql).toContain("'eco-friendly-products', null, 'business_sector'");
     expect(sql).toMatch(
