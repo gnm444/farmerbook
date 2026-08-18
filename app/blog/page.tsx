@@ -43,8 +43,8 @@ export default async function BlogPage() {
             <p>{ui.collectionLede}</p>
             <div className="blog-index-hero__topics" aria-label="Blog topics">
               <span><Sprout size={15} aria-hidden="true" /> Natural farming</span>
-              <span>Regular farming</span>
-              <span>New farm tools</span>
+              <span>Safe food</span>
+              <span>Farmer–consumer trust</span>
             </div>
           </div>
         </section>

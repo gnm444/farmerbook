@@ -3,8 +3,12 @@ import { describe, expect, it } from "vitest";
 import { blogPublicationSchema } from "@/features/blog/contracts";
 import {
   CALCULATED_TRANSITION_SLUG,
+  FOOD_TRACEABILITY_SLUG,
+  GHEE_TRUST_SLUG,
   foundingBlogPublication,
 } from "@/features/blog/published";
+import { foodTraceabilityPublication } from "@/features/blog/publications/food-traceability";
+import { gheeTrustPublication } from "@/features/blog/publications/ghee-trust";
 import { blogUi, translationNotice } from "@/features/blog/presentation";
 import { SUPPORTED_LOCALES } from "@/lib/i18n/locales";
 import { isPublicPath } from "@/proxy";
@@ -23,6 +27,9 @@ describe("managed FarmerBook Blog Writing Agent", () => {
     expect(worker).toContain('export { BlogWritingAgent }');
     expect(agent).toContain('WEEKLY_CRON_UTC = "30 3 * * 2"');
     expect(agent).toContain('"prepareWeeklyDraft"');
+    expect(agent).toContain('category: "food_safety"');
+    expect(agent).toContain('category: "farm_to_table"');
+    expect(agent).toContain("natural-farming and food editor");
   });
 
   it("uses the cheapest allowlisted model within a four-dollar cap", () => {
@@ -50,6 +57,42 @@ describe("managed FarmerBook Blog Writing Agent", () => {
     );
     expect(isPublicPath("/blog")).toBe(true);
     expect(isPublicPath(`/blog/${CALCULATED_TRANSITION_SLUG}`)).toBe(true);
+    expect(isPublicPath(`/blog/${GHEE_TRUST_SLUG}`)).toBe(true);
+    expect(isPublicPath(`/blog/${FOOD_TRACEABILITY_SLUG}`)).toBe(true);
+  });
+});
+
+describe("community-derived food articles", () => {
+  it("publishes valid reviewed Indian English and Telugu content", () => {
+    expect(blogPublicationSchema.parse(gheeTrustPublication)).toEqual(
+      gheeTrustPublication,
+    );
+    expect(blogPublicationSchema.parse(foodTraceabilityPublication)).toEqual(
+      foodTraceabilityPublication,
+    );
+    expect(gheeTrustPublication.telugu?.title).toContain("ఐదు తనిఖీలు");
+    expect(foodTraceabilityPublication.telugu?.title).toContain("ట్రేసబిలిటీ");
+  });
+
+  it("keeps unsupported WhatsApp claims out of the ghee article", () => {
+    const english = JSON.stringify(gheeTrustPublication.english);
+    const telugu = JSON.stringify(gheeTrustPublication.telugu);
+    expect(english).toContain("not evidence that 95% of all ghee");
+    expect(english).not.toContain("15,000");
+    expect(english).not.toContain("25 to 30 litres");
+    expect(telugu).not.toContain("15,000");
+    expect(gheeTrustPublication.sources.map((source) => new URL(source.url).hostname))
+      .toEqual(expect.arrayContaining(["fssai.gov.in", "www.youtube.com"]));
+  });
+
+  it("summarizes the shared traceability video without treating blockchain as verification", () => {
+    const english = JSON.stringify(foodTraceabilityPublication.english);
+    expect(english).toContain("30-minute project video");
+    expect(english).toContain("does not inspect a field");
+    expect(english).toContain("not verified");
+    expect(foodTraceabilityPublication.sources[0]?.url).toBe(
+      "https://www.youtube.com/watch?v=VwBg4-J0VZo",
+    );
   });
 });
 

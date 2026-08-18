@@ -1,4 +1,14 @@
 import type { BlogPublication } from "./contracts";
+import {
+  FOOD_TRACEABILITY_SLUG,
+  foodTraceabilityPublication,
+} from "./publications/food-traceability";
+import {
+  GHEE_TRUST_SLUG,
+  gheeTrustPublication,
+} from "./publications/ghee-trust";
+
+export { FOOD_TRACEABILITY_SLUG, GHEE_TRUST_SLUG };
 
 export const CALCULATED_TRANSITION_SLUG =
   "calculated-transition-to-natural-farming";
@@ -178,7 +188,11 @@ export const foundingBlogPublication: BlogPublication = {
   },
 };
 
-export const STATIC_BLOG_PUBLICATIONS = [foundingBlogPublication] as const;
+export const STATIC_BLOG_PUBLICATIONS = [
+  foodTraceabilityPublication,
+  gheeTrustPublication,
+  foundingBlogPublication,
+] as const;
 
 export function staticBlogPublication(slug: string) {
   return STATIC_BLOG_PUBLICATIONS.find((article) => article.slug === slug) ?? null;

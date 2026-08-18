@@ -109,40 +109,40 @@ const TOPIC_BRIEFS = [
     ],
   },
   {
-    key: "balanced-nutrient-decisions",
-    topic: "Using soil evidence for balanced nutrient decisions in regular farming",
-    category: "regular_farming" as const,
+    key: "food-adulteration-evidence-checks",
+    topic: "How consumers can screen food-adulteration concerns without making unsupported purity claims",
+    category: "food_safety" as const,
     sources: [
       {
-        title: "Soil Health Card scheme — farmer FAQ",
-        publisher: "Department of Agriculture & Farmers Welfare, Government of India",
-        url: "https://soilhealth.dac.gov.in/files/FAQ_Final_English.pdf",
-        scope: "The twelve tested soil parameters and holding-specific recommendations.",
+        title: "Check Adulteration at Home",
+        publisher: "Food Safety and Standards Authority of India",
+        url: "https://fssai.gov.in/inspection/check-adulteration",
+        scope: "Official DART and Food Safety Magic Box demonstrations for screening common adulterants in food.",
       },
       {
-        title: "Balanced fertilizer use and sustainable soil health practices",
-        publisher: "Indian Council of Agricultural Research",
-        url: "https://www.icar.gov.in/en/icar-ccari-goa-organises-khet-bachao-abhiyan-balanced-use-fertilizers-and-sustainable-soil-health",
-        scope: "Soil-test-based fertilizer application and integrated nutrient management.",
+        title: "Food Safety and Standards Regulations",
+        publisher: "Food Safety and Standards Authority of India",
+        url: "https://fssai.gov.in/food-law/regulations",
+        scope: "Current food-safety, labelling and display regulatory source index.",
       },
     ],
   },
   {
-    key: "soil-health-card-tool",
-    topic: "A practical guide to using a Soil Health Card as a farm decision tool",
-    category: "farm_tools" as const,
+    key: "farm-food-traceability",
+    topic: "What farm-to-table traceability records can prove and where their limits begin",
+    category: "farm_to_table" as const,
     sources: [
       {
-        title: "Soil Health Card scheme — farmer FAQ",
-        publisher: "Department of Agriculture & Farmers Welfare, Government of India",
-        url: "https://soilhealth.dac.gov.in/files/FAQ_Final_English.pdf",
-        scope: "Sampling, tested parameters and how farmers use recommendations.",
+        title: "GS1 Global Traceability Standard",
+        publisher: "GS1",
+        url: "https://www.gs1.org/standards/gs1-global-traceability-standard/current-standard",
+        scope: "Traceable objects, parties, locations, events and data across supply chains.",
       },
       {
-        title: "Natural Farming and scientific interpretation of Soil Health Card reports",
-        publisher: "Indian Council of Agricultural Research",
-        url: "https://icar.gov.in/index.php/hi/node/25263",
-        scope: "Scientific interpretation and crop-specific local advice.",
+        title: "PGS-India Certification System — revised guidelines and standards",
+        publisher: "National Centre for Organic & Natural Farming",
+        url: "https://pgsindia-ncof.gov.in/Default/assets/front/PDF/Revised_PGS_India_Guidlines.pdf",
+        scope: "Certification, PGS-Organic, PGS-Green and accurate organic-status claims.",
       },
     ],
   },
@@ -459,7 +459,7 @@ export class BlogWritingAgent extends Agent<
           {
             role: "system",
             content:
-              "You are FarmerBook's evidence-first agriculture editor. Return only the requested JSON. Never invent a source, statistic, yield, price, cost saving, certification, safety claim or guaranteed result. Distinguish general education from crop-specific advice.",
+              "You are FarmerBook's evidence-first natural-farming and food editor. Return only the requested JSON. Never invent a source, statistic, yield, price, cost saving, certification, safety claim or guaranteed result. Distinguish general education from crop-specific, food-safety and legal advice.",
           },
           { role: "user", content: prompt },
         ],
@@ -487,8 +487,8 @@ export class BlogWritingAgent extends Agent<
       JSON.stringify(brief.sources),
       "Return a JSON object with exactly: title, excerpt, dek, sections, conclusion, safetyNote.",
       "Each section must have heading, paragraphs and bullets. Write 700–1,000 words total.",
-      "Use careful, practical language for Indian farmers. Include measurements and questions a farmer can take to a local KVK, but no personalised agronomic instruction.",
-      "End safetyNote by directing high-impact decisions to a KVK, State Agriculture Department or qualified local professional.",
+      "Use careful, practical language for Indian farmers and consumers. Include only measurements supported by the packet and questions that can be taken to the relevant local authority or qualified professional.",
+      "End safetyNote by directing high-impact decisions to the relevant KVK, Agriculture Department, Food Safety Department, certification body, laboratory or qualified professional.",
     ].join("\n\n");
     try {
       const english = await this.generateLocalizedContent(

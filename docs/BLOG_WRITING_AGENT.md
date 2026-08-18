@@ -3,7 +3,9 @@
 ## Public and administrator URLs
 
 - Public collection: `/blog`
-- First reviewed article: `/blog/calculated-transition-to-natural-farming`
+- Reviewed field-trial article: `/blog/calculated-transition-to-natural-farming`
+- Reviewed food-safety article: `/blog/ghee-purity-five-evidence-checks`
+- Reviewed traceability article: `/blog/food-traceability-beyond-a-trust-badge`
 - Founder review desk: `/admin/blog`
 
 The runtime is a named Cloudflare Agents SDK Durable Object,
@@ -21,13 +23,14 @@ after an authenticated FarmerBook administrator selects **Publish reviewed
 draft** in `/admin/blog`. Rejection is terminal for that draft. Public article
 queries return only `published` records.
 
-The first Telugu article is code-backed and was editorially reviewed before
-release. The supplied idea was retained, but unsupported claims—fixed cost
-savings, fixed soil-recovery timelines, guaranteed premiums, and the claim that
-soil needs only microbes and organic carbon—were removed or explicitly
-qualified. It cites Government of India and ICAR material and explains that
-FarmerBook verifies organic certification only after paperwork is uploaded and
-reviewed.
+The code-backed Telugu and Indian English articles are editorially reviewed
+before release. Supplied ideas are retained only where evidence supports them.
+The first field-trial article removed fixed cost savings, fixed soil-recovery
+timelines and guaranteed premiums. The community-derived food articles removed
+an unsupported claim that 95% of milk, paneer and ghee is fake, treated
+chargesheet reporting as allegations rather than a final finding, and described
+blockchain as a record-integrity tool rather than proof of organic status or
+food safety.
 
 ## Indian-language delivery
 
@@ -46,13 +49,15 @@ by the model.
 ## Sources available to scheduled drafting
 
 The agent has a small, code-reviewed source packet rather than unrestricted
-web browsing. It currently rotates through:
+web browsing. It prepares only natural-farming, food-safety and farm-to-table
+trust topics and currently rotates through:
 
 - [NITI Aayog Natural Farming](https://naturalfarming.niti.gov.in/natural-farming/)
-- [Government of India Soil Health Card FAQ](https://soilhealth.dac.gov.in/files/FAQ_Final_English.pdf)
 - [ICAR natural-farming and Soil Health Card field guidance](https://icar.gov.in/index.php/hi/node/25263)
-- [ICAR balanced fertilizer and soil-health guidance](https://www.icar.gov.in/en/icar-ccari-goa-organises-khet-bachao-abhiyan-balanced-use-fertilizers-and-sustainable-soil-health)
 - [PGS-India certification guidelines](https://pgsindia-ncof.gov.in/Default/assets/front/PDF/Revised_PGS_India_Guidlines.pdf)
+- [FSSAI Check Adulteration at Home](https://fssai.gov.in/inspection/check-adulteration)
+- [FSSAI food regulations index](https://fssai.gov.in/food-law/regulations)
+- [GS1 Global Traceability Standard](https://www.gs1.org/standards/gs1-global-traceability-standard/current-standard)
 
 An editor must review that packet when an official page changes. The agent is
 instructed not to invent sources, statistics, yields, prices, savings,

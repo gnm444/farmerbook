@@ -24,7 +24,14 @@ export const blogSourceSchema = z.object({
 
 export const blogPublicationSchema = z.object({
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
-  category: z.enum(["natural_farming", "regular_farming", "farm_tools"]),
+  category: z.enum([
+    "natural_farming",
+    "food_safety",
+    "farm_to_table",
+    // Retained for already-published managed drafts from earlier releases.
+    "regular_farming",
+    "farm_tools",
+  ]),
   author: z.string().trim().min(2).max(120),
   publishedAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

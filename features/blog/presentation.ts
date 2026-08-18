@@ -5,7 +5,7 @@ const teluguUi = {
   collectionEyebrow: "ఫార్మర్‌బుక్ వ్యవసాయ గ్రంథాలయం",
   collectionTitle: "పొలానికి ఉపయోగపడే ఆధారపూర్వక కథనాలు",
   collectionLede:
-    "ప్రకృతి వ్యవసాయం, సాధారణ వ్యవసాయం, కొత్త పనిముట్లపై ప్రాయోగిక వ్యాసాలు—మూలాలు, పరిమితులు, స్థానిక నిపుణుడిని అడగాల్సిన ప్రశ్నలతో.",
+    "ప్రకృతి వ్యవసాయం, సురక్షిత ఆహారం, రైతు నుంచి వినియోగదారుని వరకు నమ్మకంపై ప్రాయోగిక వ్యాసాలు—మూలాలు, పరిమితులు, తనిఖీ చేయగల ప్రశ్నలతో.",
   readArticle: "వ్యాసం చదవండి",
   backToBlog: "అన్ని వ్యాసాలు",
   sources: "మూలాలు మరియు మరింత చదవడానికి",
@@ -23,7 +23,7 @@ const englishUi = {
   collectionEyebrow: "FarmerBook field library",
   collectionTitle: "Evidence-aware ideas for the field",
   collectionLede:
-    "Practical articles about natural farming, regular farming and newer farm tools—with sources, limitations and questions to take to a qualified local expert.",
+    "Practical articles about natural farming, safe food and farmer-to-consumer trust—with sources, limitations and questions that can be checked.",
   readArticle: "Read article",
   backToBlog: "All articles",
   sources: "Sources and further reading",
@@ -48,11 +48,15 @@ export function blogCategoryLabel(
   const labels = locale === "te-IN"
     ? {
         natural_farming: "ప్రకృతి వ్యవసాయం",
+        food_safety: "ఆహార భద్రత",
+        farm_to_table: "పొలం నుంచి పళ్లెం వరకు",
         regular_farming: "సాధారణ వ్యవసాయం",
         farm_tools: "వ్యవసాయ పనిముట్లు",
       }
     : {
         natural_farming: "Natural farming",
+        food_safety: "Food safety",
+        farm_to_table: "Farm to table",
         regular_farming: "Regular farming",
         farm_tools: "Farm tools",
       };
