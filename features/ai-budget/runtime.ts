@@ -19,7 +19,9 @@ export async function aiFleetBudgetAgentStub(
   bindings: FarmerBookBindings | null | undefined,
 ): Promise<AiFleetBudgetService | null> {
   if (!bindings?.AI_FLEET_BUDGET_AGENT) return null;
-  return bindings.AI_FLEET_BUDGET_AGENT.getByName(
+  const { getAgentByName } = await import("agents");
+  return await getAgentByName(
+    bindings.AI_FLEET_BUDGET_AGENT,
     "farmerbook-ai-fleet-budget",
   ) as DurableObjectStub<AiFleetBudgetAgent>;
 }
