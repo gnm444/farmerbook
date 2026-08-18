@@ -284,3 +284,18 @@
   redirect and a reviewed zero-token greeting passed. Rollback target is
   `661dfe1a-3158-49b2-8659-efe336272e53`; no feature/database control, provider,
   outreach message or publication was activated.
+- 2026-08-19: Corrected the AI fleet ledger's first-RPC initialization failure.
+  A bounded production conversation had returned the safe handoff with
+  `AI_BUDGET_UNAVAILABLE` before any Workers AI call because the raw named
+  Durable Object stub did not await the Agents SDK `onStart()` path. Switched
+  budget access to the supported awaited `getAgentByName` initializer and added
+  a focused regression test. ESLint, TypeScript, 145 Vitest files/664 tests,
+  Vinext production build, binding/flag/migration inspection, strict Wrangler
+  dry run and diff validation passed. Corrective deployment
+  `96458586-3dff-4254-b504-d87d60347d64` placed version
+  `0519d890-8923-46ec-a347-66b6b224dec9` at 100 percent. Apex and www health
+  returned `status: ok`; five bounded live conversations completed through
+  Workers AI without diagnostics, proving the ledger initialized, reserved and
+  allowed inference. The USD 10 fleet cap and every route, secret, flag and
+  migration were preserved. Rollback target is
+  `7a5dad0d-425c-4868-a59c-e3ab984127e6`.

@@ -7033,3 +7033,34 @@ kept their pre-release values. The direct workers.dev hostname returned the
 same corporate-network 403 seen in earlier releases; both production custom
 domains passed. Rollback target:
 `661dfe1a-3158-49b2-8659-efe336272e53`.
+
+## 2026-08-19 corrective release: initialize the budget Agent before RPC
+
+A bounded production conversation after the fleet-ledger release returned the
+safe `AI_BUDGET_UNAVAILABLE` fallback before Workers AI ran. The private
+namespace existed, but `aiFleetBudgetAgentStub()` used the raw namespace
+`getByName()` stub. Callable RPC does not itself run the Agents SDK request
+initialization path, so the first `reserve()` could execute before `onStart()`
+created the ledger tables.
+
+Use the supported awaited `getAgentByName(namespace, singletonName)` helper.
+It synchronizes named Agent initialization before returning the RPC stub. Keep
+the import lazy so Node-based unit suites that do not request the binding do not
+resolve Worker-only `cloudflare:` modules. Add a regression test that resolves
+the initializer before returning the service and proves missing bindings still
+fail closed.
+
+- [x] Reproduce the production fail-closed response without consuming Neurons. [DONE 2026-08-19]
+- [x] Replace raw named-stub access with awaited Agents SDK initialization. [DONE 2026-08-19]
+- [x] Add focused initialization and missing-binding regression tests. [DONE 2026-08-19]
+- [x] Pass ESLint, TypeScript and all 145 Vitest files/664 tests. [DONE 2026-08-19]
+- [x] Rebuild from live production variables and pass strict Wrangler dry run. [DONE 2026-08-19]
+- [x] Deploy version `0519d890-8923-46ec-a347-66b6b224dec9` at 100 percent. [DONE 2026-08-19]
+- [x] Verify both custom-domain health endpoints and five bounded model-backed conversations. [DONE 2026-08-19]
+
+Deployment `96458586-3dff-4254-b504-d87d60347d64` preserved the USD 10
+fleet ceiling, USD 5/USD 2/USD 3 workstream allocations, three zero-dollar
+allocations, both routes, all existing flags, 12 secrets and the complete
+migration chain. Five live conversations returned `source: workers_ai` with no
+diagnostic, confirming reserve-before-inference is operational. Roll back to
+`7a5dad0d-425c-4868-a59c-e3ab984127e6` if the initializer or ledger regresses.
