@@ -16,6 +16,9 @@ const configuredCustomDomains = (
   .map((domain) => domain.trim())
   .filter(Boolean);
 
+const includeLiveActionScaffold =
+  process.env.ENABLE_LIVE_AGENT_EXECUTION?.trim().toLowerCase() === "true";
+
 const publicWorkerVars: Record<string, string> = {};
 for (const [name, value] of Object.entries({
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
@@ -35,6 +38,9 @@ for (const [name, value] of Object.entries({
     process.env.ENABLE_PROFILE_RESEARCH_AGENT,
   ENABLE_MANAGED_OPERATIONS_AGENTS:
     process.env.ENABLE_MANAGED_OPERATIONS_AGENTS,
+  ENABLE_AI_COMPANY: process.env.ENABLE_AI_COMPANY,
+  ENABLE_LIVE_AGENT_EXECUTION:
+    process.env.ENABLE_LIVE_AGENT_EXECUTION,
   ENABLE_SUPPORT_SOCIAL_PILOT:
     process.env.ENABLE_SUPPORT_SOCIAL_PILOT,
   ENABLE_FEATURED_FARMER_PROFILES:
@@ -57,6 +63,16 @@ for (const [name, value] of Object.entries({
   BLOG_WRITING_MODEL: process.env.BLOG_WRITING_MODEL,
   BLOG_WRITING_MONTHLY_BUDGET_USD:
     process.env.BLOG_WRITING_MONTHLY_BUDGET_USD,
+  BLOG_AUTONOMOUS_PUBLISHING:
+    process.env.BLOG_AUTONOMOUS_PUBLISHING,
+  OWNED_SOCIAL_PUBLISHING:
+    process.env.OWNED_SOCIAL_PUBLISHING,
+  OWNED_SOCIAL_FACEBOOK_ENABLED:
+    process.env.OWNED_SOCIAL_FACEBOOK_ENABLED,
+  OWNED_SOCIAL_INSTAGRAM_ENABLED:
+    process.env.OWNED_SOCIAL_INSTAGRAM_ENABLED,
+  OWNED_SOCIAL_INSTAGRAM_MEDIA_READY:
+    process.env.OWNED_SOCIAL_INSTAGRAM_MEDIA_READY,
 })) {
   if (value) publicWorkerVars[name] = value;
 }
@@ -76,6 +92,14 @@ const localBindingConfig = {
   })),
   vars: publicWorkerVars,
   ai: { binding: "AI" },
+  ...(process.env.OWNED_SOCIAL_CONNECTOR_SERVICE
+    ? {
+        services: [{
+          binding: "OWNED_SOCIAL_CONNECTOR",
+          service: process.env.OWNED_SOCIAL_CONNECTOR_SERVICE,
+        }],
+      }
+    : {}),
   ...(process.env.ENABLE_OUTREACH_AGENT?.toLowerCase() === "true"
     ? { images: { binding: "IMAGES" } }
     : {}),
@@ -121,6 +145,22 @@ const localBindingConfig = {
         name: "BLOG_WRITING_AGENT",
         class_name: "BlogWritingAgent",
       },
+      {
+        name: "BLOG_PUBLICATION_VERIFIER_AGENT",
+        class_name: "BlogPublicationVerifierAgent",
+      },
+      {
+        name: "OWNED_SOCIAL_PUBLISHER_AGENT",
+        class_name: "OwnedSocialPublisherAgent",
+      },
+      {
+        name: "COMPANY_OPERATIONS_AGENT",
+        class_name: "CompanyOperationsAgent",
+      },
+      ...(includeLiveActionScaffold ? [{
+        name: "LIVE_ACTION_COORDINATOR_AGENT",
+        class_name: "LiveActionCoordinatorAgent",
+      }] : []),
     ],
   },
   migrations: [
@@ -156,6 +196,22 @@ const localBindingConfig = {
       tag: "ai-fleet-budget-agent-v1",
       new_sqlite_classes: ["AiFleetBudgetAgent"],
     },
+    {
+      tag: "ai-company-agent-v1",
+      new_sqlite_classes: ["CompanyOperationsAgent"],
+    },
+    {
+      tag: "blog-publication-verifier-agent-v1",
+      new_sqlite_classes: ["BlogPublicationVerifierAgent"],
+    },
+    {
+      tag: "owned-social-publisher-agent-v1",
+      new_sqlite_classes: ["OwnedSocialPublisherAgent"],
+    },
+    ...(includeLiveActionScaffold ? [{
+      tag: "live-action-coordinator-agent-v1",
+      new_sqlite_classes: ["LiveActionCoordinatorAgent"],
+    }] : []),
   ],
   workflows: [
     {
@@ -163,6 +219,11 @@ const localBindingConfig = {
       binding: "FARMER_PROFILE_APPROVAL_WORKFLOW",
       class_name: "FarmerProfileApprovalWorkflow",
     },
+    ...(includeLiveActionScaffold ? [{
+      name: "live-action-execution",
+      binding: "LIVE_ACTION_EXECUTION_WORKFLOW",
+      class_name: "LiveActionExecutionWorkflow",
+    }] : []),
   ],
   d1_databases: d1
     ? [

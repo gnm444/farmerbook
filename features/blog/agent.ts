@@ -1,12 +1,21 @@
-import { Agent, type AgentContext } from "agents";
+import { Agent, getAgentByName, type AgentContext } from "agents";
 import type { AiFleetBudgetAgent } from "@/features/ai-budget/agent";
 import { runBudgetedAi } from "@/features/ai-budget/inference";
 import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import type { WorkersAiBinding } from "@/lib/cloudflare-bindings";
 import type { SupportedLocale } from "@/lib/i18n/locales";
+import type { BlogPublicationVerifierAgent } from "./publication-verifier-agent";
 import {
+  AUTONOMOUS_PUBLICATION_POLICY_VERSION,
+  blogPublicationFingerprint,
+  evaluateAutonomousPublication,
+} from "./autonomous-publication-policy";
+import {
+  blogDraftReplacementSchema,
   blogDraftReviewSchema,
+  blogPublicationVerificationSchema,
   blogPublicationSchema,
+  blogScheduleControlSchema,
   blogTranslationRequestSchema,
   localizedBlogContentSchema,
   type BlogAgentDraft,
@@ -15,6 +24,22 @@ import {
   type BlogWritingAgentStatus,
   type LocalizedBlogContent,
 } from "./contracts";
+import {
+  DAILY_DRAFT_LIMIT,
+  DAILY_EDITORIAL_CALLBACK,
+  DAILY_EDITORIAL_CRON_UTC,
+  DAILY_EDITORIAL_TIME_ZONE,
+  DAILY_SOURCE_MANIFEST_VERSION,
+  DAILY_EDITORIAL_TOPICS,
+  MONTHLY_DRAFT_LIMIT,
+  editorialScheduleIdsToCancel,
+  indiaDayKey,
+  indiaMonthKey,
+  selectDailyEditorialBrief,
+  selectDailyAutonomousBrief,
+  sourceHealth,
+  type DailyEditorialBrief,
+} from "./daily-editorial";
 
 const DEFAULT_MODEL = "@cf/ibm-granite/granite-4.0-h-micro";
 const SUPPORTED_MODELS = new Set([DEFAULT_MODEL]);
@@ -24,7 +49,6 @@ const MODEL_INPUT_USD_PER_MILLION = 0.017;
 const MODEL_OUTPUT_USD_PER_MILLION = 0.112;
 const TRANSLATION_USD_PER_MILLION = 0.342;
 const DRAFT_MAX_OUTPUT_TOKENS = 3_500;
-const WEEKLY_CRON_UTC = "30 3 * * 2"; // Tuesday, 09:00 IST.
 
 const INDIC_TRANSLATION_LANGUAGE = {
   "as-IN": "asm_Beng",
@@ -56,6 +80,9 @@ interface BlogWritingAgentEnv extends Cloudflare.Env {
   AI_FLEET_BUDGET_AGENT?: DurableObjectNamespace<AiFleetBudgetAgent>;
   BLOG_WRITING_MODEL?: string;
   BLOG_WRITING_MONTHLY_BUDGET_USD?: string;
+  BLOG_AUTONOMOUS_PUBLISHING?: string;
+  BLOG_PUBLICATION_VERIFIER_AGENT?: DurableObjectNamespace<BlogPublicationVerifierAgent>;
+  NEXT_PUBLIC_SITE_URL?: string;
 }
 
 type BlogWritingAgentState = {
@@ -64,6 +91,7 @@ type BlogWritingAgentState = {
   translationsThisMonth: number;
   estimatedAiSpendMicros: number;
   scheduleId: string | null;
+  schedulePaused: boolean;
   nextScheduledRunAt: string | null;
   lastDraftAt: string | null;
   lastFailureCode: string | null;
@@ -77,101 +105,65 @@ type TranslationRow = {
 type DraftRow = {
   id: string;
   week_key: string;
+  run_key: string | null;
   status: "awaiting_review" | "published" | "rejected";
   topic: string;
   content_json: string;
   model: string;
+  source_manifest_version: string;
+  source_reviewed_at: string;
+  risk_class: "low" | "medium" | "legacy";
+  generation_status: "prepared" | "legacy";
+  failure_code: string | null;
+  revision: number;
   created_at: string;
   reviewed_at: string | null;
   reviewer_id: string | null;
+  review_reason: string | null;
+  quality_outcome: "approved" | "light_edits" | "heavy_edits" | "rejected" | null;
+  publication_verification_status: "pending" | "verified" | "failed" | null;
+  publication_verified_at: string | null;
+  publication_verification_code: string | null;
+  publication_mode: "manual" | "autonomous";
+  publication_policy_version: string | null;
+  publication_idempotency_key: string | null;
+  content_sha256: string | null;
+  visibility_status: "private" | "provisional" | "public" | "quarantined";
 };
 
 type PublishedRow = { content_json: string };
 
-const TOPIC_BRIEFS = [
-  {
-    key: "small-natural-farming-trial",
-    topic: "How to compare a small natural-farming trial with current practice",
-    category: "natural_farming" as const,
-    sources: [
-      {
-        title: "Natural Farming",
-        publisher: "NITI Aayog — Natural Farming Initiative",
-        url: "https://naturalfarming.niti.gov.in/natural-farming/",
-        scope: "Definition, biomass recycling, mulching and on-farm formulations.",
-      },
-      {
-        title: "Natural Farming and scientific interpretation of Soil Health Card reports",
-        publisher: "Indian Council of Agricultural Research",
-        url: "https://icar.gov.in/index.php/hi/node/25263",
-        scope: "Balanced soil-health interpretation and natural-farming field guidance.",
-      },
-    ],
-  },
-  {
-    key: "food-adulteration-evidence-checks",
-    topic: "How consumers can screen food-adulteration concerns without making unsupported purity claims",
-    category: "food_safety" as const,
-    sources: [
-      {
-        title: "Check Adulteration at Home",
-        publisher: "Food Safety and Standards Authority of India",
-        url: "https://fssai.gov.in/inspection/check-adulteration",
-        scope: "Official DART and Food Safety Magic Box demonstrations for screening common adulterants in food.",
-      },
-      {
-        title: "Food Safety and Standards Regulations",
-        publisher: "Food Safety and Standards Authority of India",
-        url: "https://fssai.gov.in/food-law/regulations",
-        scope: "Current food-safety, labelling and display regulatory source index.",
-      },
-    ],
-  },
-  {
-    key: "farm-food-traceability",
-    topic: "What farm-to-table traceability records can prove and where their limits begin",
-    category: "farm_to_table" as const,
-    sources: [
-      {
-        title: "GS1 Global Traceability Standard",
-        publisher: "GS1",
-        url: "https://www.gs1.org/standards/gs1-global-traceability-standard/current-standard",
-        scope: "Traceable objects, parties, locations, events and data across supply chains.",
-      },
-      {
-        title: "PGS-India Certification System — revised guidelines and standards",
-        publisher: "National Centre for Organic & Natural Farming",
-        url: "https://pgsindia-ncof.gov.in/Default/assets/front/PDF/Revised_PGS_India_Guidlines.pdf",
-        scope: "Certification, PGS-Organic, PGS-Green and accurate organic-status claims.",
-      },
-    ],
-  },
-  {
-    key: "organic-label-evidence",
-    topic: "What an organic label proves, and what 'under conversion' means",
-    category: "natural_farming" as const,
-    sources: [
-      {
-        title: "PGS-India Certification System — revised guidelines and standards",
-        publisher: "National Centre for Organic & Natural Farming",
-        url: "https://pgsindia-ncof.gov.in/Default/assets/front/PDF/Revised_PGS_India_Guidlines.pdf",
-        scope: "Certification, PGS-Organic, PGS-Green and accurate labelling requirements.",
-      },
-    ],
-  },
-] as const;
+type DailyRunRow = {
+  run_key: string;
+  source: "scheduled" | "manual";
+  status: "started" | "prepared" | "failed" | "skipped";
+  topic_key: string;
+  draft_id: string | null;
+  failure_code: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type CountRow = { count: number };
+
+type PublicationMetricRow = {
+  autonomous_published_this_month: number;
+  provisional_publications: number;
+  quarantined_publications: number;
+};
+
+type ReviewMetricRow = {
+  awaiting_review: number;
+  published: number;
+  rejected: number;
+  approved: number;
+  light_edits: number;
+  heavy_edits: number;
+  oldest_awaiting_review_at: string | null;
+};
 
 function monthKey(date: Date) {
   return date.toISOString().slice(0, 7);
-}
-
-function weekKey(date: Date) {
-  const monday = new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate() - ((date.getUTCDay() + 6) % 7),
-  ));
-  return monday.toISOString().slice(0, 10);
 }
 
 function boundedMoney(value: string | undefined) {
@@ -184,6 +176,10 @@ function boundedMoney(value: string | undefined) {
 function configuredModel(value: string | undefined) {
   const requested = value?.trim();
   return requested && SUPPORTED_MODELS.has(requested) ? requested : DEFAULT_MODEL;
+}
+
+function autonomousPublishingEnabled(value: string | undefined) {
+  return value?.trim().toLowerCase() === "true";
 }
 
 function estimateTokens(value: string) {
@@ -247,6 +243,16 @@ function failureCode(error: unknown) {
     .slice(0, 80) || "BLOG_AGENT_FAILED";
 }
 
+async function sha256(value: string) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function numbersIn(value: unknown) {
   const digitBlocks = [
     0x30, 0x660, 0x6f0, 0x966, 0x9e6, 0xa66, 0xae6, 0xb66,
@@ -273,14 +279,43 @@ function structurallyMatches(
 function draftFromRow(row: DraftRow): BlogAgentDraft {
   return {
     id: row.id,
-    weekKey: row.week_key,
+    runKey: row.run_key ?? row.week_key,
     status: row.status,
     topic: row.topic,
     content: blogPublicationSchema.parse(JSON.parse(row.content_json)),
     model: row.model,
+    sourceManifestVersion: row.source_manifest_version,
+    sourceReviewedAt: row.source_reviewed_at,
+    riskClass: row.risk_class,
+    generationStatus: row.generation_status,
+    failureCode: row.failure_code,
+    revision: row.revision,
     createdAt: row.created_at,
     reviewedAt: row.reviewed_at,
     reviewerId: row.reviewer_id,
+    reviewReason: row.review_reason,
+    qualityOutcome: row.quality_outcome,
+    publicationVerificationStatus: row.publication_verification_status,
+    publicationVerifiedAt: row.publication_verified_at,
+    publicationVerificationCode: row.publication_verification_code,
+    publicationMode: row.publication_mode,
+    publicationPolicyVersion: row.publication_policy_version,
+    publicationIdempotencyKey: row.publication_idempotency_key,
+    contentSha256: row.content_sha256,
+    visibilityStatus: row.visibility_status,
+  };
+}
+
+function dailyRunFromRow(row: DailyRunRow) {
+  return {
+    runKey: row.run_key,
+    source: row.source,
+    status: row.status,
+    topicKey: row.topic_key,
+    draftId: row.draft_id,
+    failureCode: row.failure_code,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -341,6 +376,7 @@ export class BlogWritingAgent extends Agent<
     translationsThisMonth: 0,
     estimatedAiSpendMicros: 0,
     scheduleId: null,
+    schedulePaused: false,
     nextScheduledRunAt: null,
     lastDraftAt: null,
     lastFailureCode: null,
@@ -350,20 +386,126 @@ export class BlogWritingAgent extends Agent<
     super(ctx, env);
   }
 
-  async onStart() {
+  private setupStorage() {
     void this.sql`CREATE TABLE IF NOT EXISTS blog_agent_drafts (
       id TEXT PRIMARY KEY,
       week_key TEXT NOT NULL UNIQUE,
+      run_key TEXT NOT NULL UNIQUE,
       status TEXT NOT NULL CHECK (status IN ('awaiting_review', 'published', 'rejected')),
       topic TEXT NOT NULL,
       content_json TEXT NOT NULL,
       model TEXT NOT NULL,
+      source_manifest_version TEXT NOT NULL,
+      source_reviewed_at TEXT NOT NULL,
+      risk_class TEXT NOT NULL,
+      generation_status TEXT NOT NULL,
+      failure_code TEXT,
+      revision INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL,
       reviewed_at TEXT,
-      reviewer_id TEXT
+      reviewer_id TEXT,
+      review_reason TEXT,
+      quality_outcome TEXT,
+      publication_verification_status TEXT,
+      publication_verified_at TEXT,
+      publication_verification_code TEXT,
+      publication_mode TEXT NOT NULL DEFAULT 'manual',
+      publication_policy_version TEXT,
+      publication_idempotency_key TEXT,
+      content_sha256 TEXT,
+      visibility_status TEXT NOT NULL DEFAULT 'private'
     )`;
+    const columns = this.sql<{ name: string }>`PRAGMA table_info(blog_agent_drafts)`;
+    const hasColumn = (name: string) => columns.some((column) => column.name === name);
+    if (!hasColumn("run_key")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN run_key TEXT`;
+    }
+    if (!hasColumn("source_manifest_version")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN source_manifest_version TEXT NOT NULL DEFAULT 'legacy-v0'`;
+    }
+    if (!hasColumn("source_reviewed_at")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN source_reviewed_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00.000Z'`;
+    }
+    if (!hasColumn("risk_class")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN risk_class TEXT NOT NULL DEFAULT 'legacy'`;
+    }
+    if (!hasColumn("generation_status")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN generation_status TEXT NOT NULL DEFAULT 'legacy'`;
+    }
+    if (!hasColumn("failure_code")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN failure_code TEXT`;
+    }
+    if (!hasColumn("revision")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN revision INTEGER NOT NULL DEFAULT 1`;
+    }
+    if (!hasColumn("review_reason")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN review_reason TEXT`;
+    }
+    if (!hasColumn("quality_outcome")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN quality_outcome TEXT`;
+    }
+    if (!hasColumn("publication_verification_status")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN publication_verification_status TEXT`;
+    }
+    if (!hasColumn("publication_verified_at")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN publication_verified_at TEXT`;
+    }
+    if (!hasColumn("publication_verification_code")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN publication_verification_code TEXT`;
+    }
+    if (!hasColumn("publication_mode")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN publication_mode TEXT NOT NULL DEFAULT 'manual'`;
+    }
+    if (!hasColumn("publication_policy_version")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN publication_policy_version TEXT`;
+    }
+    if (!hasColumn("publication_idempotency_key")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN publication_idempotency_key TEXT`;
+    }
+    if (!hasColumn("content_sha256")) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN content_sha256 TEXT`;
+    }
+    const visibilityColumnAdded = !hasColumn("visibility_status");
+    if (visibilityColumnAdded) {
+      void this.sql`ALTER TABLE blog_agent_drafts ADD COLUMN visibility_status TEXT NOT NULL DEFAULT 'private'`;
+      void this.sql`UPDATE blog_agent_drafts SET visibility_status = 'public'
+        WHERE status = 'published'`;
+    }
+    void this.sql`UPDATE blog_agent_drafts SET run_key = week_key WHERE run_key IS NULL`;
+    void this.sql`CREATE UNIQUE INDEX IF NOT EXISTS blog_agent_drafts_run_key_idx
+      ON blog_agent_drafts(run_key)`;
     void this.sql`CREATE INDEX IF NOT EXISTS blog_agent_drafts_status_created_idx
       ON blog_agent_drafts(status, created_at DESC)`;
+    void this.sql`CREATE UNIQUE INDEX IF NOT EXISTS blog_agent_drafts_publication_idempotency_idx
+      ON blog_agent_drafts(publication_idempotency_key)
+      WHERE publication_idempotency_key IS NOT NULL`;
+    void this.sql`CREATE INDEX IF NOT EXISTS blog_agent_drafts_visibility_created_idx
+      ON blog_agent_drafts(visibility_status, created_at DESC)`;
+    void this.sql`CREATE TABLE IF NOT EXISTS blog_agent_runs (
+      run_key TEXT PRIMARY KEY,
+      source TEXT NOT NULL CHECK (source IN ('scheduled', 'manual')),
+      status TEXT NOT NULL CHECK (status IN ('started', 'prepared', 'failed', 'skipped')),
+      topic_key TEXT NOT NULL,
+      source_manifest_version TEXT NOT NULL,
+      source_reviewed_at TEXT NOT NULL,
+      risk_class TEXT NOT NULL,
+      draft_id TEXT,
+      failure_code TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`;
+    void this.sql`CREATE INDEX IF NOT EXISTS blog_agent_runs_created_idx
+      ON blog_agent_runs(created_at DESC)`;
+    void this.sql`CREATE TABLE IF NOT EXISTS blog_agent_events (
+      id TEXT PRIMARY KEY,
+      draft_id TEXT,
+      event_type TEXT NOT NULL,
+      actor_id TEXT NOT NULL,
+      details_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )`;
+    void this.sql`CREATE INDEX IF NOT EXISTS blog_agent_events_draft_created_idx
+      ON blog_agent_events(draft_id, created_at)`;
     void this.sql`CREATE TABLE IF NOT EXISTS blog_agent_translations (
       slug TEXT NOT NULL,
       locale TEXT NOT NULL,
@@ -373,17 +515,59 @@ export class BlogWritingAgent extends Agent<
       created_at TEXT NOT NULL,
       PRIMARY KEY (slug, locale, content_fingerprint)
     )`;
+  }
+
+  private recordEvent(
+    eventType: string,
+    actorId: string,
+    draftId: string | null,
+    details: Record<string, unknown>,
+  ) {
+    void this.sql`INSERT INTO blog_agent_events (
+      id, draft_id, event_type, actor_id, details_json, created_at
+    ) VALUES (
+      ${crypto.randomUUID()}, ${draftId}, ${eventType}, ${actorId},
+      ${JSON.stringify(details)}, ${new Date().toISOString()}
+    )`;
+  }
+
+  private async cancelEditorialSchedules(keepDailyScheduleId: string | null) {
+    const schedules = await this.listSchedules({ type: "cron" });
+    const ids = editorialScheduleIdsToCancel(schedules, keepDailyScheduleId);
+    await Promise.all(ids.map((id) => this.cancelSchedule(id)));
+    return ids;
+  }
+
+  private async ensureDailySchedule() {
     const scheduled = await this.schedule(
-      WEEKLY_CRON_UTC,
-      "prepareWeeklyDraft",
-      { source: "weekly_editorial_schedule" },
+      DAILY_EDITORIAL_CRON_UTC,
+      DAILY_EDITORIAL_CALLBACK,
+      { source: "daily_editorial_schedule_v1" },
       { retry: { maxAttempts: 2 } },
     );
+    await this.cancelEditorialSchedules(scheduled.id);
     this.setState({
-      ...this.state,
+      ...this.refreshedState(new Date()),
       scheduleId: scheduled.id,
+      schedulePaused: false,
       nextScheduledRunAt: new Date(scheduled.time * 1_000).toISOString(),
     });
+    return scheduled;
+  }
+
+  async onStart() {
+    this.setupStorage();
+    if (this.state.schedulePaused === true) {
+      await this.cancelEditorialSchedules(null);
+      this.setState({
+        ...this.refreshedState(new Date()),
+        scheduleId: null,
+        schedulePaused: true,
+        nextScheduledRunAt: null,
+      });
+      return;
+    }
+    await this.ensureDailySchedule();
   }
 
   validateStateChange(nextState: BlogWritingAgentState) {
@@ -393,16 +577,21 @@ export class BlogWritingAgent extends Agent<
       || !Number.isInteger(nextState.translationsThisMonth)
       || nextState.translationsThisMonth < 0
       || !Number.isInteger(nextState.estimatedAiSpendMicros)
-      || nextState.estimatedAiSpendMicros < 0) {
+      || nextState.estimatedAiSpendMicros < 0
+      || typeof nextState.schedulePaused !== "boolean") {
       throw new Error("BLOG_AGENT_STATE_INVALID");
     }
   }
 
   private refreshedState(now: Date) {
-    return this.state.monthKey === monthKey(now)
-      ? this.state
+    const current = {
+      ...this.state,
+      schedulePaused: this.state.schedulePaused === true,
+    };
+    return current.monthKey === monthKey(now)
+      ? current
       : {
-          ...this.state,
+          ...current,
           monthKey: monthKey(now),
           draftsThisMonth: 0,
           translationsThisMonth: 0,
@@ -473,21 +662,231 @@ export class BlogWritingAgent extends Agent<
     return parsed.data;
   }
 
-  private async createDraft(runKey: string) {
-    const existing = this.sql<{ id: string }>`SELECT id FROM blog_agent_drafts
-      WHERE week_key = ${runKey} LIMIT 1`[0];
-    if (existing) return { code: "ALREADY_PREPARED" as const, id: existing.id };
-    const topicIndex = Math.abs(
-      [...runKey].reduce((sum, character) => sum + character.charCodeAt(0), 0),
-    ) % TOPIC_BRIEFS.length;
-    const brief = TOPIC_BRIEFS[topicIndex];
+  private async autonomouslyPublishDraft(
+    draftId: string,
+    runKey: string,
+    brief: DailyEditorialBrief,
+    sourceManifestFresh: boolean,
+    publicationInput: BlogPublication,
+  ) {
+    const dayCount = this.sql<CountRow>`SELECT COUNT(*) AS count
+      FROM blog_agent_drafts
+      WHERE publication_mode = 'autonomous'
+        AND status = 'published'
+        AND run_key = ${runKey}`[0]?.count ?? 0;
+    const runMonth = runKey.slice(0, 7);
+    const monthCount = this.sql<CountRow>`SELECT COUNT(*) AS count
+      FROM blog_agent_drafts
+      WHERE publication_mode = 'autonomous'
+        AND status = 'published'
+        AND substr(run_key, 1, 7) = ${runMonth}`[0]?.count ?? 0;
+    const publishedAt = new Date().toISOString();
+    const publication = blogPublicationSchema.parse({
+      ...publicationInput,
+      publishedAt,
+      updatedAt: publishedAt,
+      editorialNote:
+        "Prepared and released by FarmerBook's source-bounded autonomous publication standing policy. Public visibility is independently verified after release.",
+    });
+    const decision = evaluateAutonomousPublication({
+      publication,
+      brief,
+      runKey,
+      sourceManifestFresh,
+      dailyPublishedCount: dayCount,
+      monthlyPublishedCount: monthCount,
+    });
+    if (!decision.eligible) {
+      const code = `BLOG_AUTO_${decision.code}`;
+      void this.sql`UPDATE blog_agent_drafts SET
+        status = 'rejected', failure_code = ${code}, reviewed_at = ${publishedAt},
+        reviewer_id = 'blog-autonomous-policy', review_reason = ${code},
+        quality_outcome = 'rejected', publication_mode = 'autonomous',
+        publication_policy_version = ${AUTONOMOUS_PUBLICATION_POLICY_VERSION},
+        visibility_status = 'private'
+        WHERE id = ${draftId} AND status = 'awaiting_review'`;
+      void this.sql`UPDATE blog_agent_runs SET status = 'skipped',
+        failure_code = ${code}, updated_at = ${publishedAt}
+        WHERE run_key = ${runKey}`;
+      this.setState({
+        ...this.refreshedState(new Date()),
+        lastFailureCode: code,
+      });
+      this.recordEvent("autonomous_publication_skipped", "blog-autonomous-policy", draftId, {
+        runKey,
+        code,
+        policyVersion: AUTONOMOUS_PUBLICATION_POLICY_VERSION,
+      });
+      return { code: "AUTO_SKIPPED" as const, id: draftId, reason: code };
+    }
+
+    if (!this.env.BLOG_PUBLICATION_VERIFIER_AGENT) {
+      const code = "BLOG_AUTO_VERIFIER_UNAVAILABLE";
+      void this.sql`UPDATE blog_agent_drafts SET status = 'rejected',
+        failure_code = ${code}, reviewed_at = ${publishedAt},
+        reviewer_id = 'blog-autonomous-policy', review_reason = ${code},
+        quality_outcome = 'rejected', publication_mode = 'autonomous',
+        publication_policy_version = ${AUTONOMOUS_PUBLICATION_POLICY_VERSION},
+        visibility_status = 'private'
+        WHERE id = ${draftId} AND status = 'awaiting_review'`;
+      await this.cancelEditorialSchedules(null);
+      this.setState({
+        ...this.refreshedState(new Date()),
+        scheduleId: null,
+        schedulePaused: true,
+        nextScheduledRunAt: null,
+        lastFailureCode: code,
+      });
+      throw new Error(code);
+    }
+
+    const contentSha256 = await blogPublicationFingerprint(publication);
+    const idempotencyKey = [
+      "auto-publish",
+      AUTONOMOUS_PUBLICATION_POLICY_VERSION,
+      runKey,
+      draftId,
+      "1",
+    ].join(":");
+    try {
+      const verifier = await getAgentByName(
+        this.env.BLOG_PUBLICATION_VERIFIER_AGENT,
+        "farmerbook-blog-publication-verifier",
+      ) as DurableObjectStub<BlogPublicationVerifierAgent>;
+      await verifier.enqueueVerification({
+        draftId,
+        slug: publication.slug,
+        contentSha256,
+        title: publication.english.title,
+        excerpt: publication.english.excerpt,
+        canonicalUrl: new URL(
+          `/blog/${publication.slug}`,
+          this.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://farmerbook.in",
+        ).toString(),
+        runKey,
+      });
+    } catch (error) {
+      const code = `BLOG_AUTO_${failureCode(error)}`;
+      void this.sql`UPDATE blog_agent_drafts SET status = 'rejected',
+        failure_code = ${code}, reviewed_at = ${publishedAt},
+        reviewer_id = 'blog-autonomous-policy', review_reason = ${code},
+        quality_outcome = 'rejected', publication_mode = 'autonomous',
+        publication_policy_version = ${AUTONOMOUS_PUBLICATION_POLICY_VERSION},
+        visibility_status = 'private'
+        WHERE id = ${draftId} AND status = 'awaiting_review'`;
+      await this.cancelEditorialSchedules(null);
+      this.setState({
+        ...this.refreshedState(new Date()),
+        scheduleId: null,
+        schedulePaused: true,
+        nextScheduledRunAt: null,
+        lastFailureCode: code,
+      });
+      throw new Error(code);
+    }
+
+    const contentJson = JSON.stringify(publication);
+    void this.sql`UPDATE blog_agent_drafts SET status = 'published',
+      content_json = ${contentJson}, reviewed_at = ${publishedAt},
+      reviewer_id = 'blog-autonomous-policy',
+      review_reason = 'STANDING_POLICY_AUTO_PUBLISH', quality_outcome = 'approved',
+      publication_verification_status = 'pending', publication_verified_at = NULL,
+      publication_verification_code = NULL, publication_mode = 'autonomous',
+      publication_policy_version = ${AUTONOMOUS_PUBLICATION_POLICY_VERSION},
+      publication_idempotency_key = ${idempotencyKey},
+      content_sha256 = ${contentSha256}, visibility_status = 'provisional'
+      WHERE id = ${draftId} AND status = 'awaiting_review'`;
+    this.recordEvent("autonomous_publication_prepared", "blog-autonomous-policy", draftId, {
+      runKey,
+      policyVersion: AUTONOMOUS_PUBLICATION_POLICY_VERSION,
+      idempotencyKey,
+      contentSha256,
+      visibilityStatus: "provisional",
+    });
+    return {
+      code: "AUTO_PUBLISHED_PROVISIONAL" as const,
+      id: draftId,
+      publication,
+    };
+  }
+
+  private async createDraft(
+    runKey: string,
+    source: "scheduled" | "manual",
+  ) {
+    if (this.state.schedulePaused === true) {
+      return { code: "AGENT_PAUSED" as const, id: null };
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(runKey)) {
+      throw new Error("BLOG_RUN_KEY_INVALID");
+    }
+    const existingRun = this.sql<DailyRunRow>`SELECT run_key, source, status,
+      topic_key, draft_id, failure_code, created_at, updated_at
+      FROM blog_agent_runs WHERE run_key = ${runKey} LIMIT 1`[0];
+    if (existingRun) {
+      return {
+        code: existingRun.status === "prepared"
+          ? "ALREADY_PREPARED" as const
+          : "ALREADY_ATTEMPTED" as const,
+        id: existingRun.draft_id,
+      };
+    }
+    const runMonth = runKey.slice(0, 7);
+    const runCount = this.sql<CountRow>`SELECT COUNT(*) AS count
+      FROM blog_agent_runs WHERE substr(run_key, 1, 7) = ${runMonth}`[0]?.count ?? 0;
+    if (runCount >= MONTHLY_DRAFT_LIMIT) {
+      this.setState({
+        ...this.refreshedState(new Date()),
+        lastFailureCode: "BLOG_MONTHLY_DRAFT_LIMIT_REACHED",
+      });
+      return { code: "MONTHLY_DRAFT_LIMIT_REACHED" as const, id: null };
+    }
+    const automatic = autonomousPublishingEnabled(this.env.BLOG_AUTONOMOUS_PUBLISHING);
+    const brief = automatic
+      ? selectDailyAutonomousBrief(runKey)
+      : selectDailyEditorialBrief(runKey);
+    const health = sourceHealth(brief, new Date());
+    const now = new Date();
+    const nowIso = now.toISOString();
+    void this.sql`INSERT INTO blog_agent_runs (
+      run_key, source, status, topic_key, source_manifest_version,
+      source_reviewed_at, risk_class, draft_id, failure_code, created_at,
+      updated_at
+    ) VALUES (
+      ${runKey}, ${source}, 'started', ${brief.key},
+      ${DAILY_SOURCE_MANIFEST_VERSION},
+      ${health.oldestReviewedAt ?? "1970-01-01T00:00:00.000Z"},
+      ${brief.riskClass}, NULL, NULL, ${nowIso}, ${nowIso}
+    )`;
+    if (!health.fresh) {
+      void this.sql`UPDATE blog_agent_runs SET status = 'skipped',
+        failure_code = 'BLOG_SOURCE_MANIFEST_STALE', updated_at = ${nowIso}
+        WHERE run_key = ${runKey}`;
+      this.setState({
+        ...this.refreshedState(now),
+        lastFailureCode: "BLOG_SOURCE_MANIFEST_STALE",
+      });
+      this.recordEvent("draft_skipped", `blog-writing-agent:${source}`, null, {
+        runKey,
+        code: "BLOG_SOURCE_MANIFEST_STALE",
+        manifestVersion: DAILY_SOURCE_MANIFEST_VERSION,
+        staleSourceCount: health.staleUrls.length,
+      });
+      return { code: "SOURCE_MANIFEST_STALE" as const, id: null };
+    }
     const prompt = [
       `Prepare one Indian English FarmerBook blog draft about: ${brief.topic}.`,
-      "Use only the source packet below. Do not claim that the sources prove more than their stated scope.",
+      `Source manifest: ${DAILY_SOURCE_MANIFEST_VERSION}. Sources were editorially reviewed no earlier than ${health.oldestReviewedAt}.`,
+      `Allowed claim scope: ${brief.allowedClaimScope}`,
+      `Prohibited claims: ${JSON.stringify(brief.prohibitedClaims)}`,
+      "Use only the source packet below. Do not claim that the sources prove more than their stated scope. Do not browse, identify, quote or profile any farmer, customer or other person.",
       JSON.stringify(brief.sources),
       "Return a JSON object with exactly: title, excerpt, dek, sections, conclusion, safetyNote.",
       "Each section must have heading, paragraphs and bullets. Write 700–1,000 words total.",
       "Use careful, practical language for Indian farmers and consumers. Include only measurements supported by the packet and questions that can be taken to the relevant local authority or qualified professional.",
+      ...(automatic ? [
+        "This draft is eligible for a strict autonomous lane only if it contains no digits, percentages, prices, yield or income statements, certification conclusions, guarantees, treatment advice, personal stories, contact details, quoted people or external URLs. Use modest observational language and no universal claims.",
+      ] : []),
       "End safetyNote by directing high-impact decisions to the relevant KVK, Agriculture Department, Food Safety Department, certification body, laboratory or qualified professional.",
     ].join("\n\n");
     try {
@@ -496,11 +895,9 @@ export class BlogWritingAgent extends Agent<
         DRAFT_MAX_OUTPUT_TOKENS,
         "draft",
       );
-      const now = new Date();
-      const compactDate = now.toISOString().slice(0, 10);
       const id = crypto.randomUUID();
       const publication = blogPublicationSchema.parse({
-        slug: `${brief.key}-${compactDate}-${id.slice(0, 8)}`,
+        slug: `${brief.key}-${runKey}-${id.slice(0, 8)}`,
         category: brief.category,
         author: "FarmerBook Blog Writing Agent",
         publishedAt: now.toISOString(),
@@ -510,7 +907,9 @@ export class BlogWritingAgent extends Agent<
           Math.min(12, Math.round(JSON.stringify(english).split(/\s+/).length / 180)),
         ),
         editorialNote:
-          "Prepared by FarmerBook's budget-capped managed Blog Writing Agent from the listed source packet. Publication requires an authenticated administrator's explicit review decision.",
+          automatic
+            ? "Prepared by FarmerBook's budget-capped Blog Writing Agent for evaluation under the bounded autonomous publication standing policy."
+            : "Prepared by FarmerBook's budget-capped managed Blog Writing Agent from the listed source packet. Publication requires an authenticated administrator's explicit review decision.",
         sources: brief.sources.map(({ title, publisher, url }) => ({
           title,
           publisher,
@@ -519,63 +918,266 @@ export class BlogWritingAgent extends Agent<
         english,
       });
       void this.sql`INSERT INTO blog_agent_drafts (
-        id, week_key, status, topic, content_json, model, created_at
+        id, week_key, run_key, status, topic, content_json, model,
+        source_manifest_version, source_reviewed_at, risk_class,
+        generation_status, failure_code, revision, created_at
       ) VALUES (
-        ${id}, ${runKey}, 'awaiting_review', ${brief.topic},
+        ${id}, ${runKey}, ${runKey}, 'awaiting_review', ${brief.topic},
         ${JSON.stringify(publication)},
-        ${configuredModel(this.env.BLOG_WRITING_MODEL)}, ${now.toISOString()}
+        ${configuredModel(this.env.BLOG_WRITING_MODEL)},
+        ${DAILY_SOURCE_MANIFEST_VERSION},
+        ${health.oldestReviewedAt ?? "1970-01-01T00:00:00.000Z"},
+        ${brief.riskClass}, 'prepared', NULL, 1, ${nowIso}
       )`;
+      void this.sql`UPDATE blog_agent_runs SET status = 'prepared',
+        draft_id = ${id}, failure_code = NULL, updated_at = ${nowIso}
+        WHERE run_key = ${runKey}`;
       this.setState({
-        ...this.state,
-        lastDraftAt: now.toISOString(),
+        ...this.refreshedState(now),
+        lastDraftAt: nowIso,
         lastFailureCode: null,
       });
+      this.recordEvent("draft_created", `blog-writing-agent:${source}`, id, {
+        runKey,
+        topicKey: brief.key,
+        manifestVersion: DAILY_SOURCE_MANIFEST_VERSION,
+        riskClass: brief.riskClass,
+        sourceCount: brief.sources.length,
+        contentSha256: await sha256(JSON.stringify(publication)),
+        autonomousPublishingEnabled: automatic,
+      });
+      if (automatic) {
+        return this.autonomouslyPublishDraft(
+          id,
+          runKey,
+          brief,
+          health.fresh,
+          publication,
+        );
+      }
       return { code: "DRAFT_CREATED" as const, id };
     } catch (error) {
+      const code = failureCode(error);
+      const failedAt = new Date().toISOString();
+      void this.sql`UPDATE blog_agent_runs SET status = 'failed',
+        failure_code = ${code}, updated_at = ${failedAt}
+        WHERE run_key = ${runKey}`;
       this.setState({
-        ...this.state,
-        lastFailureCode: failureCode(error),
+        ...this.refreshedState(new Date()),
+        lastFailureCode: code,
+      });
+      this.recordEvent("draft_failed", `blog-writing-agent:${source}`, null, {
+        runKey,
+        code,
+        manifestVersion: DAILY_SOURCE_MANIFEST_VERSION,
       });
       throw error;
     }
   }
 
+  async prepareDailyDraft() {
+    return this.createDraft(indiaDayKey(new Date()), "scheduled");
+  }
+
   async prepareWeeklyDraft() {
-    return this.createDraft(weekKey(new Date()));
+    return this.createDraft(indiaDayKey(new Date()), "scheduled");
   }
 
   async prepareDraftNow() {
-    return this.createDraft(`${weekKey(new Date())}-manual-${Date.now()}`);
+    return this.createDraft(indiaDayKey(new Date()), "manual");
+  }
+
+  async pauseDailySchedule(rawInput: unknown) {
+    const input = blogScheduleControlSchema.parse(rawInput);
+    const cancelledScheduleIds = await this.cancelEditorialSchedules(null);
+    this.setState({
+      ...this.refreshedState(new Date()),
+      scheduleId: null,
+      schedulePaused: true,
+      nextScheduledRunAt: null,
+    });
+    this.recordEvent("schedule_paused", input.operatorId, null, {
+      reason: input.reason,
+      cancelledScheduleIds,
+    });
+    return { code: "PAUSED" as const, cancelledScheduleIds };
+  }
+
+  async resumeDailySchedule(rawInput: unknown) {
+    const input = blogScheduleControlSchema.parse(rawInput);
+    this.setState({
+      ...this.refreshedState(new Date()),
+      schedulePaused: false,
+    });
+    const scheduled = await this.ensureDailySchedule();
+    this.recordEvent("schedule_resumed", input.operatorId, null, {
+      reason: input.reason,
+      scheduleId: scheduled.id,
+      cronUtc: DAILY_EDITORIAL_CRON_UTC,
+    });
+    return { code: "SCHEDULED" as const, scheduleId: scheduled.id };
   }
 
   async listDrafts(limit = 20): Promise<BlogAgentDraft[]> {
     const safeLimit = Number.isInteger(limit) ? Math.max(1, Math.min(limit, 40)) : 20;
-    return this.sql<DraftRow>`SELECT id, week_key, status, topic, content_json,
-      model, created_at, reviewed_at, reviewer_id
+    return this.sql<DraftRow>`SELECT id, week_key, run_key, status, topic,
+      content_json, model, source_manifest_version, source_reviewed_at,
+      risk_class, generation_status, failure_code, revision, created_at,
+      reviewed_at, reviewer_id, review_reason, quality_outcome,
+      publication_verification_status, publication_verified_at,
+      publication_verification_code, publication_mode,
+      publication_policy_version, publication_idempotency_key,
+      content_sha256, visibility_status
       FROM blog_agent_drafts ORDER BY created_at DESC LIMIT ${safeLimit}`
       .map(draftFromRow);
   }
 
+  async replaceDraft(rawInput: unknown) {
+    const input = blogDraftReplacementSchema.parse(rawInput);
+    const current = this.sql<DraftRow>`SELECT id, week_key, run_key, status,
+      topic, content_json, model, source_manifest_version, source_reviewed_at,
+      risk_class, generation_status, failure_code, revision, created_at,
+      reviewed_at, reviewer_id, review_reason, quality_outcome,
+      publication_verification_status, publication_verified_at,
+      publication_verification_code, publication_mode,
+      publication_policy_version, publication_idempotency_key,
+      content_sha256, visibility_status
+      FROM blog_agent_drafts WHERE id = ${input.id} LIMIT 1`[0];
+    if (!current) throw new Error("BLOG_DRAFT_NOT_FOUND");
+    if (current.status !== "awaiting_review") {
+      throw new Error("BLOG_DRAFT_ALREADY_REVIEWED");
+    }
+    if (current.revision !== input.expectedRevision) {
+      throw new Error("BLOG_DRAFT_REVISION_CONFLICT");
+    }
+    const updatedAt = new Date().toISOString();
+    const publication = blogPublicationSchema.parse({
+      ...input.publication,
+      updatedAt,
+    });
+    const nextRevision = current.revision + 1;
+    const contentJson = JSON.stringify(publication);
+    void this.sql`UPDATE blog_agent_drafts SET content_json = ${contentJson},
+      revision = ${nextRevision}
+      WHERE id = ${input.id} AND status = 'awaiting_review'
+        AND revision = ${input.expectedRevision}`;
+    this.recordEvent("draft_replaced", input.editorId, input.id, {
+      priorRevision: current.revision,
+      revision: nextRevision,
+      contentSha256: await sha256(contentJson),
+    });
+    return { code: "DRAFT_REPLACED" as const, revision: nextRevision };
+  }
+
   async reviewDraft(rawInput: unknown) {
     const input = blogDraftReviewSchema.parse(rawInput);
-    const current = this.sql<DraftRow>`SELECT id, week_key, status, topic,
-      content_json, model, created_at, reviewed_at, reviewer_id
+    const current = this.sql<DraftRow>`SELECT id, week_key, run_key, status,
+      topic, content_json, model, source_manifest_version, source_reviewed_at,
+      risk_class, generation_status, failure_code, revision, created_at,
+      reviewed_at, reviewer_id, review_reason, quality_outcome,
+      publication_verification_status, publication_verified_at,
+      publication_verification_code, publication_mode,
+      publication_policy_version, publication_idempotency_key,
+      content_sha256, visibility_status
       FROM blog_agent_drafts WHERE id = ${input.id} LIMIT 1`[0];
     if (!current) throw new Error("BLOG_DRAFT_NOT_FOUND");
     if (current.status !== "awaiting_review") {
       return { code: "ALREADY_REVIEWED" as const, status: current.status };
     }
+    if (current.revision !== input.expectedRevision) {
+      throw new Error("BLOG_DRAFT_REVISION_CONFLICT");
+    }
     const status = input.decision === "publish" ? "published" : "rejected";
     const reviewedAt = new Date().toISOString();
+    const currentPublication = blogPublicationSchema.parse(
+      JSON.parse(current.content_json),
+    );
+    const publication = status === "published"
+      ? blogPublicationSchema.parse({
+          ...currentPublication,
+          publishedAt: reviewedAt,
+          updatedAt: reviewedAt,
+        })
+      : currentPublication;
+    const contentJson = JSON.stringify(publication);
+    const contentSha256 = status === "published"
+      ? await blogPublicationFingerprint(publication)
+      : null;
+    const publicationIdempotencyKey = status === "published"
+      ? `manual-publish:${input.id}:${input.expectedRevision}`
+      : null;
     void this.sql`UPDATE blog_agent_drafts SET
-      status = ${status}, reviewed_at = ${reviewedAt}, reviewer_id = ${input.reviewerId}
-      WHERE id = ${input.id} AND status = 'awaiting_review'`;
-    return { code: status === "published" ? "PUBLISHED" as const : "REJECTED" as const };
+      status = ${status}, content_json = ${contentJson},
+      reviewed_at = ${reviewedAt}, reviewer_id = ${input.reviewerId},
+      review_reason = ${input.reason}, quality_outcome = ${input.qualityOutcome},
+      publication_verification_status = ${status === "published" ? "pending" : null},
+      publication_verified_at = NULL, publication_verification_code = NULL,
+      publication_mode = 'manual', publication_policy_version = NULL,
+      publication_idempotency_key = ${publicationIdempotencyKey},
+      content_sha256 = ${contentSha256},
+      visibility_status = ${status === "published" ? "provisional" : "private"}
+      WHERE id = ${input.id} AND status = 'awaiting_review'
+        AND revision = ${input.expectedRevision}`;
+    this.recordEvent("draft_reviewed", input.reviewerId, input.id, {
+      decision: input.decision,
+      qualityOutcome: input.qualityOutcome,
+      reason: input.reason,
+      revision: current.revision,
+      contentSha256: contentSha256 ?? await sha256(contentJson),
+    });
+    return {
+      code: status === "published" ? "PUBLISHED" as const : "REJECTED" as const,
+      publication,
+    };
+  }
+
+  async recordPublicationVerification(rawInput: unknown) {
+    const input = blogPublicationVerificationSchema.parse(rawInput);
+    const current = this.sql<{
+      status: string;
+      content_sha256: string | null;
+    }>`SELECT status, content_sha256
+      FROM blog_agent_drafts WHERE id = ${input.id} LIMIT 1`[0];
+    if (!current) throw new Error("BLOG_DRAFT_NOT_FOUND");
+    if (current.status !== "published") {
+      throw new Error("BLOG_PUBLICATION_NOT_PUBLISHED");
+    }
+    if (current.content_sha256
+      && current.content_sha256 !== input.expectedContentSha256) {
+      throw new Error("BLOG_PUBLICATION_VERIFICATION_STALE");
+    }
+    const verifiedAt = new Date().toISOString();
+    void this.sql`UPDATE blog_agent_drafts SET
+      publication_verification_status = ${input.status},
+      publication_verified_at = ${verifiedAt},
+      publication_verification_code = ${input.code},
+      content_sha256 = COALESCE(content_sha256, ${input.expectedContentSha256}),
+      visibility_status = ${input.status === "verified" ? "public" : "quarantined"}
+      WHERE id = ${input.id} AND status = 'published'`;
+    this.recordEvent("publication_verified", input.verifierId, input.id, {
+      status: input.status,
+      code: input.code,
+      contentSha256: input.expectedContentSha256,
+      visibilityStatus: input.status === "verified" ? "public" : "quarantined",
+    });
+    if (input.status === "failed") {
+      await this.cancelEditorialSchedules(null);
+      this.setState({
+        ...this.refreshedState(new Date()),
+        scheduleId: null,
+        schedulePaused: true,
+        nextScheduledRunAt: null,
+        lastFailureCode: input.code,
+      });
+    }
+    return { code: input.status === "verified" ? "VERIFIED" as const : "FAILED" as const };
   }
 
   async listPublished(): Promise<BlogPublication[]> {
     return this.sql<PublishedRow>`SELECT content_json FROM blog_agent_drafts
-      WHERE status = 'published' ORDER BY reviewed_at DESC LIMIT 50`
+      WHERE status = 'published'
+        AND visibility_status IN ('provisional', 'public')
+      ORDER BY reviewed_at DESC LIMIT 50`
       .map((row) => blogPublicationSchema.parse(JSON.parse(row.content_json)));
   }
 
@@ -642,7 +1244,7 @@ export class BlogWritingAgent extends Agent<
       };
     } catch (error) {
       this.setState({
-        ...this.state,
+        ...this.refreshedState(new Date()),
         lastFailureCode: failureCode(error),
       });
       return {
@@ -657,11 +1259,89 @@ export class BlogWritingAgent extends Agent<
     const now = new Date();
     const current = this.refreshedState(now);
     const schedules = await this.listSchedules({ type: "cron" });
-    const weekly = schedules.find((schedule) => schedule.callback === "prepareWeeklyDraft");
+    const daily = schedules.find((schedule) => schedule.callback === DAILY_EDITORIAL_CALLBACK);
+    const currentRunKey = indiaDayKey(now);
+    const todayRun = this.sql<DailyRunRow>`SELECT run_key, source, status,
+      topic_key, draft_id, failure_code, created_at, updated_at
+      FROM blog_agent_runs WHERE run_key = ${currentRunKey} LIMIT 1`[0] ?? null;
+    const reviewMetrics = this.sql<ReviewMetricRow>`SELECT
+      COALESCE(SUM(CASE WHEN status = 'awaiting_review' THEN 1 ELSE 0 END), 0) AS awaiting_review,
+      COALESCE(SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END), 0) AS published,
+      COALESCE(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0) AS rejected,
+      COALESCE(SUM(CASE WHEN quality_outcome = 'approved' THEN 1 ELSE 0 END), 0) AS approved,
+      COALESCE(SUM(CASE WHEN quality_outcome = 'light_edits' THEN 1 ELSE 0 END), 0) AS light_edits,
+      COALESCE(SUM(CASE WHEN quality_outcome = 'heavy_edits' THEN 1 ELSE 0 END), 0) AS heavy_edits,
+      MIN(CASE WHEN status = 'awaiting_review' THEN created_at END) AS oldest_awaiting_review_at
+      FROM blog_agent_drafts`[0] ?? {
+        awaiting_review: 0,
+        published: 0,
+        rejected: 0,
+        approved: 0,
+        light_edits: 0,
+        heavy_edits: 0,
+        oldest_awaiting_review_at: null,
+      };
+    const publicationMetrics = this.sql<PublicationMetricRow>`SELECT
+      COALESCE(SUM(CASE
+        WHEN publication_mode = 'autonomous'
+          AND status = 'published'
+          AND substr(run_key, 1, 7) = ${indiaMonthKey(now)}
+        THEN 1 ELSE 0 END), 0) AS autonomous_published_this_month,
+      COALESCE(SUM(CASE WHEN visibility_status = 'provisional' THEN 1 ELSE 0 END), 0)
+        AS provisional_publications,
+      COALESCE(SUM(CASE WHEN visibility_status = 'quarantined' THEN 1 ELSE 0 END), 0)
+        AS quarantined_publications
+      FROM blog_agent_drafts`[0] ?? {
+        autonomous_published_this_month: 0,
+        provisional_publications: 0,
+        quarantined_publications: 0,
+      };
+    const sourceReviews = DAILY_EDITORIAL_TOPICS
+      .flatMap((brief) => brief.sources)
+      .map((source) => source.reviewedAt)
+      .sort();
+    const staleSourceUrls = new Set(
+      DAILY_EDITORIAL_TOPICS.flatMap((brief) => sourceHealth(brief, now).staleUrls),
+    );
     return {
       ...current,
-      scheduleId: weekly?.id ?? current.scheduleId,
-      nextScheduledRunAt: weekly ? new Date(weekly.time * 1_000).toISOString() : null,
+      monthKey: monthKey(now),
+      scheduleId: daily?.id ?? null,
+      schedulePaused: current.schedulePaused,
+      scheduleState: current.schedulePaused
+        ? "paused"
+        : daily
+          ? "scheduled"
+          : "missing",
+      scheduleCronUtc: DAILY_EDITORIAL_CRON_UTC,
+      scheduleTimeZone: DAILY_EDITORIAL_TIME_ZONE,
+      nextScheduledRunAt: daily
+        ? new Date(daily.time * 1_000).toISOString()
+        : null,
+      currentRunKey,
+      todayRun: todayRun ? dailyRunFromRow(todayRun) : null,
+      dailyDraftLimit: DAILY_DRAFT_LIMIT,
+      monthlyDraftLimit: MONTHLY_DRAFT_LIMIT,
+      sourceManifestVersion: DAILY_SOURCE_MANIFEST_VERSION,
+      oldestSourceReviewedAt: sourceReviews[0] ?? null,
+      staleSourceCount: staleSourceUrls.size,
+      reviewMetrics: {
+        awaitingReview: reviewMetrics.awaiting_review,
+        published: reviewMetrics.published,
+        rejected: reviewMetrics.rejected,
+        approved: reviewMetrics.approved,
+        lightEdits: reviewMetrics.light_edits,
+        heavyEdits: reviewMetrics.heavy_edits,
+        oldestAwaitingReviewAt: reviewMetrics.oldest_awaiting_review_at,
+      },
+      autonomousPublishingEnabled: autonomousPublishingEnabled(
+        this.env.BLOG_AUTONOMOUS_PUBLISHING,
+      ),
+      autonomousPolicyVersion: AUTONOMOUS_PUBLICATION_POLICY_VERSION,
+      autonomousPublishedThisMonth:
+        publicationMetrics.autonomous_published_this_month,
+      provisionalPublications: publicationMetrics.provisional_publications,
+      quarantinedPublications: publicationMetrics.quarantined_publications,
       monthlyBudgetUsd: boundedMoney(this.env.BLOG_WRITING_MONTHLY_BUDGET_USD),
       model: configuredModel(this.env.BLOG_WRITING_MODEL),
     };

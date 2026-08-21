@@ -14,6 +14,7 @@ export default function robots(): MetadataRoute.Robots {
         "/store/",
         "/companies",
         "/join",
+        "/partner-interest",
       ],
       disallow: [
         "/admin/",

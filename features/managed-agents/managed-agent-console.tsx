@@ -89,7 +89,7 @@ function AgentCard({ agent, configured }: {
           <button
             className="button"
             type="button"
-            disabled={!configured || pending || agent.enabled}
+            disabled={!configured || !agent.commandAvailable || pending || agent.enabled}
             onClick={(event) => command("resume", event.currentTarget.form!)}
           >
             <PlayCircle size={16} aria-hidden="true" /> Resume
@@ -97,7 +97,7 @@ function AgentCard({ agent, configured }: {
           <button
             className="button button--secondary"
             type="button"
-            disabled={!configured || pending || !agent.enabled}
+            disabled={!configured || !agent.commandAvailable || pending || !agent.enabled}
             onClick={(event) => command("run_now", event.currentTarget.form!)}
           >
             <RefreshCw size={16} aria-hidden="true" /> Run now
@@ -105,7 +105,7 @@ function AgentCard({ agent, configured }: {
           <button
             className="button button--secondary"
             type="button"
-            disabled={!configured || pending || !agent.enabled}
+            disabled={!configured || !agent.commandAvailable || pending || !agent.enabled}
             onClick={(event) => command("pause", event.currentTarget.form!)}
           >
             <PauseCircle size={16} aria-hidden="true" /> Pause
@@ -122,6 +122,10 @@ export function ManagedAgentConsole({ agents, recentRuns, configured }: {
   recentRuns: ManagedAgentRecentRun[];
   configured: boolean;
 }) {
+  const companyAgents = agents.filter((agent) => agent.division === "company");
+  const specializedAgents = agents.filter(
+    (agent) => agent.division === "specialized_operations",
+  );
   return (
     <div className="managed-agent-console">
       {!configured ? (
@@ -129,8 +133,21 @@ export function ManagedAgentConsole({ agents, recentRuns, configured }: {
           The fleet is safely off. Apply the private migration, set the Worker secret, enable the application flag and then enable the private database control before initializing schedules.
         </div>
       ) : null}
-      <section className="managed-agent-grid" aria-label="Managed operations roles">
-        {agents.map((agent) => (
+      <div className="outreach-section-head">
+        <div><p className="eyebrow">Company operating roles</p><h2>Company Agent schedules</h2></div>
+        <Bot aria-hidden="true" />
+      </div>
+      <section className="managed-agent-grid" aria-label="AI company roles">
+        {companyAgents.map((agent) => (
+          <AgentCard key={agent.role} agent={agent} configured={configured} />
+        ))}
+      </section>
+      <div className="outreach-section-head">
+        <div><p className="eyebrow">Purpose-limited workers</p><h2>Specialized operations schedules</h2></div>
+        <Bot aria-hidden="true" />
+      </div>
+      <section className="managed-agent-grid" aria-label="Specialized operations roles">
+        {specializedAgents.map((agent) => (
           <AgentCard key={agent.role} agent={agent} configured={configured} />
         ))}
       </section>

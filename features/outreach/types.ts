@@ -109,6 +109,10 @@ export type OutreachRuntimeHealth = {
   failedCount: number;
   lastDeliveredAt: string | null;
   lastProviderEventAt: string | null;
+  dailyDeliveryLimit: number;
+  dailyAuthorizedCount: number;
+  lastAutomaticStopCode: string | null;
+  lastAutomaticStopAt: string | null;
 };
 
 export type OutreachFailure = {

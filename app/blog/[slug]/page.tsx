@@ -10,6 +10,7 @@ import {
   blogUi,
   translationNotice,
 } from "@/features/blog/presentation";
+import { blogPublicationFingerprint } from "@/features/blog/autonomous-publication-policy";
 import { loadLocalizedBlogPublication } from "@/features/blog/queries";
 import { getSiteUrl } from "@/lib/env";
 import { formatDate, getServerI18n } from "@/lib/i18n";
@@ -55,6 +56,7 @@ export default async function BlogStoryPage({
   if (!publication) notFound();
   const ui = blogUi(locale);
   const canonicalUrl = new URL(`/blog/${slug}`, getSiteUrl()).toString();
+  const publicationSha256 = await blogPublicationFingerprint(publication);
   const publisherId = `${getSiteUrl()}#organization`;
   const articleText = [
     publication.content.dek,
@@ -105,7 +107,10 @@ export default async function BlogStoryPage({
     <>
       <PublicHeader />
       <main className="blog-story-page">
-        <article className="container blog-story">
+        <article
+          className="container blog-story"
+          data-publication-sha256={publicationSha256}
+        >
           <Link className="blog-story__back" href="/blog"><ArrowLeft size={16} aria-hidden="true" /> {ui.backToBlog}</Link>
           <header className="blog-story__hero">
             <p className="eyebrow">{blogCategoryLabel(publication.category, locale)}</p>

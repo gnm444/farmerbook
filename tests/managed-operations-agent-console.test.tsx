@@ -10,6 +10,8 @@ vi.mock("@/features/managed-agents/actions", () => ({
 describe("managed operations fleet console", () => {
   const agents = MANAGED_AGENT_DEFINITIONS.map((definition) => ({
     role: definition.role,
+    division: definition.division,
+    commandAvailable: false,
     displayName: definition.displayName,
     description: definition.description,
     boundary: definition.boundary,

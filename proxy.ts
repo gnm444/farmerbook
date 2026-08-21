@@ -10,6 +10,7 @@ const publicPrefixes = [
   "/auth",
   "/invite",
   "/join",
+  "/partner-interest",
   "/confirm-email",
   "/unsubscribe",
   "/api/health",

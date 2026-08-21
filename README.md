@@ -14,7 +14,7 @@ a Supabase-backed application boundary with email authentication, PostgreSQL Row
 Security, storage policies, seller/customer authorization, purchase reviews,
 and administrator moderation actions.
 
-## Managed AI fleet and the $50 inference ceiling
+## Managed AI fleet and the $10 inference ceiling
 
 The public site includes a Cloudflare Agent named `WebsiteGreetingAgent`. It is
 available on demand 24/7 through a SQLite-backed Durable Object; it does not run
@@ -51,11 +51,39 @@ Cloudflare AI Gateway can later route this Agent to newer Anthropic, Google or
 Workers AI models. A new model must not be enabled merely by changing an
 environment value: add its reviewed input/output pricing to the server-side
 allowlist, recalculate the conservative reservation, run the budget tests, and
-keep the $50 fleet ceiling. This avoids silently turning “latest” into an
+keep the $10 fleet ceiling. This avoids silently turning “latest” into an
 uncapped bill.
 
 The Agent stores only a random session identifier, counters and timestamps in
 its Durable Object. It does not store visitor message text.
+
+## AI company command center
+
+FarmerBook has a default-off operating layer for the six-month goal of 100,000
+registered users, 40,000 activated users, and 25,000 monthly active users. One
+private `CompanyOperationsAgent` class supplies 15 role-locked named Durable
+Object instances: executive strategy, operations coordination, data and
+experimentation, governance and risk, independent audit, growth strategy,
+Farmer acquisition, buyer acquisition, Farmer onboarding, marketplace
+matching, SEO/editorial, product management, engineering planning, QA and
+reliability, and support/trust.
+
+These roles do not consume Workers AI budget. A deterministic,
+version-controlled `company-policy-v1` reads aggregate counters and creates at
+most one reviewable proposal per run. Supabase stores the three objectives,
+run-linked KPI snapshots, proposals, optimistic revisions, and immutable
+decision events. Snapshots contain no names, contacts, messages, support text,
+prompts, or participant-level records.
+
+An administrator reviews proposals at `/admin/agents`. Approval means “accept
+into the operating backlog”; there is deliberately no connector that can send,
+publish, deploy, spend, modify users, moderate content, or grant verification.
+The shared managed-operations flag, separate `ENABLE_AI_COMPANY` flag, private
+`managed_operations_agents` database control, and private `ai_company` control
+must all pass before a role can run. All controls and all 15 roles default off.
+The first production activation completed on 2026-08-19 with all 15 schedules
+enabled and proposal execution still human-gated. See the production runbook
+before any configuration change or rollback.
 
 ## Organic certification labels
 
@@ -136,10 +164,12 @@ English are selectable. Set it to `false` only as an emergency rollback;
 unreviewed strings disclose their Indian-English fallback.
 
 The public farming library is at `/blog`. A dedicated Cloudflare
-`BlogWritingAgent` prepares one evidence-bounded draft each Tuesday at 09:00
-IST, stores it privately, and requires an authenticated administrator to
-publish it from `/admin/blog`. Its cheapest allowlisted Workers AI model has a
-hard default USD 2/month inference cap inside the shared USD 10 fleet budget.
+`BlogWritingAgent` prepares at most one evidence-bounded private draft every
+day at 09:00 IST and requires an authenticated administrator to review the
+exact revision before publishing it from `/admin/blog`. India-calendar run
+keys prevent scheduled retries and manual tests from creating or funding a
+second draft that day. Its cheapest allowlisted Workers AI model has a hard
+default USD 2/month inference cap inside the shared USD 10 fleet budget.
 Reviewed Telugu and Indian English articles are canonical; the other supported
 Indian languages receive cached, clearly disclosed AI-assisted translations
 with an honest English fallback. See `docs/BLOG_WRITING_AGENT.md`.
@@ -213,10 +243,28 @@ The first concrete email adapter targets Postmark with a verified FarmerBook
 domain, separate transactional and optional Broadcast Message Streams, signed
 double opt-in, per-message inbound reply routing, bounce/complaint suppression
 and one-click unsubscribe. `ceo@farmerbook.in` is the selected professional
-identity and currently forwards inbound mail to the owner Gmail. It remains
-receive-only and cannot be used as `From` until Postmark verifies the domain and
-outbound SPF/DKIM/DMARC alignment; the owner Gmail is never used as the
-autonomous sender.
+identity and forwards inbound mail to the owner Gmail. Postmark manually
+approved the FarmerBook account on 2026-08-17 and verified the domain DKIM and
+custom Return-Path; the application may use this address as `From` only through
+the reviewed Postmark adapter after the owner canary and release gates pass.
+The owner Gmail is never used as the autonomous sender.
+
+Once the one-time release and canary are complete, `Growth & Outreach` processes
+the consented queue every 15 minutes without per-message approval. A service-
+only final dispatch RPC rechecks pause, expiry, suppression and exact-purpose
+authority immediately before any contact read or provider call. It reserves at
+most 25 attempts per India calendar day and stores only redacted immutable
+decision evidence. Missing credentials/legal configuration, an invalid final
+check, an ambiguous provider outcome or a three-failure circuit break
+persistently pauses delivery and exposes an actionable reason in the admin
+console. Resume remains an explicit recovery operation; it cannot override
+consent or suppression.
+
+The 15 aggregate-only company Agents are operated through
+`/admin/agents`; their browser guide is at `/admin/agents/guide` and the
+repository guide is [`docs/AI_COMPANY_OPERATING_GUIDE.md`](docs/AI_COMPANY_OPERATING_GUIDE.md).
+Company proposal approval creates backlog work only. Consented email delivery
+belongs to the separate `Growth & Outreach` specialized Agent.
 
 The private Farmer database at `/admin/farmer-database` is a founder-owner-only
 contact store for direct interest, existing-member, approved partner, and

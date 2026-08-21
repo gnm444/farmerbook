@@ -47,9 +47,10 @@ begin
     select array_agg(control_key order by control_key)
     from public.ecosystem_release_controls
   ) <> array[
-    'agri_businesses', 'business_offers', 'extended_locales',
-    'featured_farmer_profiles', 'inc_sourcing', 'managed_operations_agents',
-    'outreach_agent', 'private_farmer_contacts', 'profile_research_agents',
+    'agri_businesses', 'ai_company', 'business_offers', 'extended_locales',
+    'featured_farmer_profiles', 'inc_sourcing', 'live_agent_execution',
+    'managed_operations_agents', 'outreach_agent', 'private_farmer_contacts',
+    'profile_research_agents',
     'resumable_onboarding', 'sourced_farmer_research', 'support_social_pilot'
   ]::text[] then
     raise exception 'ecosystem release controls must match the disabled gate set';

@@ -1,21 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
+  COMPANY_AGENT_ROLES,
   MANAGED_AGENT_DEFINITIONS,
+  SPECIALIZED_AGENT_ROLES,
   managedAgentCommandSchema,
   managedAgentRunRequestSchema,
 } from "@/features/managed-agents/contracts";
 import { verificationTriageDecision } from "@/features/managed-agents/processor";
 
 describe("managed operations agent contracts", () => {
-  it("defines six separate purpose-limited roles", () => {
+  it("defines six specialized and fifteen company roles", () => {
     expect(MANAGED_AGENT_DEFINITIONS.map((agent) => agent.role)).toEqual([
-      "outreach_growth",
-      "profile_drafting",
-      "verification_triage",
-      "customer_support",
-      "social_content",
-      "operations_supervisor",
+      ...SPECIALIZED_AGENT_ROLES,
+      ...COMPANY_AGENT_ROLES,
     ]);
+    expect(COMPANY_AGENT_ROLES).toHaveLength(15);
+    expect(MANAGED_AGENT_DEFINITIONS.filter(
+      (agent) => agent.division === "specialized_operations",
+    )).toHaveLength(6);
+    expect(MANAGED_AGENT_DEFINITIONS.filter(
+      (agent) => agent.division === "company",
+    )).toHaveLength(15);
     expect(MANAGED_AGENT_DEFINITIONS.every((agent) => agent.boundary.length > 40)).toBe(true);
   });
 

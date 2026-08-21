@@ -1545,9 +1545,30 @@
 
 .blog-agent-status {
   display: grid;
-  grid-template-columns: minmax(15rem, 1fr) minmax(18rem, 1.3fr) auto;
+  grid-template-columns: minmax(15rem, 1fr) minmax(18rem, 1.3fr);
   gap: 1.5rem;
   align-items: center;
+}
+
+.blog-agent-status label,
+.blog-agent-review-controls label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.blog-agent-status input,
+.blog-agent-review-controls select,
+.blog-agent-review-controls textarea {
+  inline-size: 100%;
+  padding: 0.75rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
 }
 
 .blog-agent-status h2 {
@@ -1621,11 +1642,30 @@
 
 .blog-agent-draft__meta {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
   margin-block: 1rem;
   color: var(--muted);
   font-size: 0.74rem;
+}
+
+.blog-agent-review-controls {
+  display: grid;
+  gap: 0.9rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.blog-agent-review-controls details {
+  max-block-size: none;
+  margin: 0;
+}
+
+.blog-agent-review-controls textarea[spellcheck="false"] {
+  min-block-size: 18rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 900px) {
@@ -8939,6 +8979,103 @@ img {
 .managed-agent-console {
   display: grid;
   gap: 1.25rem;
+}
+
+.company-command-center {
+  display: grid;
+  gap: 1.25rem;
+  margin-block: 1.25rem;
+}
+
+.company-objective-grid,
+.company-proposal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1rem;
+}
+
+.company-objective-card {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.company-objective-card > svg {
+  color: var(--leaf-700);
+}
+
+.company-objective-card > span,
+.company-objective-card > small {
+  color: var(--muted);
+}
+
+.company-objective-card > strong {
+  font-size: 1.2rem;
+}
+
+.company-objective-card progress {
+  inline-size: 100%;
+  accent-color: var(--leaf-700);
+}
+
+.company-metrics-card,
+.company-proposal-card,
+.company-proposal-section,
+.company-proposal-review {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.company-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.company-metrics-grid > div {
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--leaf-50);
+}
+
+.company-metrics-grid dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.company-metrics-grid dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+
+.company-proposal-card {
+  align-content: start;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.company-proposal-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.company-proposal-card h3,
+.company-proposal-card p {
+  margin: 0;
+}
+
+.managed-agent-status--high,
+.managed-agent-status--critical {
+  color: var(--amber-700);
+  background: color-mix(in srgb, var(--amber-700) 12%, transparent);
 }
 
 .ai-budget-panel {

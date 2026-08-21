@@ -27,7 +27,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const paths: readonly string[] = [
     ...publicPaths,
     ...(isFeatureEnabled("ENABLE_AGRI_BUSINESSES") ? ["/companies"] : []),
-    ...(isFeatureEnabled("ENABLE_OUTREACH_AGENT") ? ["/join"] : []),
+    ...(isFeatureEnabled("ENABLE_OUTREACH_AGENT")
+      ? ["/join", "/partner-interest"]
+      : []),
     "/featured-farmers",
   ];
   return [

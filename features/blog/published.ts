@@ -7,8 +7,12 @@ import {
   GHEE_TRUST_SLUG,
   gheeTrustPublication,
 } from "./publications/ghee-trust";
+import {
+  MONEY_CHARACTER_SLUG,
+  moneyCharacterPublication,
+} from "./publications/money-character";
 
-export { FOOD_TRACEABILITY_SLUG, GHEE_TRUST_SLUG };
+export { FOOD_TRACEABILITY_SLUG, GHEE_TRUST_SLUG, MONEY_CHARACTER_SLUG };
 
 export const CALCULATED_TRANSITION_SLUG =
   "calculated-transition-to-natural-farming";
@@ -189,6 +193,7 @@ export const foundingBlogPublication: BlogPublication = {
 };
 
 export const STATIC_BLOG_PUBLICATIONS = [
+  moneyCharacterPublication,
   foodTraceabilityPublication,
   gheeTrustPublication,
   foundingBlogPublication,
