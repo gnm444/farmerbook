@@ -15,10 +15,10 @@ FarmerBook already has production feature flags for the autonomous blog, FarmerB
 - [x] (2026-08-21 23:20Z) Classified and transferred 115 candidate files: application/configuration code, additive migrations, tests, and operator documentation. Excluded planning state, research, generated evidence, and lead/discovery data.
 - [x] (2026-08-21 23:23Z) Verified the candidate's content-to-social and consented-outreach safety behavior with 32 focused suites (151 tests).
 - [x] (2026-08-21 23:28Z) Ran the full repository check (170 files and 779 tests), Gitleaks history scan, a production-shaped build, and strict dry runs for the main Worker and isolated connector.
-- [ ] Commit the intended release and push it without including research notes, generated evidence, lead lists, or unrelated user work.
+- [x] (2026-08-21 23:31Z) Committed the intended release as `ef0275d` and pushed `codex/autonomous-content-outreach-release`; the excluded primary-checkout material remains untouched.
 - [ ] Apply pending production database migrations and deploy the application and isolated owned-social connector if documented credentials are available (blocked: production has no listed physical backup and the documented migration dry run refuses an out-of-order 19-migration history gap).
 - [x] (2026-08-21 23:28Z) Verified production configuration, current Worker deployments, secret names, database release controls, and migration prerequisites using read-only checks; no provider action was invoked.
-- [ ] Send the coordinator a concise deployment, autonomy, test, and prerequisite report.
+- [ ] Send the coordinator a concise deployment, autonomy, test, and prerequisite report (prepared; final branch-head SHA will be included after this plan update is pushed).
 
 ## Surprises & Discoveries
 
@@ -55,7 +55,7 @@ FarmerBook already has production feature flags for the autonomous blog, FarmerB
 
 ## Outcomes & Retrospective
 
-The repository release candidate is complete and fully validated. Production mutation remains blocked by the database backup and migration-history prerequisites described above. The final entry will add the pushed commit and coordinator handoff.
+The repository release candidate is complete, fully validated, committed, and pushed. Production mutation was deliberately not attempted because the database backup and migration-history prerequisites described above fail the runbook. Read-only live checks show both apex and `www` health endpoints returning HTTP 200 with `{"status":"ok"}`, and the blog, robots file, and sitemap rendering expected public content. Repository tests prove the content-to-social pipeline, but no safe production evidence shows a completed autonomous article-to-Facebook publication, so deployed end-to-end content autonomy remains unverified. The resume sequence is: obtain backup and restore proof; reconcile the migration ledger through an approved exact plan; apply and test the migrations in isolated staging with pgTAP/RLS/readiness checks; record secrets, bindings, rollback target, and release approval; then apply the exact production migration and roll out connector/main Worker in order.
 
 ## Context and Orientation
 
@@ -127,6 +127,8 @@ Validation evidence:
     current main Worker:   563686e9-0065-4212-9530-17e1c55c14fb at 100%
     current connector:     50888eb0-f0da-45cd-8c52-25e87f38af4d at 100%
     production mutation:   not attempted
+    live HTTP smoke:       apex and www health 200; blog/robots/sitemap render
+    live E2E social proof: not established without a provider-side action
 
 ## Interfaces and Dependencies
 
@@ -135,3 +137,5 @@ The exact runtime interfaces will be preserved from the candidate implementation
 Plan revision note (2026-08-21 23:17Z): Created the initial self-contained release plan after inventorying the worktrees and remote divergence.
 
 Plan revision note (2026-08-21 23:28Z): Recorded the selected transfer, complete test/dry-run evidence, production shape, and the backup/migration-history deployment blocker so another operator can resume without repeating investigation.
+
+Plan revision note (2026-08-21 23:31Z): Recorded the pushed release commit, independent no-go confirmation, safe live smoke evidence, terminal deployment outcome, and exact resume sequence.
