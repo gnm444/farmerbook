@@ -31,12 +31,24 @@ test("sourced Farmer detail fails closed in the demo environment", async ({
   await expect(page.locator("body")).not.toContainText("Professional facts");
 });
 
+test("Raitu Nestham private snapshot fails closed without leaking its data", async ({
+  page,
+}) => {
+  const response = await page.goto("/admin/sourced-farmers/raitunestham");
+
+  expect(response?.status()).toBe(404);
+  await expect(page.locator("body")).not.toContainText("Komatla Nancha Reddy");
+  await expect(page.locator("body")).not.toContainText("9849852470");
+  await expect(page.getByRole("link", { name: /open source video/i })).toHaveCount(0);
+});
+
 test("sourced Farmer routes declare private crawler metadata", async ({
   request,
 }) => {
   for (const path of [
     "/admin/sourced-farmers",
     "/admin/sourced-farmers/11111111-1111-4111-8111-111111111111",
+    "/admin/sourced-farmers/raitunestham",
   ]) {
     const response = await request.get(path);
     expect(response.status()).toBe(404);

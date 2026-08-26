@@ -140,6 +140,17 @@ runtime guard](../lib/env.ts), [generated Worker inputs](../vite.config.ts),
 | `WEBSITE_GREETER_MONTHLY_REPLY_LIMIT` | Server Worker variable | `25000` | At most `25000` for the first-agent release |
 | `WEBSITE_GREETER_DAILY_AI_REPLY_LIMIT` | Server Worker variable | `1000` | At most `1000`; the model call stops when reached |
 | `AI_FLEET_BUDGET_AGENT` | Private SQLite Durable Object binding | Required for model inference | Bind `AiFleetBudgetAgent`; never expose it through an HTTP Agent route |
+| `COMPANY_OPERATIONS_AGENT` | Private SQLite Durable Object binding | Required only for isolated AI-company testing | Bind `CompanyOperationsAgent`; every role uses a distinct name and no public Agent route |
+| `LIVE_ACTION_COORDINATOR_AGENT` | Private SQLite Durable Object binding | Required only for default-off Phase 1 tests | Bind `LiveActionCoordinatorAgent`; it coordinates exact authorizations and never owns a universal connector credential |
+| `LIVE_ACTION_EXECUTION_WORKFLOW` | Private Cloudflare Workflow binding | Required only for default-off Phase 1 tests | Bind `LiveActionExecutionWorkflow`; approval waits, dispatch claims and verification must remain durable |
+| `BLOG_AUTONOMOUS_PUBLISHING` | Server Worker variable | `false` | Enable only with the low-risk policy, one/day quota, verifier binding, quarantine and rollback evidence |
+| `BLOG_PUBLICATION_VERIFIER_AGENT` | Private SQLite Durable Object binding | Required for autonomous blog release | Verify the independently rendered SHA-256 outside the writer Agent before final visibility |
+| `OWNED_SOCIAL_PUBLISHER_AGENT` | Private SQLite Durable Object binding | Required for owned-channel monitoring | Controls default paused; resume an official channel only after connector and read-back evidence pass |
+| `OWNED_SOCIAL_PUBLISHING` | Server Worker variable | `false` | Enable only after the isolated connector and at least one official business channel are authorized |
+| `OWNED_SOCIAL_CONNECTOR` | Private service binding | Unconfigured | Bind only to `farmerbook-owned-social-connector`; never expose a public route or put Meta tokens in the main Worker |
+| `META_PAGE_ACCESS_TOKEN` | Connector-only secret | Unconfigured | Store only the current system-user credential in the isolated connector with `wrangler secret put`; resolve the exact Page-scoped token in memory and never print, log or copy either token into the main Worker |
+| `META_PAGE_ID` | Connector-only variable | Unconfigured | Exact portfolio-owned Facebook Page ID; Page-token resolution must return this same ID before a post can be attempted |
+| `META_INSTAGRAM_ACCOUNT_ID` | Connector-only variable | Unconfigured | Exact portfolio-owned Instagram Professional account ID; enable only with the rights-cleared media gate and independent provider read-back |
 
 `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS. It must never have a `NEXT_PUBLIC_`
 prefix, appear in `.env.example` with a value, be printed in evidence, or appear
@@ -168,9 +179,21 @@ explicit `false` is its emergency rollback.
 | `ENABLE_BUSINESS_OFFERS` | C | business foundation plus offer expiry, enquiry, moderation, abuse, and discovery gates pass |
 | `ENABLE_OUTREACH_AGENT` | Controlled growth add-on | consent wording/legal review, Turnstile, provider/DLT-DCA approval, suppression, retention, webhook, outbox, and incident gates pass |
 | `ENABLE_PROFILE_RESEARCH_AGENT` | Managed private-profile add-on | outreach consent/provider gates, Agents SDK binding/migration, Workflow, private preview, verification-claim RLS, retention/deletion, cost, and staged approval/claim journeys pass |
-| `ENABLE_MANAGED_OPERATIONS_AGENTS` | Purpose-limited operations fleet | outreach/profile prerequisites, four Durable Object bindings, processor secret, private fleet migration, automatic-pause, audit, scheduling and synthetic staging journeys pass |
+| `ENABLE_MANAGED_OPERATIONS_AGENTS` | Purpose-limited operations fleet | outreach/profile prerequisites, required private Durable Object bindings, processor secret, private fleet migration, automatic-pause, audit, scheduling and synthetic staging journeys pass |
+| `ENABLE_SUPPORT_SOCIAL_PILOT` | Supervised support/social add-on | managed fleet, support/social migration, two private bindings, zero-send/copy-ready behavior, human review, escalation and staged participant/admin evidence pass |
+| `ENABLE_AI_COMPANY` | Human-governed company control plane | managed fleet, AI-company migration, shared private binding, aggregate-only metrics, deterministic proposals, administrator review, immutable audit and zero-execution staging evidence pass |
+| `ENABLE_LIVE_AGENT_EXECUTION` | Default-off live-action control plane | action-ledger/RLS tests, scoped executor bindings, approval separation, quotas, expiry, receipts, reconciliation and at least seven shadow days pass; then obtain a separate executor-and-cap-specific canary approval |
 | `ENABLE_PRIVATE_FARMER_CONTACTS` | Founder-owned consent database | owner UUID, encryption/rotation plan, private migration/RLS, synthetic consent and deletion, transient YouTube, approved email provider and rollback evidence pass |
 | `ENABLE_SOURCED_FARMER_RESEARCH` | Founder-only sourced research | owner UUID, official YouTube key/privacy review, private migration/RLS, contact-redaction, 30-day refresh/purge and synthetic evidence-review rollback pass |
+| `BLOG_AUTONOMOUS_PUBLISHING` | Owned-site standing policy | exact low-risk source/claim gate, one/day and 31/month limits, rendered-hash verification, quarantine, pause and seven-day canary evidence |
+| `OWNED_SOCIAL_PUBLISHING` | Owned business-channel syndication | private connector, official Page authorization, one/day quota, provider receipt/read-back verification, per-channel pause and no personal-profile/DM/group capability |
+
+`OWNED_SOCIAL_FACEBOOK_ENABLED`, `OWNED_SOCIAL_INSTAGRAM_ENABLED` and
+`OWNED_SOCIAL_INSTAGRAM_MEDIA_READY` are independent exact-string controls.
+Instagram requires all global/channel/media gates. Facebook can activate
+without Instagram. Every channel starts paused in durable state and receives
+one reason-bound resume after its connector passes verification; this is not a
+per-post approval.
 
 Release A runs with unreleased product flags `false`; the shipped locale catalog
 remains enabled. Release B must not enable Release C flags.
@@ -178,18 +201,18 @@ remains enabled. Release B must not enable Release C flags.
 `ENABLE_AGRI_BUSINESSES`.
 
 The Worker flags are rollout controls, not authorization boundaries. The
-database also owns twelve private controls in
+database also owns fourteen private controls in
 `public.ecosystem_release_controls`: `extended_locales`,
 `resumable_onboarding`, `agri_businesses`, `business_offers`,
 `outreach_agent`, `inc_sourcing`, `profile_research_agents`,
 `managed_operations_agents`, `featured_farmer_profiles`,
 `private_farmer_contacts`, `sourced_farmer_research`, and
-`support_social_pilot`. Every row is
+`support_social_pilot`, `ai_company`, and `live_agent_execution`. Every row is
 seeded `false`; `anon` and `authenticated` have no privileges on the control
 table. Change them only through a reviewed SQL console/session running as the
 database owner or service role, and record the operator and change ticket.
 
-Before and after every rollout or rollback, verify all twelve rows:
+Before and after every rollout or rollback, verify all fourteen rows:
 
 ```sql
 select control_key, enabled, updated_at
@@ -214,7 +237,10 @@ Prepare the flag-enabled Worker candidate without routing public traffic, then
 enable only the matching database control, run the readiness/smoke probe, and
 start the approved canary. If a gate fails, disable the database control first
 so direct PostgREST/RPC access fails closed, then disable the Worker flag or
-roll back the Worker. Never enable all controls as a convenience.
+roll back the Worker. Never enable all controls as a convenience. For live
+execution, pause the individual executor first, set its reviewed caps and
+canary stage, verify the redacted action ledger, and only then consider the two
+release gates. An application flag by itself never authorizes dispatch.
 
 ### External configuration
 
@@ -226,12 +252,14 @@ roll back the Worker. Never enable all controls as a convenience.
 | `OUTREACH_INVITATION_SIGNING_SECRET` | **REQUIRED:** separate value of at least 32 random bytes; one-time account invitation signing; secret store only |
 | `OUTREACH_PROCESSOR_SECRET` | **REQUIRED:** at least 32 random bytes; scheduler-to-processor authentication; secret store only |
 | `MANAGED_AGENT_PROCESSOR_SECRET` | **REQUIRED for the managed fleet:** separate value of at least 32 random bytes; private Durable Object-to-processor authentication; secret store only |
+| `LIVE_ACTION_<EXECUTOR>_PRINCIPAL_JWT` | **RESERVED—DO NOT PROVISION IN PHASE 1:** the inactive scaffold names separate executor principals, but the database RPCs still use the broad Supabase `service_role`. The runtime therefore rejects even configured values with `ACTION_RESTRICTED_DATABASE_ROLE_NOT_IMPLEMENTED`. Before any canary, introduce dedicated restricted PostgREST roles with exact RPC grants, isolate each connector service, then use one short-lived credential per executor. Current reserved suffixes are `CONSENT_OUTREACH`, `IN_APP_LIFECYCLE`, `SUPPORT_REPLY`, `OWNED_SITE_PUBLISH`, `MARKETPLACE_RECOMMENDATION`, `EXPERIMENT`, `ENGINEERING_PR`, and `CANARY_RELEASE`. |
+| `LIVE_ACTION_ACTION_VERIFIER_PRINCIPAL_JWT` | **RESERVED—DO NOT PROVISION IN PHASE 1:** the verifier must eventually use an independent restricted database role and service. It must not share an executor credential. Until that design is implemented, live dispatch and executor resume are hard-disabled. |
 | `OUTREACH_PROVIDER_BASE_URL` | **REQUIRED:** approved HTTPS provider endpoint; record data region, processor and contract version |
 | `OUTREACH_PROVIDER_API_TOKEN` | **REQUIRED:** provider API token; secret store only |
 | `OUTREACH_PROVIDER_WEBHOOK_SECRET` | **REQUIRED:** at least 32 random bytes; HMAC webhook verification; secret store only |
 | `OUTREACH_PROVIDER_KIND` | Set to `postmark` only for the reviewed native email adapter; omit it to retain the generic fail-closed gateway |
 | `POSTMARK_SERVER_TOKEN` | **REQUIRED for email:** server-scoped token; secret store only; never use the account token |
-| `POSTMARK_FROM_EMAIL` | **REQUIRED for email:** `ceo@farmerbook.in`; currently receive-only, so outbound use is prohibited until Postmark verification plus SPF, DKIM, Return-Path and DMARC evidence pass |
+| `POSTMARK_FROM_EMAIL` | **REQUIRED for email:** `ceo@farmerbook.in`; Postmark manually approved the FarmerBook account and verified domain DKIM plus custom Return-Path on 2026-08-17; outbound use remains gated by the owner canary and release controls |
 | `POSTMARK_INBOUND_ADDRESS` | **REQUIRED for email replies:** exact private inbound Postmark address used with per-outbox plus addressing |
 | `POSTMARK_TRANSACTIONAL_MESSAGE_STREAM` | **REQUIRED for email:** transactional stream for requested confirmations, introductions and bounded replies |
 | `POSTMARK_BROADCAST_MESSAGE_STREAM` | **REQUIRED only for the optional follow-up:** reviewed Broadcast stream; leave unset to keep follow-ups unavailable |
@@ -257,6 +285,36 @@ projection](../vite.config.ts), [Cloudflare deploy/secret behavior](https://deve
 [Brave result-storage requirement](https://brave.com/search/api/),
 [YouTube search.list contract](https://developers.google.com/youtube/v3/docs/search/list),
 [YouTube API developer policies](https://developers.google.com/youtube/terms/developer-policies)
+
+### Daily Blog Writing Agent
+
+The private `farmerbook-blog-writing` Agent owns one cron schedule,
+`30 3 * * *` (09:00 Asia/Kolkata). On first wake after the daily upgrade it
+creates or reuses that schedule, lists its cron records, and cancels only the
+exact legacy `prepareWeeklyDraft` schedule plus duplicate `prepareDailyDraft`
+IDs. Do not deploy a global Worker cron for the same job.
+
+Production checks:
+
+1. Open `/blog` to initialize the named Agent, then `/admin/blog` as an
+   administrator.
+2. Confirm status is `scheduled`, next run is 09:00 IST, the source manifest
+   has zero stale sources, daily/monthly limits are 1/31, and the AI cap is USD
+   2 inside the USD 10 fleet limit.
+3. A controlled **Prepare today's draft now** may create one private
+   `awaiting_review` row. A second manual/scheduled call on the same India date
+   must return the retained outcome without another inference.
+4. Publishing requires the exact revision, a review reason and quality
+   outcome. Confirm the post-publication route verifier is `verified`.
+5. On duplicate runs, a stale/invented source, invalid output, budget anomaly
+   or route mismatch, pause from `/admin/blog`. Pausing cancels only the Blog
+   Agent schedule and retains runs, drafts, reviews and publications. Resume
+   only after recording a reason and confirming exactly one daily schedule.
+
+Rollback the Worker to the recorded prior version if storage migration, public
+routes or the administrator desk fail. Returning Worker code does not delete
+SQLite columns or evidence. If the daily schedule itself is unsafe, pause it
+before rollback so the older weekly code cannot recreate work unexpectedly.
 
 ### Managed Agent cost and organic-certificate gates
 
@@ -828,8 +886,9 @@ message delivery or upload of third-party contact lists.
 1. On a clean installation, apply the full migration history. On the current
    production-shaped installation, apply only the reviewed
    `20260817120000_outreach_production_compatibility.sql` and
-   `20260817130000_outreach_production_safety_completion.sql` bridges, in that
-   order and in one transaction; do not run unrestricted `db push`. Rehearse both shapes first
+   `20260817130000_outreach_production_safety_completion.sql` bridges followed
+   by `20260822120000_autonomous_outreach_dispatch.sql`, in that order and in
+   one transaction; do not run unrestricted `db push`. Rehearse both shapes first
    and verify the Worker flag and private `outreach_agent` control remain off
    while the delivery runtime control remains paused. Prove `anon` and
    `authenticated` cannot read contact candidates, consent receipts, outbox
@@ -853,7 +912,10 @@ message delivery or upload of third-party contact lists.
    `POST /api/outreach/provider/events`. Prove the processor claims nothing
    when the provider is unconfigured. Prove webhook prospect/contact binding,
    provider receipt idempotency, retry backoff, maximum five attempts and that
-   withdrawal during processing prevents delivery. Prove STOP, decline,
+   the final `authorize_outreach_dispatch` recheck prevents a withdrawal or
+   suppression that races with a claimed row. Prove the hard 25-per-India-day
+   reservation ceiling defers excess work and concurrent workers cannot exceed
+   it. Prove STOP, decline,
    complaint and hard bounce immediately suppress/cancel, while raw reply text
    is classified transiently and is not stored. Only an allowlisted onboarding
    question may create one bounded answer.
@@ -888,10 +950,10 @@ message delivery or upload of third-party contact lists.
    sustainable/low-input/smallholder tier 20 and general tier 30. Never infer
    this field from discovery research or a public profile.
 
-### Daily outreach operator checklist
+### Autonomous outreach monitoring checklist
 
-1. Check delivery remains paused unless an approved canary or active release
-   window exists; compare the Worker flag and database control.
+1. Confirm the one-time release/canary evidence is still valid and compare the
+   Worker flag, private database control, provider readiness and runtime pause.
 2. Review queue age, ambiguous sends and terminal failures without opening or
    exporting private contact values.
 3. Review every complaint, hard bounce, unsubscribe and STOP event; verify its
@@ -900,6 +962,10 @@ message delivery or upload of third-party contact lists.
    retain raw reply bodies in logs or audit JSON.
 5. Confirm introduction/follow-up counts remain within one plus one and that no
    WhatsApp job, discovery CSV import, or recurring cold campaign exists.
+6. Check today's authorized reservations against the fixed daily ceiling and
+   inspect the latest automatic-stop code. Missing readiness, invalid final
+   authorization, an ambiguous provider outcome or a three-failure circuit must
+   leave delivery persistently paused before another cycle.
 
 ### Enablement and autonomous processing
 
@@ -911,14 +977,37 @@ Route a staff-only canary, submit a synthetic opt-in, complete provider
 verification, then resume delivery through the admin console with an audited
 reason. Invoke
 `POST /api/outreach/process` with the scheduler secret and verify exactly one
-provider receipt plus one immutable event. Then test withdrawal and prove later
-processor calls send nothing.
+   provider receipt, one immutable dispatch authorization and one delivery
+   event. Then test withdrawal and prove later processor calls send nothing.
 
 Only after those checks may the approved scheduler invoke the processor. Never
 give the scheduler a Supabase key; it receives only `OUTREACH_PROCESSOR_SECRET`.
 The Worker holds the service role and provider token in its secret store. Alert
 on provider signature failures, repeated batch failures, consent/outbox trigger
-violations, five-attempt failures, complaints and unexpected send volume.
+violations, final-authorization failures, automatic stops, daily-limit
+deferrals, five-attempt failures, complaints and unexpected send volume.
+
+After a successful owner canary, resume only the `Growth & Outreach`
+specialized Agent at a 900-second interval with `maxItemsPerRun=10`. This
+schedule checks eligible consented work; it is not a cold-campaign generator.
+Keep confirmations prompt, ramp real volume gradually, and treat a complaint
+rate approaching 0.1% as an immediate pause/review threshold. The public
+collaboration intake must return anonymous HTTP 200 at `/partner-interest`
+before any creator campaign shares that URL.
+
+Production activation update (2026-08-19): Postmark approval, DKIM, custom
+Return-Path, streams, postal footer, encrypted server token and authenticated
+webhooks are configured. The owner-controlled canary delivered exactly one
+confirmation and one requested introduction, verified the visible sender,
+reply handoff and opt-out controls, and then withdrew. The database records two
+withdrawn purpose receipts, one scrubbed contact, one suppression and zero
+pending/processing messages. Delivery is active and only `Growth & Outreach`
+is scheduled at 900 seconds with `maxItemsPerRun=10`; it remains consent-bound
+and fail-closed. The first eight automatic cycles all succeeded with zero
+claimed recipients and zero failures. Worker
+`ab9ac737-8adc-42d2-aafb-a51d48e14abe` is active at 100 percent. The
+immediately preceding rollback version is
+`652053a9-2689-4756-b1fe-a52d3e0e227e`.
 
 ### Rollback
 
@@ -1082,7 +1171,8 @@ profiles, or consent records. The application flag
 
 ### Required staging and editorial evidence
 
-1. Apply `20260812150000_featured_farmer_profiles.sql` in a clean staging
+1. Apply `20260812150000_featured_farmer_profiles.sql` and
+   `20260825120000_optional_featured_farmer_professional_sources.sql` in a clean staging
    rebuild. Prove private research, source, draft, claim, social, media, event,
    YouTube-candidate, and quota tables have RLS and no browser table grants.
    Prove public RPCs return only the latest published, non-withdrawn immutable
@@ -1102,12 +1192,15 @@ profiles, or consent records. The application flag
    is enabled, restrict the official API key and prove database reservation
    precedes every call, candidate text expires within 30 days, and no media,
    thumbnail, comment, transcript, statistic, cookie, or raw response is kept.
-5. For a synthetic subject, prove readiness fails without two current
-   professional sources on separate domains, one authoritative or independent
-   source, two approved significance claims, citations for every selected
-   claim, three story sections, a fact check within 24 hours, and one manually
-   confirmed owned LinkedIn, Instagram, Facebook, or YouTube account. Posts,
-   reels, groups, interviews, watch URLs, and `youtu.be` links remain coverage.
+5. Test both evidence-policy modes for a synthetic subject. With
+   `featured_farmer_professional_sources_required=true`, prove readiness fails
+   without two current professional sources on separate domains and one
+   authoritative or independent source. With the control false, prove only
+   those two blockers are omitted. In both modes require two approved claims,
+   selected citations for every claim, three story sections, a fact check
+   within 24 hours, and one manually confirmed owned LinkedIn, Instagram,
+   Facebook, or YouTube account. Posts, reels, groups, interviews, watch URLs,
+   and `youtu.be` links remain coverage.
 6. Verify each image is an original photograph with a recorded rights basis,
    credit, reference, and approval. With no approved media, verify the image-free
    treatment appears and no generated, generic, copied, proxied, or hotlinked
@@ -1123,6 +1216,12 @@ profiles, or consent records. The application flag
    revise, withdraw, and attempt stale-revision actions with synthetic data;
    confirm withdrawal immediately removes public reads without deleting the
    audit trail. Record exact migration checksum and test evidence.
+9. If an editorial snapshot has `reportedProducts`, verify it says the catalog
+   is operator-supplied and non-orderable, includes no price, stock, delivery,
+   store or enquiry action, and does not create a profile or listing row. A live
+   food storefront additionally requires the seller-controlled active account,
+   complete listing fields, applicable FSSAI registration/licence evidence and
+   explicit seller approval.
 
 ### Enablement and rollback
 
@@ -1139,6 +1238,47 @@ Then disable `ENABLE_FEATURED_FARMER_PROFILES` or restore the previous Worker.
 For one disputed article, use the withdrawal RPC immediately. Preserve source,
 revision, publication, withdrawal, and correction evidence; repair schema or
 data with a reviewed forward migration rather than rewriting migration history.
+
+To restore the stronger professional-source gate without a rollback, run:
+
+```sql
+update public.ecosystem_release_controls
+set enabled = true
+where control_key = 'featured_farmer_professional_sources_required';
+```
+
+## 12B.3 Featured Farmer engagement
+
+`ENABLE_FEATURED_FARMER_ENGAGEMENT` controls Sandeep's public farm email,
+private question form, moderated Customer recommendations and approximate view
+aggregate independently of the Featured Farmer newsroom control. Its standalone
+migration is `20260825130000_featured_farmer_engagement.sql`; never apply local
+migration gaps or `--include-all` to release it.
+
+Before enabling, take protected schema, data and roles dumps. Build a temporary
+Supabase workspace containing only every migration already listed remotely plus
+`20260825130000`, link that workspace, and require `db push --dry-run` to name
+only the engagement migration. Apply it from the same isolated workspace and
+verify the remote ledger before deploying the Worker.
+
+Install `FEATURED_FARMER_ENGAGEMENT_HASH_SECRET` as an encrypted Worker secret
+with at least 32 random characters. Preserve the existing Supabase service-role,
+Turnstile and Postmark secrets. The recipient must remain in the server-owned
+registry; never accept a browser-provided `To` address. Release validation must
+not send a synthetic email to the farmer or create a fabricated recommendation.
+
+Verify both custom domains show the authorized email, exact-action Turnstile
+form, approved-only recommendation projection and Customer sign-in gate. In a
+real non-bot browser, confirm the count increments once, the response sets a
+Secure, HttpOnly, SameSite=Lax date-only cookie scoped to
+`/featured-farmers/`, and a reload in the same browser does not increment again.
+Do not add IP, fingerprint, user-agent or per-visitor persistence for stronger
+deduplication.
+
+For rollback, set `ENABLE_FEATURED_FARMER_ENGAGEMENT=false` or restore the
+recorded previous Worker. Retain the additive tables and moderation/delivery
+audit. If a Postmark result is unknown, disable questions and investigate the
+ledger without retrying the message.
 
 ## 12C. Purpose-limited managed operations fleet
 
@@ -1266,6 +1406,18 @@ only anonymous agriculture tags and refreshable source provenance. A named
 durable profile requires either documented subject consent or an independently
 reviewed, non-YouTube HTTPS source for the profile and every fact.
 
+The sole approved retained-YouTube-data exception is the dated, manually
+reviewed Raitu Nestham snapshot at
+`/admin/sourced-farmers/raitunestham`. It is a fixed server-bundle artifact,
+not an API batch or database import. The route must reuse the exact configured
+founder-owner gate before dynamically importing the data, remain dynamic,
+uncached, noindex and read-only, and keep all phone numbers labeled
+`Public/unverified · not outreach consent`. Do not add it to the sitemap,
+public navigation, client bundles, Farmer contacts, consent, member profiles,
+outreach, verification, or publication. Updating or adding another retained
+snapshot requires a new named review and product-owner approval; this exception
+does not loosen the transient/contact-redacted official discovery policy.
+
 Before a staging canary, prove all of the following with fictional fixtures:
 
 1. The founder UUID is enforced in the application and every mutation RPC;
@@ -1303,6 +1455,12 @@ purge expired/unreviewed API provenance, and verify no contact/outreach rows
 changed. Preserve reviewed consent/independent-evidence records unless an
 approved privacy/removal request requires deletion; correct schema defects
 forward rather than dropping the audit domain.
+
+The fixed Raitu Nestham snapshot has no database rollback. Remove traffic from
+the affected Worker by restoring the previous healthy Worker version, then
+verify anonymous denial and that no public route or client asset contains a
+reviewed name or phone sentinel. No farmer contact, provider, secret, feature
+control, schedule, or database row should be changed during that rollback.
 
 ## 12F. Supervised support and social-content pilot
 
@@ -1355,6 +1513,76 @@ Rollback pauses both roles, disables `support_social_pilot`, disables
 needed. Preserve private cases, proposals and review evidence under the approved
 retention policy. No connector exists, so rollback must not attempt to delete or
 retract a falsely recorded publication.
+
+## 12G. Human-governed AI company command center
+
+Apply `20260819120000_ai_company_control_plane.sql` only after every preceding
+migration. It adds the private `ai_company` control, three 180-day objectives,
+15 paused company roles, aggregate KPI snapshots, reviewable proposals and
+immutable proposal events. The Worker candidate must preserve all prior Durable
+Object migrations and add exactly one private `COMPANY_OPERATIONS_AGENT`
+namespace with the `ai-company-agent-v1` SQLite migration.
+
+Keep `ENABLE_MANAGED_OPERATIONS_AGENTS=false`, `ENABLE_AI_COMPANY=false`,
+`managed_operations_agents=false`, `ai_company=false`, and all 15 roles paused
+until a separately approved staging rehearsal. The company roles share one
+class but use distinct stable names, SQLite state, schedules, run leases and
+failure streaks. A named instance locks to its first configured role and must
+reject later role changes.
+
+Required staging proof:
+
+1. Rebuild an empty local/staging database and run every pgTAP suite, including
+   `ai_company_control_plane_test.sql`. Prove the four new tables have RLS and no
+   `anon` or ordinary `authenticated` table grants.
+2. Prove snapshot/proposal creation is service-only, review/list operations are
+   administrator-only, both private database controls are required, and a stale
+   revision or reused conflicting idempotency key fails closed.
+3. Inspect a snapshot. It may contain only the approved integer counters and a
+   capture timestamp—never names, handles, contacts, messages, support text,
+   prompts, raw events or participant rows. Treat monthly active users as the
+   disclosed trailing-30-day product-event proxy.
+4. Resume one role with fictional/aggregate staging data. One leased run must
+   create at most one `company-policy-v1` proposal and use zero Workers AI model
+   calls. A second role must use a different named Agent instance.
+5. Approve, reject and escalate proposals from `/admin/agents`. Each decision
+   must use the expected revision, store a bounded administrator reason, and
+   append a redacted immutable event. Approval means backlog acceptance only.
+6. Search and runtime-test for the absence of execution connectors. A reviewed
+   proposal must not send email/WhatsApp/direct messages, publish content,
+   deploy code, spend money, change accounts/listings/reports, moderate users,
+   grant verification, or invoke an external provider.
+7. Trigger three controlled failures for one fictional role and prove only that
+   role auto-pauses. Confirm the other 14 company roles and the six specialized
+   roles retain their own state.
+
+Activation order, after separately recorded authorization, is: migrate an
+isolated staging database; deploy a no-traffic Worker candidate; verify the
+private namespace, processor secret and exact origin; set
+`ENABLE_MANAGED_OPERATIONS_AGENTS=true`; set `ENABLE_AI_COMPANY=true`; enable
+the `managed_operations_agents` database control; enable `ai_company`; then
+resume exactly one low-frequency role. Review three healthy cycles before
+adding another role. Enabling the framework does not authorize autonomous
+execution or any real acquisition campaign.
+
+Rollback starts by setting `ai_company=false`, then pausing every company role,
+then setting `ENABLE_AI_COMPANY=false`. If the broader fleet is affected, also
+set `managed_operations_agents=false` and
+`ENABLE_MANAGED_OPERATIONS_AGENTS=false`, then restore the recorded healthy
+Worker version. Preserve run, snapshot, proposal and decision evidence; repair
+schema defects with a forward migration and never drop the audit tables.
+
+Production activation record (2026-08-19): the protected pre-activation backup
+completed before the isolated `20260819110000` bridge and `20260819120000`
+control-plane migrations were applied. Worker deployment
+`3f0fff5b-4aa2-42ae-88e9-063aefbf7ad4` serves version
+`1b42b9b8-373f-4322-a522-84b683abdfa2` at 100 percent with both application and
+database gates enabled. All 15 schedules are enabled. The bounded validation
+run produced 15 succeeded runs and 15 pending proposals with zero model calls
+and zero external actions. Apex and `www` `/api/health` returned 200 and an
+unsigned `/api/managed-agents/run` POST returned 403. The exact rollback target
+is Worker version `160f3eba-2a44-4959-a4ad-efd830028d1e`. Preserve the
+production run/proposal evidence when rolling back.
 
 ## 13. Production deploy and Worker version recording
 

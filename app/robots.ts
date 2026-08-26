@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/env";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export default function robots(): MetadataRoute.Robots {
   const origin = getSiteUrl();
@@ -14,6 +15,8 @@ export default function robots(): MetadataRoute.Robots {
         "/store/",
         "/companies",
         "/join",
+        "/partner-interest",
+        ...(isFeatureEnabled("ENABLE_FARM_VISITS") ? ["/farm-visits"] : []),
       ],
       disallow: [
         "/admin/",

@@ -10,6 +10,7 @@ import type { OutreachGrowthAgent } from "./agents";
 import {
   managedAgentCommandSchema,
   managedAgentDefinition,
+  isCompanyAgentRole,
   type ManagedAgentRole,
   type ManagedAgentRunResult,
 } from "./contracts";
@@ -38,6 +39,9 @@ function safeDatabaseMessage(details: unknown) {
 }
 
 function rolePrerequisitesEnabled(role: ManagedAgentRole) {
+  if (isCompanyAgentRole(role)) {
+    return isFeatureEnabled("ENABLE_AI_COMPANY");
+  }
   if (role === "outreach_growth") {
     return isFeatureEnabled("ENABLE_OUTREACH_AGENT");
   }
@@ -57,7 +61,9 @@ function rolePrerequisitesEnabled(role: ManagedAgentRole) {
 async function managedAgentStub(role: ManagedAgentRole) {
   const bindings = await getCloudflareBindings();
   if (!bindings) return null;
-  const namespace = role === "outreach_growth"
+  const namespace = isCompanyAgentRole(role)
+    ? bindings.COMPANY_OPERATIONS_AGENT
+    : role === "outreach_growth"
     ? bindings.OUTREACH_GROWTH_AGENT
     : role === "profile_drafting"
       ? bindings.PROFILE_DRAFTING_AGENT
@@ -70,7 +76,9 @@ async function managedAgentStub(role: ManagedAgentRole) {
             : bindings.OPERATIONS_SUPERVISOR_AGENT;
   if (!namespace) return null;
   const { getAgentByName } = await import("agents");
-  const instanceName = `farmerbook-${role.replaceAll("_", "-")}`;
+  const instanceName = isCompanyAgentRole(role)
+    ? `farmerbook-company-${role.replaceAll("_", "-")}`
+    : `farmerbook-${role.replaceAll("_", "-")}`;
   return getAgentByName(
     namespace as unknown as DurableObjectNamespace<OutreachGrowthAgent>,
     instanceName,

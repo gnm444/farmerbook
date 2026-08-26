@@ -26,7 +26,10 @@ describe("platform metadata and health routes", () => {
   it("keeps private and demo routes out of indexing", () => {
     const route = robots();
     const rules = Array.isArray(route.rules) ? route.rules : [route.rules];
+    const allowed = rules.flatMap((rule) => rule.allow ?? []);
     const disallowed = rules.flatMap((rule) => rule.disallow ?? []);
+    expect(allowed).toContain("/join");
+    expect(allowed).toContain("/partner-interest");
     expect(disallowed).toContain("/admin/");
     expect(disallowed).toContain("/messages/");
     expect(disallowed).toContain("/marketplace/demo");
@@ -41,6 +44,7 @@ describe("platform metadata and health routes", () => {
     expect(urls).toContain("/blog/calculated-transition-to-natural-farming");
     expect(urls).toContain("/license");
     expect(urls).toContain("/eco-products");
+    expect(urls).not.toContain("/farm-visits");
     expect(urls).toContain("/featured-farmers/narayana-reddy");
     expect(urls).not.toContain("/marketplace/demo");
     expect(manifest()).toMatchObject({
@@ -50,12 +54,42 @@ describe("platform metadata and health routes", () => {
     });
   });
 
+  it("publishes Farm Visits metadata only when its release flag is enabled", async () => {
+    vi.stubEnv("ENABLE_FARM_VISITS", "true");
+    const enabledUrls = (await sitemap()).map((entry) => new URL(entry.url).pathname);
+    expect(enabledUrls).toContain("/farm-visits");
+    expect(robots().rules).toMatchObject({ allow: expect.arrayContaining(["/farm-visits"]) });
+
+    vi.stubEnv("ENABLE_FARM_VISITS", "false");
+    const disabledUrls = (await sitemap()).map((entry) => new URL(entry.url).pathname);
+    expect(disabledUrls).not.toContain("/farm-visits");
+  });
+
+  it("publishes both consent intake routes only when outreach is enabled", async () => {
+    vi.stubEnv("ENABLE_OUTREACH_AGENT", "true");
+    const enabledUrls = (await sitemap()).map(
+      (entry) => new URL(entry.url).pathname,
+    );
+    expect(enabledUrls).toContain("/join");
+    expect(enabledUrls).toContain("/partner-interest");
+
+    vi.stubEnv("ENABLE_OUTREACH_AGENT", "false");
+    const disabledUrls = (await sitemap()).map(
+      (entry) => new URL(entry.url).pathname,
+    );
+    expect(disabledUrls).not.toContain("/join");
+    expect(disabledUrls).not.toContain("/partner-interest");
+  });
+
   it("keeps search metadata routes public", () => {
     expect(isPublicPath("/robots.txt")).toBe(true);
     expect(isPublicPath("/sitemap.xml")).toBe(true);
     expect(isPublicPath("/manifest.webmanifest")).toBe(true);
     expect(isPublicPath("/license")).toBe(true);
     expect(isPublicPath("/eco-products")).toBe(true);
+    expect(isPublicPath("/join")).toBe(true);
+    expect(isPublicPath("/partner-interest")).toBe(true);
+    expect(isPublicPath("/farm-visits")).toBe(true);
   });
 
   it("matches public subtrees without exposing prefix-confusable routes", () => {
@@ -63,6 +97,7 @@ describe("platform metadata and health routes", () => {
     expect(isPublicPath("/api/outreach-admin")).toBe(false);
     expect(isPublicPath("/profile/farmer-one")).toBe(true);
     expect(isPublicPath("/profile-export")).toBe(false);
+    expect(isPublicPath("/partner-interest-admin")).toBe(false);
   });
 
   it("bypasses browser sessions only for the exact bearer-protected processor", async () => {

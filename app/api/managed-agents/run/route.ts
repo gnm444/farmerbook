@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { constantTimeEqual } from "@/features/outreach/crypto";
-import { managedAgentRunRequestSchema } from "@/features/managed-agents/contracts";
+import {
+  isCompanyAgentRole,
+  managedAgentRunRequestSchema,
+  type ManagedAgentRole,
+} from "@/features/managed-agents/contracts";
 import { processManagedAgentRun } from "@/features/managed-agents/processor";
 import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
-function roleFeaturesEnabled(role: string) {
+function roleFeaturesEnabled(role: ManagedAgentRole) {
+  if (isCompanyAgentRole(role)) {
+    return isFeatureEnabled("ENABLE_AI_COMPANY");
+  }
   if (role === "outreach_growth") {
     return isFeatureEnabled("ENABLE_OUTREACH_AGENT");
   }

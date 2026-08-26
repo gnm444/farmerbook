@@ -7,6 +7,7 @@ do $$
 declare
   table_name_value text;
   definition text;
+  professional_sources_required boolean;
 begin
   foreach table_name_value in array array[
     'featured_farmer_research',
@@ -80,12 +81,22 @@ begin
     'public.refresh_featured_farmer_readiness(uuid)'::regprocedure
   )) into definition;
   if definition not like '%count(distinct source.publisher_host)%'
-    or definition not like '%authoritative_sources < 1%'
+    or definition not like '%require_professional_sources and professional_domains < 2%'
+    or definition not like '%require_professional_sources and authoritative_sources < 1%'
     or definition not like '%approved_claims < 2%'
+    or definition not like '%uncited_claims > 0%'
     or definition not like '%social_links < 1%'
+    or definition not like '%jsonb_array_length(draft.story_sections) < 3%'
     or definition not like '%media_unapproved > 0%'
   then
     raise exception 'Featured Farmer publication readiness is incomplete';
+  end if;
+
+  select enabled into professional_sources_required
+  from public.ecosystem_release_controls
+  where control_key = 'featured_farmer_professional_sources_required';
+  if not found or professional_sources_required is distinct from false then
+    raise exception 'Featured Farmer professional-source control must default false';
   end if;
 end;
 $$;

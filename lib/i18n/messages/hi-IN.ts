@@ -180,6 +180,7 @@ const coreOffersMessages = {
 
 const messages = {
   ecoSuppliers: englishMessages.ecoSuppliers,
+  farmVisits: englishMessages.farmVisits,
   offers: coreOffersMessages,
   profilePreview: {
     ...englishMessages.profilePreview,

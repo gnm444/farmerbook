@@ -2,6 +2,11 @@ import { requireAdmin } from "@/features/auth/require-admin";
 import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { createClient } from "@/lib/supabase/server";
+import {
+  evaluateOutreachAutonomyReadiness,
+  type OutreachAutonomyReadiness,
+} from "./autonomous-readiness";
+import { createConfiguredOutreachProvider } from "./providers";
 import type {
   OutreachDashboardSummary,
   OutreachFailure,
@@ -46,6 +51,10 @@ const emptyHealth: OutreachRuntimeHealth = {
   failedCount: 0,
   lastDeliveredAt: null,
   lastProviderEventAt: null,
+  dailyDeliveryLimit: 25,
+  dailyAuthorizedCount: 0,
+  lastAutomaticStopCode: null,
+  lastAutomaticStopAt: null,
 };
 
 export async function loadOutreachDashboard(): Promise<{
@@ -53,13 +62,18 @@ export async function loadOutreachDashboard(): Promise<{
   summary: OutreachDashboardSummary;
   health: OutreachRuntimeHealth;
   failures: OutreachFailure[];
+  readiness: OutreachAutonomyReadiness;
 }> {
   await requireAdmin();
+  const readiness = evaluateOutreachAutonomyReadiness({
+    providerConfigured: createConfiguredOutreachProvider().configured,
+    processor: "managed_agent",
+  });
   if (!isFeatureEnabled("ENABLE_OUTREACH_AGENT") || !isSupabaseConfigured()) {
-    return { prospects: [], summary: emptySummary, health: emptyHealth, failures: [] };
+    return { prospects: [], summary: emptySummary, health: emptyHealth, failures: [], readiness };
   }
   if (isDemoMode()) {
-    return { prospects: [], summary: emptySummary, health: emptyHealth, failures: [] };
+    return { prospects: [], summary: emptySummary, health: emptyHealth, failures: [], readiness };
   }
   const supabase = await createClient();
   const [prospectsResult, summaryResult, healthResult, failuresResult] = await Promise.all([
@@ -118,6 +132,10 @@ export async function loadOutreachDashboard(): Promise<{
         failed_count?: unknown;
         last_delivered_at?: unknown;
         last_provider_event_at?: unknown;
+        daily_delivery_limit?: unknown;
+        daily_authorized_count?: unknown;
+        last_automatic_stop_code?: unknown;
+        last_automatic_stop_at?: unknown;
       }
     | null;
   const health: OutreachRuntimeHealth = healthRow
@@ -133,6 +151,16 @@ export async function loadOutreachDashboard(): Promise<{
         lastProviderEventAt:
           typeof healthRow.last_provider_event_at === "string"
             ? healthRow.last_provider_event_at
+            : null,
+        dailyDeliveryLimit: Number(healthRow.daily_delivery_limit) || 25,
+        dailyAuthorizedCount: Number(healthRow.daily_authorized_count) || 0,
+        lastAutomaticStopCode:
+          typeof healthRow.last_automatic_stop_code === "string"
+            ? healthRow.last_automatic_stop_code
+            : null,
+        lastAutomaticStopAt:
+          typeof healthRow.last_automatic_stop_at === "string"
+            ? healthRow.last_automatic_stop_at
             : null,
       }
     : emptyHealth;
@@ -155,5 +183,5 @@ export async function loadOutreachDashboard(): Promise<{
     createdAt: row.created_at,
     expiresAt: row.expires_at,
   }));
-  return { prospects, summary, health, failures };
+  return { prospects, summary, health, failures, readiness };
 }

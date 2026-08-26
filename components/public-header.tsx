@@ -10,6 +10,7 @@ export async function PublicHeader() {
   const incSourcingEnabled = companiesEnabled && isFeatureEnabled("ENABLE_INC_SOURCING");
   const outreachEnabled = isFeatureEnabled("ENABLE_OUTREACH_AGENT");
   const extendedLocalesEnabled = isFeatureEnabled("ENABLE_EXTENDED_LOCALES");
+  const farmVisitsEnabled = isFeatureEnabled("ENABLE_FARM_VISITS");
   return (
     <header className="public-header">
       <nav className="container public-nav" aria-label={t("publicNavigation")}>
@@ -20,6 +21,7 @@ export async function PublicHeader() {
           <Link href="/marketplace">{t("marketplace")}</Link>
           <Link href="/featured-farmers">{t("featuredFarmers")}</Link>
           <Link href="/blog">{t("blog")}</Link>
+          {farmVisitsEnabled ? <Link href="/farm-visits">{t("farmVisits")}</Link> : null}
           {incSourcingEnabled ? <Link href="/sourcing">{t("sourcingNeeds")}</Link> : null}
           {companiesEnabled ? <Link href="/companies">{t("companiesOffers")}</Link> : null}
           <Link href="/#segments">{t("whoFor")}</Link>

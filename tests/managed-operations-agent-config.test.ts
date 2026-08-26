@@ -8,7 +8,7 @@ describe("Cloudflare managed operations fleet configuration", () => {
   const runtime = readFileSync("features/managed-agents/runtime.ts", "utf8");
   const processorRoute = readFileSync("app/api/managed-agents/run/route.ts", "utf8");
 
-  it("adds six named SQLite classes through additive migrations", () => {
+  it("preserves six specialized classes and adds one shared company class", () => {
     for (const name of [
       "OutreachGrowthAgent",
       "ProfileDraftingAgent",
@@ -16,6 +16,8 @@ describe("Cloudflare managed operations fleet configuration", () => {
       "CustomerSupportAgent",
       "SocialContentAgent",
       "OperationsSupervisorAgent",
+      "CompanyOperationsAgent",
+      "LiveActionCoordinatorAgent",
     ]) {
       expect(vite).toContain(`class_name: "${name}"`);
       expect(vite).toContain(`"${name}"`);
@@ -24,6 +26,13 @@ describe("Cloudflare managed operations fleet configuration", () => {
     expect(vite).toContain('tag: "farmer-profile-agent-v1"');
     expect(vite).toContain('tag: "managed-operations-agents-v1"');
     expect(vite).toContain('tag: "support-social-agents-v1"');
+    expect(vite).toContain('tag: "ai-company-agent-v1"');
+    expect(vite).toContain('tag: "live-action-coordinator-agent-v1"');
+    expect(vite).toContain('binding: "LIVE_ACTION_EXECUTION_WORKFLOW"');
+    expect(vite).toContain('class_name: "LiveActionExecutionWorkflow"');
+    expect(environment).toContain("ENABLE_AI_COMPANY=false");
+    expect(environment).toContain("ENABLE_LIVE_AGENT_EXECUTION=false");
+    expect(vite).toContain("ENABLE_LIVE_AGENT_EXECUTION");
   });
 
   it("keeps the Agent fleet private and the processor bearer server-side", () => {

@@ -10,6 +10,7 @@ import {
   blogUi,
   translationNotice,
 } from "@/features/blog/presentation";
+import { blogPublicationFingerprint } from "@/features/blog/autonomous-publication-policy";
 import { loadLocalizedBlogPublication } from "@/features/blog/queries";
 import { getSiteUrl } from "@/lib/env";
 import { formatDate, getServerI18n } from "@/lib/i18n";
@@ -36,11 +37,18 @@ export async function generateMetadata({
       url: `/blog/${slug}`,
       publishedTime: publication.publishedAt,
       modifiedTime: publication.updatedAt,
+      images: publication.heroImage ? [{
+        url: publication.heroImage.src,
+        width: publication.heroImage.width,
+        height: publication.heroImage.height,
+        alt: publication.heroImage.alt,
+      }] : undefined,
     },
     twitter: {
-      card: "summary",
+      card: publication.heroImage ? "summary_large_image" : "summary",
       title: publication.content.title,
       description: publication.content.excerpt,
+      images: publication.heroImage ? [publication.heroImage.src] : undefined,
     },
   };
 }
@@ -55,6 +63,7 @@ export default async function BlogStoryPage({
   if (!publication) notFound();
   const ui = blogUi(locale);
   const canonicalUrl = new URL(`/blog/${slug}`, getSiteUrl()).toString();
+  const publicationSha256 = await blogPublicationFingerprint(publication);
   const publisherId = `${getSiteUrl()}#organization`;
   const articleText = [
     publication.content.dek,
@@ -81,6 +90,16 @@ export default async function BlogStoryPage({
         wordCount: articleText.trim().split(/\s+/).length,
         author: { "@id": publisherId },
         publisher: { "@id": publisherId },
+        image: publication.heroImage ? {
+          "@type": "ImageObject",
+          contentUrl: new URL(publication.heroImage.src, getSiteUrl()).toString(),
+          width: publication.heroImage.width,
+          height: publication.heroImage.height,
+          caption: publication.heroImage.caption,
+          creditText: publication.heroImage.provenance === "ai_generated"
+            ? "AI-generated editorial illustration created for FarmerBook"
+            : "Rights-approved original FarmerBook media",
+        } : undefined,
         citation: publication.sources.map((source) => source.url),
         publishingPrinciples: new URL("/community-rules", getSiteUrl()).toString(),
       },
@@ -105,12 +124,30 @@ export default async function BlogStoryPage({
     <>
       <PublicHeader />
       <main className="blog-story-page">
-        <article className="container blog-story">
+        <article
+          className="container blog-story"
+          data-publication-sha256={publicationSha256}
+        >
           <Link className="blog-story__back" href="/blog"><ArrowLeft size={16} aria-hidden="true" /> {ui.backToBlog}</Link>
           <header className="blog-story__hero">
             <p className="eyebrow">{blogCategoryLabel(publication.category, locale)}</p>
             <h1>{publication.content.title}</h1>
             <p className="blog-story__dek">{publication.content.dek}</p>
+            {publication.heroImage ? (
+              <figure className="blog-story__hero-image">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={publication.heroImage.src}
+                  alt={publication.heroImage.alt}
+                  width={publication.heroImage.width}
+                  height={publication.heroImage.height}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                />
+                <figcaption>{publication.heroImage.caption}</figcaption>
+              </figure>
+            ) : null}
             <div className="blog-story__meta">
               <span>{publication.author}</span>
               <span>{formatDate(publication.publishedAt, locale)}</span>

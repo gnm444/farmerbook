@@ -17,9 +17,14 @@ export default async function FeaturedFarmerNewsroomPage() {
         title="Featured Farmer newsroom"
         description="Research, fact-check, write, and publish beautiful editorial profiles of farmers whose significant work is supported by public evidence. Every story is cited and carries at least one confirmed farmer-owned social account."
         action={
-          <Link className="button button--secondary" href="/featured-farmers">
-            View public collection
-          </Link>
+          <div className="button-row">
+            <Link className="button button--secondary" href="/admin/featured-farmer-engagement">
+              Review recommendations
+            </Link>
+            <Link className="button button--secondary" href="/featured-farmers">
+              View public collection
+            </Link>
+          </div>
         }
       />
       <div className="featured-editorial-notice">

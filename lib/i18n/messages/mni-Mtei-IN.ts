@@ -6,6 +6,7 @@ const messages = {
   offers: englishMessages.offers,
   profilePreview: englishMessages.profilePreview,
   incSourcing: englishMessages.incSourcing,
+  farmVisits: englishMessages.farmVisits,
   navigation: englishMessages.navigation,
   home: englishMessages.home,
   publicProfile: englishMessages.publicProfile,

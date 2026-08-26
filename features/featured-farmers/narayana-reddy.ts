@@ -130,6 +130,24 @@ export const narayanaReddyPublication = {
     ],
     editorialDisclosure:
       "FarmerBook historical editorial profile; not a member, identity-verification or endorsement claim.",
+    personMetadata: {
+      alternateNames: ["L Narayana Reddy", "Varthur Narayana Reddy"],
+      birthDate: "1935",
+      deathDate: "2019-01-14",
+      jobTitles: [
+        "Organic farmer",
+        "Farmer educator",
+        "Agricultural writer",
+      ],
+      homeLocation: "Bengaluru Rural, Karnataka, India",
+      knowsAbout: [
+        "Organic farming",
+        "Natural farming",
+        "Farm biodiversity",
+        "Soil health",
+        "Farmer education",
+      ],
+    },
     media: null,
     sourceHostedPreview: {
       assetUrl:

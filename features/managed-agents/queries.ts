@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { requireAdmin } from "@/features/auth/require-admin";
 import { getCloudflareBindings } from "@/lib/cloudflare-bindings";
 import { isDemoMode, isSupabaseConfigured } from "@/lib/env";
@@ -5,11 +6,14 @@ import { isFeatureEnabled } from "@/lib/feature-flags";
 import { createClient } from "@/lib/supabase/server";
 import {
   MANAGED_AGENT_DEFINITIONS,
+  isCompanyAgentRole,
   type ManagedAgentRole,
 } from "./contracts";
 
 export type ManagedAgentDashboardItem = {
   role: ManagedAgentRole;
+  division: "company" | "specialized_operations";
+  commandAvailable: boolean;
   displayName: string;
   description: string;
   boundary: string;
@@ -43,6 +47,8 @@ export type ManagedAgentRecentRun = {
 function defaults(): ManagedAgentDashboardItem[] {
   return MANAGED_AGENT_DEFINITIONS.map((definition) => ({
     role: definition.role,
+    division: definition.division,
+    commandAvailable: false,
     displayName: definition.displayName,
     description: definition.description,
     boundary: definition.boundary,
@@ -60,6 +66,11 @@ function defaults(): ManagedAgentDashboardItem[] {
     failuresLast24Hours: 0,
   }));
 }
+
+const companyControlStatusSchema = z.object({
+  managed_operations_enabled: z.boolean(),
+  ai_company_enabled: z.boolean(),
+});
 
 export async function loadManagedAgentDashboard(): Promise<{
   agents: ManagedAgentDashboardItem[];
@@ -92,12 +103,28 @@ export async function loadManagedAgentDashboard(): Promise<{
   const definitions = new Map(
     MANAGED_AGENT_DEFINITIONS.map((definition) => [definition.role, definition]),
   );
+  const companyApplicationAvailable =
+    isFeatureEnabled("ENABLE_AI_COMPANY") &&
+    Boolean(bindings.COMPANY_OPERATIONS_AGENT);
+  let companyCommandsAvailable = false;
+  if (companyApplicationAvailable) {
+    const controlResult = await supabase.rpc("ai_company_control_status");
+    const control = companyControlStatusSchema.safeParse(
+      Array.isArray(controlResult.data) ? controlResult.data[0] : null,
+    );
+    companyCommandsAvailable =
+      !controlResult.error && control.success &&
+      control.data.managed_operations_enabled &&
+      control.data.ai_company_enabled;
+  }
   const agents = (dashboard.data ?? []).map((row: Record<string, unknown>) => {
     const role = String(row.role) as ManagedAgentRole;
     const definition = definitions.get(role);
     if (!definition) throw new Error("Unknown managed agent role.");
     return {
       role,
+      division: definition.division,
+      commandAvailable: !isCompanyAgentRole(role) || companyCommandsAvailable,
       displayName: String(row.display_name),
       description: definition.description,
       boundary: definition.boundary,

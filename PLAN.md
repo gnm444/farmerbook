@@ -51,6 +51,7 @@ FarmerBook member or verified participant.
 - [x] (2026-08-12) Researched the product owner's correction from personally-known intake to sourced Featured Farmer editorial stories; updated `research.md`, `docs/REQUIREMENTS.md`, this plan, the implementation log and structured-development state without changing application or production code.
 - [x] (2026-08-12) Product owner explicitly approved the Featured Farmer editorial profiles correction addendum and authorized implementation.
 - [x] (2026-08-12) Implemented and locally verified the approved Featured Farmer editorial plan; stopped before any provider account, real-person research, publication, production mutation or deployment.
+- [x] (2026-08-25 07:04 IST) Corrected Sandeep Dasari's published profile to Gir cows only, added an attributed Avani Van farm background and clear source-hosted portrait, replaced plain video coverage links with three thumbnail cards, and deployed Worker `bd06a4c2-2692-4a32-b60c-4ad2ff28aceb` at 100 percent.
 - [ ] Continue product-owner intake one focused question at a time and update `docs/REQUIREMENTS.md`, this plan, `implementation-log.md`, and `.structured-dev-state` at every stopping point.
 - [ ] Finish the LinkedIn developer app and Supabase provider after Chrome file-upload permission is enabled for the required app logo.
 - [ ] Product owner chooses the pilot region, crop focus, local language, pilot invitation method, and moderator.
@@ -206,18 +207,30 @@ The remaining work is operational rather than hidden application scope: connect 
 
 The 2026-08-09 agriculture-ecosystem milestone is currently research and planning only. Three subagents produced independent read-only audits, the local baseline passes, and the detailed implementation/rollback program is recorded below. No company, taxonomy, resumable-onboarding, or 23-locale product code should be described as complete until the addendum is explicitly approved and its behavioral gates pass.
 
-The 2026-08-12 Featured Farmer correction is implemented locally behind
-default-off application and database controls. The private newsroom supports
+The 2026-08-12 Featured Farmer correction now includes two live curated
+editorials: the L. Narayana Reddy historical pilot and the product-owner-approved
+Sandeep Dasari / Avani Van Farms story. The private newsroom supports
 human-reviewed Web/YouTube sources, claim-level citations, confirmed owned
 social accounts, structured editorial drafts, media-rights review, fact checks,
 immutable revisions and withdrawal. The public collection and articles use the
-Deccan editorial design, honest empty/fallback states, localized shells,
-Article-about-Person metadata and published-only sitemap entries. A clean local
-database rebuild and all database, unit, browser, lint, type and build gates
-pass. No provider account or key, real-person research, real publication,
-production migration/control, deployment or other production state was changed.
-The previous Known Farmer implementation remains default-disabled and its admin
-route redirects to the replacement newsroom.
+Deccan editorial design, localized shells, Article-about-Person metadata and
+published-only sitemap entries. Sandeep's story discloses its YouTube-only source
+basis and non-certified status, and presents nine reported products without
+prices, stock, ordering, seller-membership or marketplace semantics. Worker
+Worker `b17c8986-5467-47f2-84f7-603283bfb16c` carried the initial publication;
+no auth user, member profile, store, listing or enquiry target was created.
+Production lacks the optional policy migration's prerequisite newsroom schema,
+so that migration was not applied and the independent curated story shipped
+without it. The previous Known Farmer implementation remains default-disabled
+and its admin route redirects to the replacement newsroom.
+
+The 2026-08-25 factual and visual correction removes every Ongole reference and
+states that Avani Van Farms has Gir cows only. Revision 2 uses source-hosted,
+visibly credited Avanivan Farms YouTube images for a clear Sandeep portrait and
+farm background, plus three clickable video-thumbnail cards. Worker
+`bd06a4c2-2692-4a32-b60c-4ad2ff28aceb` is live through deployment
+`28f0e572-8060-485b-9ccc-aaf07092b385`; rollback for this correction is
+`b17c8986-5467-47f2-84f7-603283bfb16c`.
 
 At the end of each milestone, add a short entry here covering what is demonstrably working, remaining gaps, measured effort, and any scope decision that should affect later milestones.
 
@@ -7064,3 +7077,2458 @@ allocations, both routes, all existing flags, 12 secrets and the complete
 migration chain. Five live conversations returned `source: workers_ai` with no
 diagnostic, confirming reserve-before-inference is operational. Roll back to
 `7a5dad0d-425c-4868-a59c-e3ab984127e6` if the initializer or ledger regresses.
+## 2026-08-19 addendum: build the AI company command center
+
+This addendum implements the product owner's approved first fleet of 15 AI
+company roles while retaining FarmerBook's existing purpose-limited delivery
+agents. It is part of this living ExecPlan and must be updated as implementation
+progresses.
+
+### Purpose / Big Picture
+
+After this work, an authenticated FarmerBook administrator can open
+`/admin/agents`, see three 180-day company objectives, inspect a privacy-safe
+growth and marketplace snapshot, operate 15 independently scheduled company
+roles, and review the bounded proposals they create. The roles help manage the
+path toward 100,000 registered users, 40,000 activated users, and 25,000
+monthly active users. They cannot send, publish, deploy, spend money, alter a
+user, grant verification, or execute a proposal.
+
+The observable vertical slice is: enable both local release gates in an
+isolated environment, resume one company role, run it, observe one aggregate
+KPI snapshot and one role-specific pending proposal, then approve or reject the
+proposal from the command center. Repeating the same database operation is
+idempotent, and three unsuccessful scheduled runs still pause only the affected
+role.
+
+### Progress
+
+- [x] (2026-08-19) Receive product-owner approval for the AI company roles and instruction to implement. [DONE]
+- [x] (2026-08-19) Deeply research the existing managed-Agent runtime, processor, database ledger, approval queue, authorization, metrics, budget, UI and tests. [DONE]
+- [x] (2026-08-19) Record the architecture and safety findings in `research.md`. [DONE]
+- [x] (2026-08-19) Write this detailed technical plan, test strategy, rollback boundary and todo list. [DONE]
+- [x] (2026-08-19) Add the default-off feature flag, release control and one shared company-Agent Durable Object class. [DONE]
+- [x] (2026-08-19) Add the exact 15 role definitions and integrate their isolated named instances with existing scheduling and commands. [DONE]
+- [x] (2026-08-19) Add private company objectives, KPI snapshots, proposals, immutable events and narrow RPCs in one forward migration. [DONE]
+- [x] (2026-08-19) Add the deterministic `company-policy-v1` proposal builder and service-role processor dispatch. [DONE]
+- [x] (2026-08-19) Add the administrator company command center, proposal review action and grouped fleet display. [DONE]
+- [x] (2026-08-19) Add focused contract, policy, processor, route, migration, RLS/configuration, query and UI tests. [DONE]
+- [x] (2026-08-19) Update the runbook, README, requirements register, implementation log and structured-development state. [DONE]
+- [x] (2026-08-19) Run focused tests and TypeScript after each significant milestone. [DONE]
+- [x] (2026-08-19) Run the complete lint, typecheck, Vitest, production build, database, Wrangler and diff gates. [DONE]
+- [x] (2026-08-19) Inspect the final diff for PII retention, model-budget bypass, public Agent routing, unsafe execution and unrelated changes. [DONE]
+- [x] (2026-08-19) Record outcomes while leaving production migration, deployment and activation pending separate authorization. [DONE]
+- [x] (2026-08-19) Receive explicit production activation and testing approval. [DONE]
+- [x] (2026-08-19) Back up production and apply only the bridge and control-plane migrations. [DONE]
+- [x] (2026-08-19) Deploy and activate both application/database gates and all 15 schedules. [DONE]
+- [x] (2026-08-19) Run each role once, export conversations, capture screenshots and revoke temporary test sessions. [DONE]
+
+### Surprises & Discoveries
+
+- Observation: the approved USD 10 inference ceiling is fully allocated, so
+  adding model calls for 15 roles would violate the existing budget design.
+  Evidence: `features/ai-budget/contracts.ts` assigns USD 5, USD 2, USD 3 and
+  three zero-dollar workstreams, leaving no reserve.
+
+- Observation: one Cloudflare Agent class can safely represent 15 logical
+  workers because each named Durable Object instance has independent SQLite
+  state and schedules.
+  Evidence: the existing runtime addresses agents by stable role-derived names
+  and Cloudflare maintains state per named instance.
+
+- Observation: the existing product-event model supports a trailing-30-day
+  activity proxy but not true session-level MAU.
+  Evidence: `product_events` records user-linked business events but no login or
+  heartbeat event. The Data role must keep this limitation visible.
+
+- Observation: Docker Desktop was unavailable, but the running local Podman VM
+  could host a database-only Supabase stack when non-database services were
+  excluded.
+  Evidence: the pinned CLI rebuilt all 30 migrations and ran all eight pgTAP
+  suites through the isolated Podman socket; the stack was stopped afterward.
+
+### Decision Log
+
+- Decision: implement 15 company roles as isolated named instances of one
+  `CompanyOperationsAgent` class rather than 15 new classes.
+  Rationale: this preserves independent state/schedules while minimizing
+  bindings and forward-only Durable Object migrations.
+  Date/Author: 2026-08-19 / Codex, implementing the approved product design.
+
+- Decision: keep all company-role reasoning deterministic in
+  `company-policy-v1` and allocate no new model budget.
+  Rationale: the entire approved fleet ceiling is already allocated; aggregate
+  metrics plus versioned policies are safer, cheaper and exactly testable.
+  Date/Author: 2026-08-19 / Codex.
+
+- Decision: approved company proposals remain backlog decisions and have no
+  execution connector.
+  Rationale: the product owner authorized implementation, not autonomous
+  deployment, spending, outreach, publication, moderation, or account changes.
+  Date/Author: 2026-08-19 / Codex.
+
+- Decision: reuse the existing private managed-agent route, processor bearer,
+  run lease, failure streak and administrator command path.
+  Rationale: a second ingress or scheduler identity would duplicate security
+  surface and weaken the established fail-closed system.
+  Date/Author: 2026-08-19 / Codex.
+
+### Outcomes & Retrospective
+
+The implementation and approved production activation are complete. FarmerBook now has 15 exact company
+roles as role-locked named instances of one private `CompanyOperationsAgent`,
+three 180-day objectives, aggregate-only KPI snapshots, deterministic
+`company-policy-v1` proposals, immutable decision evidence and an administrator
+command center. Both application flags and both database controls are required
+before schedule controls become available. Review changes only the operating
+backlog; there is no execution connector and the company roles make no model
+call.
+
+Final local evidence is green: a clean Supabase rebuild applied all 30
+migrations; all eight executable pgTAP/RLS suites passed; ESLint and TypeScript
+passed; 152 Vitest files/687 tests passed; the Vinext production build and
+strict Wrangler dry run passed; the generated artifact contains the private
+`COMPANY_OPERATIONS_AGENT` namespace and final `ai-company-agent-v1` migration;
+raw public-Agent-router and direct-inference searches returned no match; and
+`git diff --check` passed. The production bridge and control-plane migrations
+were then applied after a protected backup. Worker version
+`1b42b9b8-373f-4322-a522-84b683abdfa2` is live at 100 percent; both application
+and database gates and all 15 schedules are enabled. Fifteen bounded manual
+runs succeeded and created 15 pending proposals with zero model calls and zero
+external actions. No message, publication, provider call, spend, user mutation
+or proposal approval occurred. Rollback target:
+`160f3eba-2a44-4959-a4ad-efd830028d1e`.
+
+### Context and Orientation
+
+`features/managed-agents/contracts.ts` defines the role names, validation,
+defaults and public boundaries displayed by the administrator UI.
+`features/managed-agents/runtime.ts` provides the current fixed-role recurring
+Agent lifecycle. A new `features/company-agents/agent.ts` will provide the same
+lifecycle for a role locked at first configuration while sharing one Durable
+Object class across role-specific names.
+
+`features/managed-agents/actions.ts` converts administrator commands into both
+database audit evidence and Durable Object schedule changes.
+`app/api/managed-agents/run/route.ts` is the bearer-protected scheduled ingress,
+and `features/managed-agents/processor.ts` owns the service-role run lease and
+dispatch. The new company processor belongs under
+`features/company-agents/processor.ts` and is called only from that dispatch.
+
+Supabase is the system of record. A new forward migration named
+`supabase/migrations/20260819120000_ai_company_control_plane.sql` will add the
+release gate, roles, objectives, aggregate snapshots, proposals, immutable
+events and narrow functions. All new tables will have Row Level Security (RLS),
+meaning PostgreSQL rejects browser access unless an explicit policy permits it.
+No browser table policy will be added; administrator and service operations use
+audited security-definer functions with fixed search paths.
+
+`app/(product)/admin/agents/page.tsx` is the user-visible command center.
+`features/company-agents/queries.ts`, `actions.ts`, and
+`company-command-center.tsx` will load and review company proposals without
+granting the browser direct access to the private tables.
+
+### Plan of Work
+
+First, extend `lib/feature-flags.ts`, `.env.example`, and `vite.config.ts` with
+`ENABLE_AI_COMPANY=false`. Add one `COMPANY_OPERATIONS_AGENT` namespace and one
+forward-only `ai-company-agent-v1` SQLite migration. Export the class from
+`worker/index.ts` and type the binding in `lib/cloudflare-bindings.ts`.
+
+Second, extend `features/managed-agents/contracts.ts` with the exact 15 roles
+and a `division` field. Add `COMPANY_AGENT_ROLES` and a type guard so route,
+actions and processor logic cannot rely on fragile string-prefix checks. The
+shared company class will validate this shape:
+
+    type CompanyAgentState = Omit<ManagedAgentState, "role"> & {
+      role: CompanyAgentRole | null;
+    };
+
+Its first successful `configure` locks the role. Later configuration with a
+different role raises `MANAGED_AGENT_ROLE_CONFLICT`. It uses the same private
+URL, bearer, retry, interval, batch and three-failure auto-pause rules as the
+existing fixed-role runtime.
+
+Third, add the forward SQL migration. It will seed the three targets and 15
+paused role rows. `collect_ai_company_metrics()` returns one JSON object with
+only integer counters and the capture timestamp. `record_ai_company_snapshot`
+and `record_ai_company_proposal` require `service_role` and a matching active
+managed run. `review_ai_company_proposal` requires an administrator, an exact
+revision, a bounded reason and an idempotency key. It changes only the proposal
+state and records an immutable redacted event.
+
+Fourth, implement `features/company-agents/policy.ts`. Define a strict metrics
+schema and a pure function:
+
+    buildCompanyProposal(input: {
+      role: CompanyAgentRole;
+      metrics: CompanyMetrics;
+      objectives: CompanyObjectiveProgress[];
+      now: Date;
+    }): CompanyProposalDraft
+
+Each result has a bounded title, summary, action kind, priority, risk level and
+aggregate evidence. It never receives or emits PII. Deadline calculations must
+handle expired targets and zero denominators without `Infinity` or `NaN`.
+
+Fifth, implement `features/company-agents/processor.ts`. One run calls the
+metrics RPC, records the immutable snapshot, builds one proposal, derives a
+stable idempotency key from run and role, records it, and returns scalar counts.
+No model runtime or external provider is imported. Add this branch to
+`dispatchRole` while preserving all six current processors.
+
+Sixth, implement the command-center query/action/UI. The dashboard should show
+objective progress, core metrics, the MAU proxy disclosure, pending proposals,
+recent decisions and review buttons. Group low-level role cards by company and
+specialized operations. The safely-off state must explain both required gates.
+
+Finally, update documentation and verify the complete repository. Do not
+refactor unrelated routes, alter existing delivery semantics, consume AI
+budget, deploy, activate a database control or contact anyone.
+
+### Concrete Steps
+
+Work from `/Users/ngonapa/Downloads/farmerbook`.
+
+After contract/runtime changes, run:
+
+    npx vitest run tests/managed-operations-agent.test.ts tests/managed-operations-agent-config.test.ts tests/ai-company-policy.test.ts
+    npm run typecheck
+
+After the processor and route changes, run:
+
+    npx vitest run tests/ai-company-processor.test.ts tests/managed-operations-agent-route.test.ts
+    npm run typecheck
+
+After migration and UI changes, run:
+
+    npx vitest run tests/ai-company-migration.test.ts tests/ai-company-command-center.test.tsx tests/managed-operations-agent-console.test.tsx
+    npm run typecheck
+
+At the final gate, run the repository scripts reported by `package.json`, the
+local Supabase reset and SQL tests if the pinned CLI is available, a production
+build, a strict Wrangler dry run against the generated configuration, and:
+
+    git diff --check
+    rg -n "routeAgentRequest|\.AI\.run\(" worker features app lib
+
+The direct-inference search must find no new company-agent call, and the public
+Agent router search must remain empty.
+
+### Validation and Acceptance
+
+The focused role test must enumerate exactly 15 company roles in addition to
+the six existing specialized roles. The shared class test must prove one named
+instance cannot be reconfigured as a second role. Policy tests must exercise
+all 15 outputs, zero users, expired deadlines, a zero target, agent failures,
+pending reports, unactivated profiles and listings without enquiries.
+
+Migration tests must prove both release gates are required, all new tables are
+RLS-protected and have no browser grants, creation RPCs are service-only,
+dashboard/review RPCs are administrator-only, proposal events are immutable,
+reviews use optimistic revision and idempotency, and no review function updates
+profiles, listings, messages, reports, verification claims or external state.
+
+The administrator component test must show safely-off text, all three
+objectives, aggregate metrics, proposal risk/priority, and disabled review
+controls when unconfigured. A configured test must show pending proposals and
+invoke only `reviewAiCompanyProposalAction`.
+
+The complete repository must pass lint, TypeScript, Vitest and the production
+build. If local Supabase is available, reset from zero and run every SQL/RLS
+suite. Generated Wrangler configuration must contain one new private namespace
+and an additive `ai-company-agent-v1` migration after all existing migrations.
+
+### Idempotence and Recovery
+
+The SQL migration is forward-only and safe to apply once through Supabase's
+migration ledger. Seed rows use fixed identifiers or conflict-safe inserts.
+Configuration, run, snapshot, proposal and review writes use unique
+idempotency keys. Overlapping runs remain skipped by the existing lease.
+
+Local code can be reverted file by file. After a deployed Durable Object class
+migration, rollback must send traffic to a prior Worker version while retaining
+the unused namespace. Database rollback is operational: set `ai_company=false`
+first, pause the 15 roles, then set `ENABLE_AI_COMPANY=false`. Preserve run,
+snapshot, proposal and decision evidence; repair schema defects with a forward
+migration instead of dropping audit tables.
+
+### Interfaces and Dependencies
+
+No new package is required. Use Zod for runtime schemas, the existing Agents SDK
+for schedules and named instances, Supabase service/admin clients for narrow
+RPCs, existing UUID/hash helpers for idempotency, React server actions for
+review, and the current component/CSS system. The company proposal builder must
+not import Workers AI, an outreach provider, social connector, deployment API,
+payment API or external search client.
+
+### Approval checkpoint
+
+The product owner approved the role design and said, "Approved go ahead and
+implement" on 2026-08-19. That explicitly authorizes this local implementation
+plan. Production deployment, migration, activation, external communication and
+spend remain outside the authorization.
+
+Change note: this addendum was added after deep inspection of the existing
+fleet and translates the approved organizational design into a bounded,
+testable, default-off technical implementation.
+
+## 2026-08-19 addendum: activate consented outreach and document the 15-agent operating model
+
+### Status
+
+Research is complete and the product owner approved this canary-first plan on
+2026-08-19. Implementation and the paused production rollout are authorized;
+the browser workflow will still request action-time confirmation immediately
+before transmitting the owner's contact data or sending the first canary.
+
+### Purpose / Big Picture
+
+After this work, a prospective Farmer or customer can open `/join`, and a
+YouTube creator, farmer group or agriculture organization can open
+`/partner-interest`, submit their own details, explicitly request contact,
+confirm ownership of the email address and receive one relevant FarmerBook
+introduction from `FarmerBook CEO <ceo@farmerbook.in>`. If they separately ask
+for a follow-up, the scheduled Growth & Outreach agent may send exactly one.
+Replies, STOP, unsubscribe, complaints and bounces remain enforced.
+
+The specialized email worker will check the eligible queue every 15 minutes in
+batches of ten. It will not scrape or import contacts, send to the research CSV
+files, automate YouTube comments/messages, buy a list or run an endless drip.
+FarmerBook reaches new creator audiences by sharing the public opt-in landing
+page through owned social drafts, approved partnerships or permission-bearing
+lead forms.
+
+The same release will add a concise operator guide for the 15 company roles so
+an administrator knows which role to run, what input it uses, how to review its
+output, and which specialized worker or human workflow performs approved work.
+
+### Progress
+
+- [x] Audit the current outreach schema, provider adapter, secrets/bindings,
+  consent rules, suppression, webhooks, production controls and delivery
+  state. [DONE]
+- [x] Verify Postmark account approval plus sender-domain DKIM and custom
+  Return-Path notices without exposing credentials. [DONE]
+- [x] Audit the 15 company roles, production test evidence and administrator
+  control surfaces. [DONE]
+- [x] Identify the production `/partner-interest` authentication redirect and
+  missing sitemap/robots exposure. [DONE]
+- [x] Inspect the signed-in Facebook Page/group surfaces and record the
+  promotion boundaries for AP/Telangana outreach. [DONE 2026-08-19]
+- [x] Record findings in `research.md` and this technical plan. [DONE]
+- [x] Receive explicit approval for this plan. [DONE 2026-08-19]
+- [x] Repair the public collaboration route and add regression coverage. [DONE 2026-08-19]
+- [x] Add the 15-agent operator guide and link it from the command center. [DONE 2026-08-19]
+- [x] Prepare the reviewed bilingual AP/Telangana Farmer, trader and tool-
+  business Facebook invitation. [DONE 2026-08-19]
+- [x] Run focused and complete local verification. [DONE 2026-08-19]
+- [x] Build and strictly dry-run an outreach-enabled Worker while preserving
+  every current secret, binding, compatibility flag and AI-company schedule.
+  [DONE 2026-08-19]
+- [x] Take a protected production backup and record the active/rollback Worker
+  versions and current database gates. [DONE 2026-08-19]
+- [x] Deploy the route/guide patch with delivery still paused. [DONE 2026-08-19]
+- [x] Enable the outreach application/database gates while keeping runtime
+  delivery paused; verify both public forms and private admin health.
+  [DONE 2026-08-19]
+- [ ] Run one owner-controlled double-opt-in canary through confirmation,
+  introduction, reply/unsubscribe and provider lifecycle evidence.
+- [ ] Pause again and inspect the canary for duplicate sends, content,
+  alignment, provider receipt, webhook correlation and suppression.
+- [ ] If all canary assertions pass, resume consented delivery and the
+  `outreach_growth` schedule at 900 seconds / ten items per run.
+- [ ] Capture redacted production evidence, update runbooks/state/logs and
+  report the exact activated version and rollback target.
+- [ ] After the intake routes are live, obtain action-time confirmation and
+  publish exactly one invitation on the signed-in account's own Facebook
+  timeline; do not post to groups that prohibit promotion.
+
+### Plan of Work
+
+First, repair the public entry point. Add `/partner-interest` to the exact
+public-prefix list in `proxy.ts`, add it to robots and the feature-gated
+sitemap, and extend proxy/sitemap/route tests to prove anonymous HTTP 200 for
+both intake pages while admin/product paths still require authentication. Keep
+the intake itself unavailable while the feature flag is false.
+
+Second, create `docs/AI_COMPANY_OPERATING_GUIDE.md` and link it from
+`/admin/agents`. The guide will include a one-page daily/weekly operating loop
+and a table for all 15 roles containing purpose, required aggregate input,
+expected proposal, review question, cadence and handoff. It will explicitly
+distinguish company proposal agents from the six specialized workers and show
+the safe outreach handoff:
+
+```text
+Growth/Farmer/Buyer proposal
+        -> administrator backlog decision
+        -> Social Content draft / public opt-in URL
+        -> person submits and confirms consent
+        -> Growth & Outreach sends bounded email
+        -> administrator handles substantive reply
+```
+
+Third, update outreach architecture/runbook text to replace the stale Postmark
+“Test mode pending” status with dated approval evidence and a canary checklist.
+Document sender identity, streams, SPF/DKIM/DMARC/Return-Path, 15-minute batch,
+one-follow-up maximum, complaint/bounce thresholds, daily review, emergency
+pause and rollback. Preserve the discovery CSVs as research-only.
+
+Fourth, run the route, outreach configuration, Postmark provider, processor,
+managed-Agent and command-center tests, then repository lint, TypeScript,
+Vitest, production build, strict Wrangler dry run and `git diff --check`. If a
+local database runtime is available, rebuild from zero and run every pgTAP/RLS
+suite. Automated tests use a fake provider only and may not make a real send.
+
+Fifth, stage production without delivery. Record the active Worker
+`1b42b9b8-373f-4322-a522-84b683abdfa2` and rollback Worker
+`160f3eba-2a44-4959-a4ad-efd830028d1e`, take a protected Supabase backup, and
+inspect the generated binding set. Upload/deploy the fixed Worker with
+`ENABLE_OUTREACH_AGENT=true` while preserving all current encrypted secrets and
+AI-company bindings. Enable only the `outreach_agent` database release control;
+leave `delivery_paused=true` and keep `outreach_growth` paused. Verify anonymous
+access to both forms, admin-only access to the evidence console, webhook
+authentication rejection and zero claimable/sent rows.
+
+Sixth, perform one owner-controlled canary. The owner submits their own details
+through the relevant public form, explicitly selects introduction consent and
+the optional follow-up choice being tested, completes Turnstile, and lets one
+processor run deliver the confirmation. After the owner follows the signed
+confirmation link, run the processor again for the introduction. Check the
+visible From/Reply-To/footer/unsubscribe identity, Postmark receipt/stream,
+outbox state and redacted webhook evidence. Exercise unsubscribe or STOP with
+the canary and prove queued work is cancelled and the contact is suppressed.
+Any browser step that submits personal contact data or sends mail requires an
+action-time confirmation immediately before it occurs.
+
+Finally, resume normal consented processing only if every canary assertion is
+green. Unpause the delivery control with a specific audit reason, resume the
+`Growth & Outreach` specialized Agent at 900 seconds and batch ten, and leave
+the 15 company schedules unchanged. Monitor the first day for queue age,
+failures, bounces, complaints, opt-outs and duplicate receipts. Do not load the
+research CSVs or create a recipient merely to demonstrate volume.
+
+### 15-agent operating guide content
+
+The documentation will describe these exact responsibilities and handoffs:
+
+| Company role | Operator use | Safe output / handoff |
+| --- | --- | --- |
+| Executive Strategy | Review objective pace and choose the week's company focus. | Approve one focus for the backlog; assign work manually. |
+| Operations Coordinator | Find failed runs and old unreviewed proposals. | Clear blockers or pause an unhealthy role. |
+| Data & Experimentation | Validate registration, activation and 30-day event measurement. | Approve a measurement task before any experiment. |
+| Governance & Risk | Prioritize moderation and high-risk action review. | Escalate legal/trust decisions to an accountable person. |
+| Independent Agent Auditor | Challenge fleet controls and unresolved risk independently. | Record an audit action; never self-approve execution. |
+| Growth Strategy | Compare registrations, activations and activity with the 180-day targets. | Approve one bounded growth hypothesis. |
+| Farmer Acquisition | Identify a permission-based Farmer cohort by region/language/crop. | Handoff to owned content/partner opt-in, never a scraped list. |
+| Buyer & Wholesaler Acquisition | Match demand-building work to active supply. | Approve a consented buyer cohort or landing-page task. |
+| Farmer Onboarding | Find aggregate onboarding completion gaps. | Approve a mobile/language funnel improvement. |
+| Marketplace Matching | Find listings without enquiries. | Approve an aggregate liquidity investigation; no buyer details. |
+| SEO & Editorial | Select a source-reviewed agriculture topic or landing page. | Handoff to the separate editorial publishing review. |
+| Product Management | Frame the largest validated funnel constraint as an outcome. | Create a reviewed product backlog item. |
+| Engineering Planning | Turn reliability/support pressure into an investigation. | Create an engineering task; no automatic code/deploy. |
+| QA & Reliability | Reproduce dominant failures and request regression coverage. | Add a test/release-gate task; cannot declare itself safe. |
+| Support & Trust | Prioritize aggregate support/moderation demand. | Route private cases to authorized human/specialized workflows. |
+
+Daily operation is to review critical/high proposals and failed runs, record
+decisions with meaningful reasons, inspect outreach suppressions and provider
+failures, and leave healthy schedules alone. Weekly operation is to compare
+objective progress, approve a small set of measurable backlog outcomes, reject
+duplicates/stale proposals and run a manual role only when fresh aggregate
+evidence is needed. `Approve for backlog` never means “execute.”
+
+### Validation and Acceptance
+
+Acceptance requires all of the following:
+
+- anonymous `/partner-interest` and `/join` return 200 in production;
+- both pages remain fail-closed unless the complete intake configuration and
+  database control are present;
+- no public/admin route or table authorization is weakened;
+- the guide names all 15 roles and accurately distinguishes proposals from
+  specialized execution;
+- Postmark uses `FarmerBook CEO <ceo@farmerbook.in>`, the configured
+  transactional/Broadcast streams, verified DKIM/custom Return-Path, tracking
+  off, postal footer, privacy link, one-click unsubscribe and STOP;
+- exactly one canary confirmation and one introduction are accepted, with no
+  duplicate or unconsented send;
+- optional follow-up is impossible without its separate consent and remains
+  capped at one;
+- unsubscribe/STOP, complaint and hard-bounce tests cancel/suppress as designed;
+- the scheduled worker claims at most ten every 15 minutes and pauses after
+  three consecutive unsuccessful runs;
+- the 15 company schedules and their existing pending proposals are preserved;
+- zero rows from `outreach/*.csv` are imported and zero non-canary recipients
+  are contacted during rollout;
+- full local gates, database authorization tests, strict Worker dry run, live
+  health and redacted production evidence pass.
+
+### Rollback
+
+At the first unexpected recipient, duplicate, consent mismatch, provider
+authentication problem, complaint, elevated bounce rate or queue anomaly:
+
+1. pause delivery in `/admin/outreach`;
+2. pause the `Growth & Outreach` schedule in `/admin/agents`;
+3. set the database `outreach_agent` control false;
+4. return traffic to the recorded rollback Worker or deploy with
+   `ENABLE_OUTREACH_AGENT=false`;
+5. verify no pending row is claimable and preserve consent, suppression,
+   provider receipt and immutable audit evidence;
+6. rotate the Postmark/webhook credential only if compromise is suspected.
+
+Do not delete the suppression ledger or complaint/withdrawal evidence during
+rollback. Repair database defects with a forward migration rather than
+dropping private audit tables.
+
+### Approval checkpoint
+
+Approval recorded: the product owner said “Approve the canary-first outreach
+plan” on 2026-08-19. This authorizes the route/guide patch, verified production
+configuration, one owner-controlled canary and gradual activation of consented
+processing. It does not authorize cold email, scraped or purchased contacts,
+bulk import, automated social messages/comments, unbounded follow-ups, ad spend
+or contact with the discovery CSV rows.
+
+### Production activation record (2026-08-19)
+
+The product owner gave action-time confirmation for both the owner-controlled
+email canary and one reviewed Facebook timeline post. The canary submitted the
+owner's tagged Gmail address through `/join`, delivered exactly one consent
+confirmation and one requested introduction through Postmark, and verified the
+visible `FarmerBook CEO <ceo@farmerbook.in>` sender, domain signing, reply
+handoff, postal footer, privacy link, unsubscribe link and reply-`STOP` path.
+The owner then used the signed unsubscribe flow. Production evidence shows two
+provider receipts, both consent purposes withdrawn, one scrubbed contact, one
+suppression, one withdrawal event and zero pending or processing messages.
+
+Two fail-closed defects were found before the introduction: the production
+compatibility bridge lacked the service-only cleanup RPC, and PostgREST returned
+an offset datetime rejected by the processor schema. Migration
+`20260819130000_outreach_cleanup_compatibility.sql` repaired the bounded cleanup
+contract; the processor now accepts explicit ISO offsets. A protected repair
+backup was recorded before the migration. Full local gates then passed: ESLint,
+TypeScript, 155 Vitest files/693 tests, clean 32-migration Supabase rebuild, all
+eight pgTAP/RLS suites, the production-shaped compatibility rehearsal, Vinext
+build, strict Wrangler dry run and diff validation.
+
+Worker version `ab9ac737-8adc-42d2-aafb-a51d48e14abe` is active at 100 percent.
+After the green canary, the administrator console reset and explicitly
+configured the `Growth & Outreach` Durable Object at 900 seconds and ten items
+per run. Database delivery is active, the role is enabled with zero consecutive
+failures, and the latest immutable configuration reason records the approved
+production activation. Eight subsequent scheduled cycles succeeded with zero
+claimed recipients and zero failures, proving the Durable Object schedule fired
+while the suppressed canary remained ineligible. The local one-time
+processor-token file was deleted; the encrypted Cloudflare secret remains
+active.
+
+The reviewed Telugu/English invitation was published once to the signed-in
+personal Facebook timeline with the account's existing Friends audience. It
+links to `/join` for Farmers, customers and wholesalers and
+`/partner-interest` for tool manufacturers/dealers and agriculture service
+businesses. No joined group, Page, Messenger recipient, friend request, comment,
+boost or repeated post was used. The permalink is
+`https://www.facebook.com/narasimha.gonapa/posts/pfbid0oYqhLfFvUJX6KgLCZWjf7GsNrsnM4S2snRQvZCgfCj7gJw6ijgDiHG2XPuBHDUnml`.
+
+## 2026-08-20 addendum: live agent execution control plane
+
+### Status and approval boundary
+
+Research is complete. The product owner approved this plan on 2026-08-20 by
+saying “Approver Live Agent Execution Phase 1,” interpreted as approval of the
+named Phase 1 checkpoint. This authorizes local/default-off implementation and
+synthetic testing only. It does not authorize adding production credentials,
+enabling a production connector/control, contacting a person, publishing
+content, deploying or spending money. Production activation remains a separate
+canary approval.
+
+### Purpose / Big Picture
+
+FarmerBook will use multiple agents like a company without giving every role the
+keys to the company. The 15 existing company agents remain role-isolated
+planners. A deterministic control plane converts an approved proposal into a
+short-lived, exact authorization. Separate executor agents can perform only the
+named action, within a hard budget, and an independent verifier records the
+outcome or pauses that executor.
+
+```text
+Mission Controller
+  -> planner subagents (parallel analysis, no credentials)
+  -> reviewed company proposal
+  -> Action Authorizer (deterministic)
+  -> approval gate when required
+  -> scoped executor
+  -> verifier / reconciliation
+  -> metrics + auditor + automatic pause
+```
+
+Cloudflare Agent subagents/agent tools may be used for retained parallel
+planning runs, but PostgreSQL remains the authoritative policy, budget and audit
+boundary. Cloudflare Workflows hold long-running approvals and execution steps.
+An Agent queue is only a wake-up mechanism; it is not the sole record of an
+external action.
+
+### Authority model
+
+| Tier | Agent may do | Approval |
+| --- | --- | --- |
+| 0 | Read aggregate KPIs and health. | Standing policy. |
+| 1 | Create proposals, drafts, private previews and test plans. | Standing policy. |
+| 2 | Perform internal, reversible actions within hard quotas. | Approved policy and random audit. |
+| 3 | Perform bounded live actions inside an approved campaign. | Campaign approval, expiry, canary and verifier. |
+| 4 | Deploy, publish publicly, spend, moderate, verify or materially alter a marketplace. | Per action; two distinct people for high risk. |
+| 5 | Unsolicited bulk contact, scraping/DM automation, personal Facebook automation, transfers, contracts, final KYC/disputes, secrets or irreversible deletion. | Prohibited. |
+
+The agent that proposes an action cannot approve or verify it. Governance and
+the Independent Auditor never receive executor credentials.
+
+### 1. Add the action authorization contract
+
+**Files:**
+
+- `features/action-control/contracts.ts` (new)
+- `features/action-control/policy.ts` (new)
+- `supabase/migrations/20260820xxxxxx_live_agent_execution_control.sql` (new)
+
+Add bounded schemas for an authorization and execution receipt. The exact
+shape should follow this contract:
+
+```ts
+const actionAuthorizationSchema = z.object({
+  authorizationId: z.uuid(),
+  proposalId: z.uuid(),
+  executor: z.enum([
+    "consent_outreach", "in_app_lifecycle", "support_reply",
+    "owned_site_publish", "marketplace_recommendation", "experiment",
+    "engineering_pr", "canary_release",
+  ]),
+  actionType: z.string().regex(/^[a-z0-9_]{3,80}$/),
+  targetScope: z.record(z.string(), z.unknown()),
+  payloadSha256: z.string().regex(/^[0-9a-f]{64}$/),
+  approvalTier: z.number().int().min(0).max(5),
+  maxActions: z.number().int().min(1).max(10_000),
+  maxSpendPaise: z.number().int().min(0),
+  canaryStage: z.number().int().min(0).max(20),
+  notBefore: z.iso.datetime({ offset: true }),
+  expiresAt: z.iso.datetime({ offset: true }),
+  policyVersion: z.literal("live-action-policy-v1"),
+  idempotencyKey: z.uuid(),
+});
+```
+
+The migration will add private, RLS-enabled tables for:
+
+- `agent_action_authorizations` — exact scope, derived risk, status, expiry,
+  revocation, budgets and required approvers;
+- `agent_action_approvals` — distinct people, decision, reason hash and revision;
+- `agent_action_attempts` — claim/lease, request hash, connector, result and
+  `prepared | dispatched | verified | unknown | failed | compensated` state;
+- `agent_action_budget_ledger` — atomic per-day/per-month counts and paise;
+- `agent_action_events` — immutable hash-chained, redacted audit events.
+
+Only narrow service RPCs may create, approve, claim, authorize immediately
+before dispatch, record a receipt, verify, compensate, reconcile or pause. Risk
+and approval tier are derived server-side from the operation; an agent cannot
+downgrade them. Every high-risk action requires two distinct approvers, neither
+of whom proposed it. All new release controls default off.
+
+### 2. Add durable authorization and verification Workflows
+
+**Files:**
+
+- `features/action-control/execution-workflow.ts` (new)
+- `features/action-control/authorizer.ts` (new)
+- `features/action-control/verifier.ts` (new)
+- `worker/index.ts`
+- `vite.config.ts`
+- `lib/cloudflare-bindings.ts`
+
+The Workflow will:
+
+1. freeze the proposal revision and payload hash;
+2. call the deterministic database policy;
+3. wait for the required approval tier with an expiry;
+4. reserve the daily/monthly action and spend budget atomically;
+5. create a short lease and call the scoped executor;
+6. store the provider/internal receipt;
+7. verify the post-condition or mark the outcome `unknown`;
+8. compensate where possible or pause for reconciliation;
+9. report the outcome to the planner metrics and independent audit stream.
+
+Retries may repeat only idempotent preparation and verification. An unknown
+external outcome is never blindly retried. Irreversible email uses suppression
+and reconciliation rather than pretending it can be rolled back.
+
+### 3. Remove the universal executor credential pattern
+
+**Files:**
+
+- `app/api/managed-agents/run/route.ts`
+- `features/managed-agents/runtime.ts`
+- `features/company-agents/agent.ts`
+- executor-specific bindings and database RPC wrappers
+
+Keep the current shared processor route for the bounded planner fleet during
+migration. New executors receive separate service bindings or signed,
+short-lived capability tokens binding the executor, authorization ID, payload
+hash and expiry. Each connector receives only its own credential. Executors use
+purpose-built RPCs rather than a general Supabase service-role client.
+
+### 4. Implement the first executor tranche
+
+#### 4.1 Consent Outreach Executor
+
+Reuse `outreach_growth` and the current Postmark/consent/suppression path. Add a
+final transactional dispatch authorization immediately before the provider
+call, an atomic daily cap and explicit unknown-delivery reconciliation. Do not
+add cold email, imported public contacts, YouTube/Facebook DMs or more than the
+existing consented one-plus-one sequence.
+
+Initial external canary cap: at most 10 consented deliveries/day. Any complaint,
+recipient mismatch, duplicate or consent failure pauses the executor.
+
+#### 4.2 In-App Lifecycle Executor
+
+**Files:** `features/lifecycle-agent/*` (new) plus a private migration and
+notification preference UI.
+
+It may create an authenticated FarmerBook inbox item for an opted-in member:
+onboarding help, listing-completion guidance or a non-binding marketplace
+recommendation. It cannot expose another user's contact, send external email,
+quote a price, place an order or claim a confirmed match.
+
+Initial cap: 50 members/day and one message/member/seven days.
+
+#### 4.3 Support Reply Executor
+
+Extend the current support proposal flow. During the first canary, every reply
+still needs administrator approval. Later, Tier-3 standing authorization may
+cover an allowlist of low-risk navigation/account-help templates. Identity,
+payments, disputes, moderation, safety and legal questions always escalate.
+
+Initial cap: 10 replies/day; pause if correction/reopen rate exceeds 10% or any
+high-risk reply bypasses review.
+
+#### 4.4 Owned-Site Publisher
+
+Publish only approved, source-reviewed content to FarmerBook-owned website/blog
+resources. Public publication remains per-action approved initially. A future
+Facebook connector requires a FarmerBook-owned Page and official API permission;
+personal profiles, groups, comments, friend requests and DMs are excluded.
+
+Initial cap: one public item/day; every item must have a source manifest,
+preview, exact payload hash and post-publication verifier.
+
+### 5. Defer higher-risk executors
+
+The Marketplace Recommendation and Experiment executors enter shadow mode only
+after the first tranche is stable. Engineering may create a branch, tests and a
+PR only after repository credentials can be scoped to that capability; it may
+not merge. Canary Release may deploy a previously approved immutable artifact
+to a small traffic percentage only after separate approval and rollback proof.
+Ads, spend, pricing, verification, moderation and production promotion remain
+Tier 4.
+
+### 6. Add safe growth measurement
+
+**Files:**
+
+- `features/company-agents/contracts.ts`
+- `features/company-agents/processor.ts`
+- a forward-only aggregate-metrics migration
+- `/admin/agents` objective/experiment dashboard
+
+Add privacy-preserving aggregates for state/district, role, locale, acquisition
+channel, onboarding step, listing creation, enquiry and retention. Suppress any
+cohort below a reviewed minimum population (proposed minimum 20) and never
+expose names, contacts, messages or case text to company planners.
+
+The six-month operating targets are cumulative planning targets, not a promise:
+
+| Month | Registered | Activated | MAU |
+| --- | ---: | ---: | ---: |
+| 1 | 1,000 | 400 | 250 |
+| 2 | 5,000 | 2,000 | 1,250 |
+| 3 | 15,000 | 6,000 | 3,750 |
+| 4 | 35,000 | 14,000 | 8,750 |
+| 5 | 65,000 | 26,000 | 16,250 |
+| 6 | 100,000 | 40,000 | 25,000 |
+
+The dashboard should show the required average pace of about 556 registrations
+and 222 activations per day, AP/Telangana cohort performance, and which approved
+action authorization produced each measurable outcome.
+
+### 7. Add operator controls and evidence
+
+**Files:**
+
+- `app/(product)/admin/agents/actions/page.tsx` (new)
+- `features/action-control/action-console.tsx` (new)
+- `features/company-agents/operator-guide.tsx`
+- `docs/AI_COMPANY_OPERATING_GUIDE.md`
+- `docs/PRODUCTION_RUNBOOK.md`
+
+The console must show pending approvals, exact target scope, payload diff/hash,
+budgets, canary stage, expiry, attempts, receipts, verifier state, unknown
+outcomes, audit backlog and a per-executor kill switch. High-risk approvals show
+both distinct approvers. No UI label may equate proposal approval with action
+execution.
+
+### 8. Testing and release strategy
+
+Add unit, component, migration, pgTAP/RLS and production-shaped tests proving:
+
+- server-derived risk and Tier 4 dual approval;
+- proposer/approver/verifier separation;
+- exact capability, target, payload and expiry enforcement;
+- atomic daily/monthly budgets and canary cohorts;
+- idempotent replay with zero duplicate external actions;
+- final pre-dispatch pause/consent recheck;
+- unknown-result reconciliation without blind retry;
+- verifier and compensation transitions;
+- executor-specific credential/RPC isolation;
+- automatic pause thresholds and immutable hash-chained events;
+- unchanged 15 planner roles and existing outreach suppression guarantees.
+
+Run ESLint, TypeScript, focused and full Vitest, a clean Supabase rebuild, all
+pgTAP/RLS suites, production build, strict Wrangler dry run and `git diff
+--check`. Automated tests use fake providers only.
+
+Rollout stages:
+
+1. Shadow mode for at least seven days and 100 proposed actions: zero connector
+   calls, at least 95% human-policy agreement and 100% audit receipts.
+2. Internal/reversible canary: at least 100 actions, 99% technical success,
+   zero duplicates or privacy/authorization incidents.
+3. External canary at the caps above: at least seven clean days and 50 actions
+   per connector, zero unauthorized targets/complaints and 100% receipts.
+4. Limited autopilot: increase a cap by at most 2x per seven days after 14 clean
+   days, 200 actions, positive outcome evidence and Independent Auditor sign-off.
+5. Scale only the executor that passes; never enable the entire fleet together.
+
+Automatic pause conditions include any authorization/consent mismatch,
+duplicate irreversible action, complaint, secret/private-data exposure, missing
+receipt, unknown provider outcome, prohibited policy version, more than 5%
+failures in the last 20 actions, verifier backlog older than 24 hours, or an
+executor-specific guardrail breach.
+
+### Todo list
+
+- [DONE] Receive explicit approval for this addendum. Approved 2026-08-20.
+- [DONE] Implement the default-off authorization, approval, attempt, budget and
+  event ledger with narrow RPCs.
+- [DONE] Implement the durable approval and zero-retry execution Workflow. A
+  provider-accepted action remains `unknown` until an independently
+  credentialed verifier is registered.
+- [DONE] Reserve separate executor/verifier principal bindings and hard-disable
+  environment-configured principals while only the broad database service role
+  exists.
+- [ ] Replace the broad service-role RPC grants with dedicated restricted
+  PostgREST roles and isolate each connector and verifier service.
+- [ ] Add the final outreach pre-dispatch authorization and reconciliation.
+- [ ] Implement the In-App Lifecycle, supervised Support Reply and Owned-Site
+  Publisher executors behind default-off controls.
+- [ ] Add privacy-preserving AP/Telangana/channel funnel metrics.
+- [DONE] Add the action console, kill switches and operator documentation.
+- [DONE] Complete synthetic local, full database, production build and strict
+  Worker dry-run verification.
+- [ ] Complete at least seven days and 100 proposals of observed shadow-mode
+  operation before requesting an external canary.
+- [ ] Present the evidence bundle and request a separate production canary
+  approval naming exact executors and caps.
+
+### Rollback
+
+Disable the affected database executor control first, revoke unconsumed
+authorizations and leases, then pause its Durable Object/Workflow and disable the
+Worker flag or return traffic to the recorded Worker version. Reconcile every
+`dispatched` or `unknown` attempt before retrying. Preserve authorization,
+consent, suppression, receipt, verifier and audit evidence. Repair schema issues
+with a forward migration; never delete the audit or suppression ledger.
+
+### Approval checkpoint
+
+Approval recorded: the product owner said “Approver Live Agent Execution Phase
+1” on 2026-08-20. Implementation may proceed locally and default-off. Do not
+enable any production live action from this addendum without a separate canary
+approval naming the exact executors and limits.
+
+### Phase 1 local implementation outcome
+
+The default-off control plane is implemented without enabling a production
+executor. The 15 company roles remain planners. PostgreSQL now owns the frozen
+authorization, exact redacted target scope, proposal revision, policy-derived
+risk and approval count, short lease, atomic action/spend budgets, receipts,
+verification state, event hash chain and per-executor pause/canary controls.
+Every database control is seeded false; every executor is seeded paused,
+shadow-only and canary stage zero.
+
+Cloudflare now contains one private coordinator Agent and one durable Workflow.
+Shadow validation calls neither the database gateway nor an executor. Live mode
+requires the application flag, database release gate, exact executor control,
+valid authorization and final atomic database check. The reserved principal
+gateway additionally contains a hard stop until dedicated restricted database
+roles replace the broad Supabase service role.
+Dispatch has zero retries. A provider-accepted action is stored as `unknown`
+with `VERIFIER_NOT_REGISTERED`, which pauses the executor instead of claiming
+success before independent verification. Exact-target first-tranche
+authorizations are capped at one action and the future executor interface
+requires a DB-attempt-derived provider idempotency key. The default executor
+registry is empty and no principal JWT was configured.
+
+The administrator page at `/admin/agents/actions` shows the independent
+foundation gates, kill switches, quotas, canary stages, approval counts,
+expiry, validated non-contact target scope, hashes, attempts and verifier
+state. Executor resume remains hard-disabled and the page explicitly reports
+that restricted roles, connector registry and verifier are not implemented. It
+can record database reviews, revocations and emergency pauses; none of those
+operations alone executes an action.
+
+Final local evidence is green: focused live-action Vitest 39/39, complete
+Vitest 161 files/732 tests, ESLint, TypeScript, the Vinext production build,
+strict Wrangler dry run, forward migration apply, all nine pgTAP/RLS files and
+`git diff --check`. The first real executor integration, verifier service,
+seven-day shadow observation, production migration, principal provisioning,
+release activation and external canary all remain pending separate work and
+approval. Dedicated restricted database roles, isolated connectors, an
+authorization/start ingress, database-review Workflow wake-up, verifier caller,
+reconciliation worker and TS-to-SQL policy parity automation are explicit
+canary blockers.
+# 2026-08-20 addendum: publish the founder editorial and plan daily Blog Agent work
+
+## Status and authority
+
+The product owner explicitly said “Publish it please” for the reviewed founder
+editorial and later said “Approve daily Blog Agent implementation.” The first
+instruction authorized the exact article without the supplied screenshot. The
+second authorized the review-only daily schedule, state migration,
+administrator controls, tests and Stage 1 production activation. Neither
+instruction authorizes autonomous publication.
+
+## Immediate publication
+
+- [DONE] Convert the reviewed editorial into the strict `BlogPublication`
+  contract with author `Narasimha Gonapa`.
+- [DONE] Use the official PGS-India manual as further reading for the limited
+  certification/transparency statements.
+- [DONE] Keep the screenshot out of the release until a clean rights-cleared
+  source is available.
+- [DONE] Add the article to the static publication registry, public blog route,
+  sitemap data path and focused tests.
+- [DONE] Build a production candidate that excludes the unapproved Live Agent
+  Phase 1 scaffold from the deployment artifact.
+- [DONE] Deploy the article-only candidate and verify the article, collection,
+  sitemap and health endpoint over HTTPS. Deployment
+  `a82e47b2-3551-4743-a4d8-1bc7f56ee66c` placed signed Worker version
+  `abab508b-b74d-451b-bc31-1ced28b6b205` at 100 percent; the pre-editorial
+  rollback version is `ab9ac737-8adc-42d2-aafb-a51d48e14abe`.
+
+## Daily Blog Agent design
+
+### Outcome
+
+At 09:00 IST every day, the existing dedicated `BlogWritingAgent` prepares at
+most one private Indian-English draft from a reviewed source packet. The draft
+appears in `/admin/blog` with its source scope, freshness and review status. It
+does not become public until an authenticated administrator explicitly
+publishes it. Budget exhaustion, stale sources or invalid model output skips the
+day safely.
+
+```text
+daily cron (03:30 UTC / 09:00 IST)
+  -> India-calendar idempotency key
+  -> approved topic + source manifest
+  -> reserve Blog/fleet inference budget
+  -> generate and schema/claim validate
+  -> private awaiting_review draft
+  -> administrator review, edit/reject/publish
+  -> public route + sitemap
+  -> aggregate quality and publication verification
+```
+
+### Implementation work after approval
+
+1. In `features/blog/agent.ts`, replace the weekly cron with
+   `30 3 * * *`, introduce a daily India-calendar key and enforce one draft per
+   day. During upgrade, list schedules, create/confirm the daily schedule, then
+   cancel only the exact legacy weekly schedule. Retain bounded retries for
+   draft preparation; idempotency must prevent a second inference.
+2. Extend the SQLite draft record with `run_key`, source-manifest version,
+   source-reviewed date, risk class, generation status and bounded failure code.
+   Preserve existing rows and publications through an idempotent forward schema
+   upgrade in `onStart()`.
+3. Replace the four-item rotation with a reviewed 30-topic registry covering
+   natural/organic farming, soil and water literacy, accurate certification
+   claims, farmer-consumer trust, farm-to-table traceability, food safety and
+   practical farm-business records. Every brief declares exact official or
+   reviewed sources and prohibited claims. Unrestricted browsing, testimonials,
+   named-person stories, prices, yields and medical or chemical advice remain
+   excluded.
+4. Keep the current USD 2 Blog and USD 10 fleet ceilings unchanged. Add a hard
+   daily draft count of one, maximum 31 scheduled drafts/month, maximum one
+   manual test draft/day, and no inference when source or budget checks fail.
+5. Extend `features/blog/blog-agent-console.tsx`, admin queries/actions and
+   contracts with daily schedule status, pause/resume, today's run, source
+   freshness, review reason and quality outcome. Pausing cancels the daily
+   schedule; resuming recreates exactly one schedule. Neither action publishes.
+6. Preserve administrator review for every article. Add an editable reviewed
+   revision or exact replacement mechanism before publish, immutable reviewer/
+   timestamp evidence, and a post-publication route verifier. Rejection is
+   terminal for that draft.
+7. Add unit, Agent-state, schedule-migration, budget, idempotency, schema,
+   administrator UI, sitemap, build and browser coverage. Synthetic model
+   responses must prove zero duplicate drafts, zero stale-source publication
+   and honest budget failure.
+8. Update `docs/BLOG_WRITING_AGENT.md`, the production runbook, requirements,
+   implementation log and operator guide. Record the exact schedule timezone,
+   caps, topic/source review owner and emergency pause steps.
+
+### Rollout
+
+- Stage 0: deploy today's founder-approved static editorial only.
+- Stage 1: after plan approval, deploy daily drafting with publication still
+  human-reviewed. Run one synthetic/manual draft and confirm no public change.
+- Stage 2: observe 30 consecutive daily cycles. Required evidence: no duplicate
+  draft, no unsupported material claim, no stale or invented source, 100%
+  reviewed before publication, at least 90% accepted with light edits, and no
+  budget/PII/image-rights incident.
+- Stage 3: only after the separate Live Agent control-plane blockers are fixed,
+  propose an owned-site publishing canary capped at one article/day. It must use
+  exact payload hashing, two distinct approvals initially, an independent route
+  verifier and automatic pause on mismatch. This requires new explicit product-
+  owner approval.
+
+### Rollback
+
+For the article, return traffic to the recorded previous Worker version if the
+route, metadata or collection fails. For the future daily schedule, pause the
+Blog Agent, cancel only its exact daily schedule ID and retain all draft/review
+evidence. Never delete already reviewed publications or raise the model budget
+to compensate for a schedule or source failure.
+
+### Approval checkpoint
+
+The immediate founder editorial publication is approved and complete. On
+2026-08-20 the product owner explicitly said “Approve daily Blog Agent
+implementation,” authorizing the review-only daily schedule, state migration,
+administrator controls, tests and Stage 1 production activation described
+above. Autonomous daily publication is not approved and remains a later canary
+decision.
+
+### Stage 1 production outcome
+
+- [DONE] Implemented the India-calendar daily run ledger, 03:30 UTC / 09:00
+  IST Agent schedule, exact legacy-schedule cleanup and one-inference-per-day
+  idempotency.
+- [DONE] Added the reviewed 30-topic registry, six bounded source records,
+  180-day freshness stop, exact allowed/prohibited claim scopes and immutable
+  draft/review event metadata.
+- [DONE] Added revision-bound replacement and publish review, required review
+  reason and quality outcome, terminal rejection, schedule pause/resume and
+  automatic pause on failed public-route verification.
+- [DONE] Passed ESLint, TypeScript, all 163 Vitest files / 741 tests, Vinext
+  production build, generated Worker types, strict Wrangler dry run and local
+  startup profiling. The exact-date local startup profiler was three days
+  behind the configured compatibility date; a `2026-08-08` compatibility proxy
+  passed and the Cloudflare upload reported 155 ms startup.
+- [DONE] Built a release-only candidate that excluded the separately
+  unapproved Live Agent Phase 1 route, classes and bindings. No-traffic Worker
+  version `770bd7c8-0cce-470a-bd12-7fa89095d1da` matched all 52 existing
+  production bindings before deployment.
+- [DONE] Deployment `ee65816d-5244-430b-b000-239392f198b4` placed that version
+  at 100 percent. Health, the public blog and the signed founder editorial
+  passed. Rollback version: `abab508b-b74d-451b-bc31-1ced28b6b205`.
+- [DONE] The authenticated console verified one active schedule, zero stale
+  sources, no failure and a next run at 09:00 IST. One bounded manual run made
+  **“Understanding 'Under Conversion' in Your Organic Farming Journey”** as a
+  private revision-1 `awaiting_review` draft. A second invocation did not add
+  inference or a draft. The public blog remained at four reviewed articles.
+- [ ] Observe 30 consecutive daily cycles and record the Stage 2 quality,
+  source, duplicate, review and budget evidence before proposing any change to
+  the human-publication boundary.
+
+# 2026-08-20 addendum: autonomous daily publication and owned-channel reach
+
+## Decision requested
+
+Replace per-post approval with one standing policy for low-risk FarmerBook
+content. After one explicit approval of this addendum, the Blog Agent may
+publish and verify at most one eligible article per day without asking again.
+After the relevant FarmerBook business account is connected once, the social
+publisher may syndicate that verified article to each enabled owned channel
+without asking again. Operators retain monitoring, pause and rollback controls;
+they do not become a daily review queue.
+
+This plan never authorizes personal Facebook profile automation, group posting,
+friend invitations, direct messages, comment/like/follow automation, scraping,
+cold outreach or paid advertising.
+
+## Target flow
+
+```text
+09:00 IST BlogWritingAgent
+  -> reviewed low-risk source brief
+  -> draft + strict schema/claim/source checks
+  -> autonomous publication ledger (one/day)
+  -> provisional public article
+  -> independent route/content verification
+       -> verified: social outbox per configured owned channel
+       -> failed: quarantine article + pause Blog Agent
+  -> official Page/organization API
+  -> provider receipt + read-after-write verification
+       -> verified: aggregate UTM metrics
+       -> unknown/failed: pause only that channel, never blind-retry
+```
+
+## Phase A — guarded autonomous Blog Agent
+
+### State and contracts
+
+- Add an explicit `BLOG_AUTONOMOUS_PUBLISHING` environment flag. It defaults
+  false in source and is enabled only in the approved production release.
+- Extend the Agent's SQLite rows forward-only with `publication_mode`,
+  `publication_policy_version`, `publication_idempotency_key`,
+  `content_sha256`, and `visibility_status` (`private`, `provisional`,
+  `public`, `quarantined`). Do not rebuild or weaken the existing status check.
+  `listPublished()` must additionally require public/provisional visibility;
+  the verifier moves provisional to public or quarantined.
+- Add a small autonomous-publication result contract with bounded codes:
+  `AUTO_PUBLISHED_PROVISIONAL`, `NOT_ELIGIBLE`, `SOURCE_STALE`,
+  `CLAIM_POLICY_FAILED`, `DAILY_LIMIT`, `MONTHLY_LIMIT`, `FLAG_DISABLED`, and
+  `DUPLICATE`.
+- Preserve all existing rows. Existing published rows migrate logically to
+  `public`; awaiting-review/rejected rows remain `private`. Never auto-publish a
+  historical draft.
+
+### Deterministic eligibility
+
+Create `features/blog/autonomous-publication-policy.ts` as a pure, versioned
+gate. It accepts only a freshly generated draft from today's run and an exact
+low-risk brief.
+
+```ts
+const decision = evaluateAutonomousPublication({
+  publication,
+  draftRiskClass,
+  runKey,
+  sourceManifestHealth,
+  dailyPublishedCount,
+  monthlyPublishedCount,
+});
+
+if (!decision.eligible) {
+  return { code: decision.code, published: false };
+}
+```
+
+The function must reject medium/legacy risk, stale or unlisted sources,
+unknown URLs, fewer than the brief's source minimum, prohibited claim terms,
+personal identifiers, testimonials, unlicensed media, medical/veterinary/
+chemical advice, certification conclusions, yield/income/price guarantees and
+any schema failure. It may not call a model, network or database.
+
+Only low-risk briefs enter the daily autonomous rotation. The existing
+certification-adjacent “Under Conversion” draft remains private. A skipped day
+does not create a review task and does not trigger a replacement generation.
+
+### Atomic publication and verification
+
+- In `features/blog/agent.ts`, add a private transaction-equivalent publication
+  transition keyed by `auto-publish:v1:<run-key>:<draft-id>:<revision>`.
+  Replays return the recorded outcome. Enforce one autonomous publication per
+  India day and 31 per month in Agent state/SQLite in addition to the existing
+  inference budget.
+- Stamp `publishedAt` and `updatedAt`, store the exact content SHA-256, set
+  `publication_mode=autonomous`, and make the article only provisional.
+- Schedule a one-time verifier callback 90 seconds later. The callback fetches
+  the canonical article route outside the publishing RPC, confirms HTTP 200,
+  canonical slug, title and content fingerprint, then marks it public. It must
+  not rely only on the same SQLite row it is verifying.
+- On verification failure, set visibility to quarantined, remove the article
+  from public queries/sitemap, cancel the daily schedule, set the failure code,
+  and retain immutable event evidence. Do not delete the draft or auto-retry.
+- Keep authenticated pause/resume and add an emergency “quarantine latest
+  autonomous publication” action. Resume remains an explicit operator recovery
+  action after fixing the cause; it is not a content approval.
+
+### Console and documentation
+
+Update `/admin/blog` to show the standing-policy version, flag, today's
+eligibility outcome, autonomous publication count, provisional/public/
+quarantined state, latest verifier result and next schedule. Remove publish/
+reject buttons from autonomous rows while preserving them for legacy/manual
+review rows. Update `docs/BLOG_WRITING_AGENT.md`, `docs/PRODUCTION_RUNBOOK.md`,
+requirements, implementation log and state.
+
+## Phase B — official owned social publisher
+
+### Connector boundary
+
+Add a dedicated `OwnedSocialPublisherAgent` and isolated connector service. It
+receives only a verified article envelope (`slug`, title, excerpt, canonical
+URL, content hash, locale and campaign code). It does not receive user records,
+contacts, browser sessions, Blog model prompts or broad database credentials.
+
+Start only with business assets the product owner confirms and officially
+authorizes:
+
+1. FarmerBook Facebook Page through Meta's Pages API.
+2. LinkedIn is explicitly excluded because the owner confirmed there is no
+   FarmerBook LinkedIn Organization Page.
+3. The linked Instagram professional account after a rights-cleared image
+   pipeline exists.
+
+The current YouTube API key remains discovery-only. YouTube video publication,
+X and any other network require separate connector plans and credentials.
+
+Store provider secrets as encrypted connector-service secrets. Never put them
+in Durable Object state, logs, source, the central coordinator or client code.
+The one-time OAuth/account-link flow and any secret entry require the signed-in
+owner's action-time confirmation.
+
+### Outbox, copy and verification
+
+- Add a forward-only private outbox with channel, article content hash,
+  idempotency key, state, attempt ID, provider receipt hash, verifier result,
+  bounded failure code and timestamps. Exact post text may be retained only as
+  required for audit; tokens and audience-person data are forbidden.
+- Build post copy deterministically from the verified article. Template:
+
+```text
+<verified title>
+
+<bounded verified excerpt>
+
+Read on FarmerBook: <canonical URL with channel/campaign UTM>
+#FarmerBook #OrganicFarming #NaturalFarming
+```
+
+- Enforce one post per article per channel, one post per channel/day, 31 per
+  channel/month and ₹0 ad spend. Use provider idempotency if supported plus the
+  local outbox key in all cases.
+- After the provider call, store a receipt and read the object back using the
+  official API. A confirmed match becomes `verified`. A timeout or ambiguous
+  outcome becomes `unknown`, pauses that connector and creates no retry. A
+  deterministic pre-dispatch failure may retry only under a new bounded attempt
+  after backoff.
+- Do not send DMs, invites, comments or replies. Do not post to groups or a
+  personal timeline. Do not scrape identities or engagement. Record only daily
+  aggregate impressions/clicks when the provider lawfully exposes them, plus
+  UTM visits, registrations and activated profiles already measured by
+  FarmerBook.
+
+### Relationship to existing systems
+
+Keep `ENABLE_SUPPORT_SOCIAL_PILOT` and the existing draft-only social content
+agent unchanged until its proposals are deliberately retired or migrated. Do
+not enable the incomplete Live Action Phase 1 runtime. The new publisher has a
+narrow article-syndication capability and independent kill switch; broader live
+actions remain default-off.
+
+## Test and evidence plan
+
+- Unit-test every eligibility rule, source allowlist, prohibited-claim class,
+  content hash, India-day/month quota and legacy-row migration.
+- Agent-state tests must prove one inference and one publication under
+  concurrency/replay, no historical draft publication, correct provisional
+  visibility, quarantine on mismatch and pause persistence across restart.
+- Route/sitemap tests must prove provisional/public inclusion policy and
+  immediate quarantined exclusion.
+- Connector contract tests use synthetic provider servers to prove exact
+  payload, idempotency, receipt hashing, read-after-write verification, no
+  retry on unknown and per-channel pause isolation. No real post is part of the
+  automated suite.
+- Run ESLint, TypeScript, focused and complete Vitest, production build,
+  generated Worker-type check, strict Wrangler dry run, local migration/RLS
+  tests for any Postgres outbox, and `git diff --check`.
+- Production release first attempts a new no-traffic Worker version with exact
+  binding comparison. Because Cloudflare requires new Durable Object migrations
+  to be applied through a non-versioned deployment, use a direct deployment
+  only after the upload is rejected with that exact migration constraint and
+  all strict build/binding checks pass. Verify health/admin/public paths and
+  record the deployment plus rollback version.
+- Canary evidence: seven consecutive days at one article/day. No per-post
+  approval is required. Automatic pause thresholds are any unsupported claim,
+  stale source, duplicate, quota breach, route mismatch, secret exposure,
+  provider-policy failure or unknown external outcome.
+- Each social channel begins independently at one post/day after its account is
+  connected. A channel can activate without waiting for unconfigured channels.
+
+## Rollback
+
+Turn off `BLOG_AUTONOMOUS_PUBLISHING`, cancel only the exact daily schedule and
+quarantine any unverified provisional article. Restore the recorded previous
+Worker version if application behavior is unhealthy. For social, pause the
+affected connector first, reconcile unknown attempts using provider read APIs,
+then revoke that connector token if compromise is suspected. Preserve ledgers,
+receipts and suppression/evidence records. Never bulk-delete publications or
+retry an ambiguous provider action.
+
+## Todo and approval checkpoint
+
+- [DONE] Audit production Blog and social bindings and existing execution
+  boundaries.
+- [DONE] Confirm that no official social publishing credential is configured.
+- [DONE] Define the standing-policy eligibility, quota, idempotency,
+  verification, quarantine and rollback model.
+- [DONE] Record explicit one-time approval of this exact addendum. The product
+  owner replied “Approve standing-policy plan” on 2026-08-20 and confirmed a
+  FarmerBook Facebook Page plus Instagram professional account, with no
+  LinkedIn Page.
+- [DONE] Implement and verify Phase A locally: low-risk-only selection, pure
+  claim/source/privacy policy, forward SQLite fields, one/day and 31/month
+  publication caps, provisional visibility, separate delayed rendered-hash
+  verifier, quarantine/pause, monitoring UI and focused tests.
+- [DONE] Deploy and activate the Phase A one-article/day canary. Cloudflare
+  required the two append-only Durable Object migrations to use a direct
+  deployment. Deployment `9672fbe1-1c5f-4ed6-9dd6-63af70c126f9` placed Worker
+  version `59676b01-86bb-4d25-86e5-5892281f7dac` at 100 percent on 2026-08-20;
+  rollback version is `770bd7c8-0cce-470a-bd12-7fa89095d1da`. The Blog flag is
+  true. Social, Facebook, Instagram, Instagram media and Live Action flags are
+  false; no connector service is bound.
+- [DONE] Confirm which FarmerBook-owned Facebook Page, LinkedIn Organization
+  Page and Instagram professional account exist: Facebook yes, LinkedIn no,
+  Instagram professional yes.
+- [DONE] Complete one-time official Facebook Page authorization. The dedicated
+  FarmerBook Meta portfolio, Page, app and system user are connected with only
+  Page publishing/read permissions. The dedicated `@farmerbook2026` Instagram
+  account is a Professional Business account in the Agriculture category, is
+  owned by the FarmerBook portfolio and is connected to the FarmerBook Page.
+  Shared Instagram inbox access is disabled and no separate people, partner,
+  ad-account or publishing-agent access was granted.
+- [DONE] Implement and locally test the Phase B safety boundary: dedicated
+  default-paused Agent/outbox, deterministic UTM copy, exact per-channel caps,
+  receipt hashing, unknown-outcome pause, admin monitor and an isolated
+  release-disabled Facebook Page connector. No token or live post was used.
+- [DONE] Deploy and independently activate Facebook after one-time Meta
+  app/Page authorization. Production Worker version
+  `563686e9-0065-4212-9530-17e1c55c14fb` binds the private connector; Facebook
+  is configured and enabled under the standing policy. Keep Instagram paused
+  until its isolated connector, independently verified receipts and
+  rights-cleared media pipeline are available.
+
+No production mutation, autonomous publication or social post is authorized by
+the act of writing this plan. The requested operating model becomes actionable
+after the product owner explicitly approves this addendum and identifies the
+owned business accounts available for connection.
+
+## 2026-08-22 implementation addendum: autonomous consented outreach
+
+### Status and approval
+
+The product owner explicitly requested implementation of autonomous content and
+outreach on 2026-08-22. Existing standing-policy Blog and owned-social changes
+are retained. This approved repository-only tranche completes consented email
+dispatch safety; it does not authorize an external account change, production
+deployment, contact import, real recipient or provider call.
+
+### Approach
+
+Keep the existing `OutreachGrowthAgent -> managed processor -> Postmark adapter`
+path. Add a final database authority boundary immediately before dispatch,
+immutable redacted reservation evidence, one India-day ceiling, and a system
+kill switch for missing readiness or ambiguous provider results. Do not create
+a force-send path or weaken consent, suppression, privacy, role or legal sender
+checks.
+
+### 1. Shared autonomous readiness
+
+**File:** `features/outreach/autonomous-readiness.ts`
+
+Add a pure evaluator returning a stable code such as
+`OUTREACH_AUTONOMY_READY`, `OUTREACH_PROVIDER_NOT_CONFIGURED` or the exact
+missing prerequisite. It checks the service-role/processor/consent/invitation/
+Turnstile settings and the complete Postmark sender, stream, postal, origin and
+webhook boundary. The evaluator accepts an explicit environment-shaped input
+for deterministic tests.
+
+### 2. Final dispatch authorization and automatic stop
+
+**File:** `supabase/migrations/20260822120000_autonomous_outreach_dispatch.sql`
+
+Create private immutable `outreach_dispatch_checks` and
+`outreach_automatic_events` tables. Add a default 25/day India-calendar ceiling
+to the singleton runtime control. Implement service-only RPCs:
+
+```sql
+authorize_outreach_dispatch(outbox_id_input uuid)
+  -> (authorized boolean, code text, check_id uuid, next_eligible_at timestamptz)
+
+pause_outreach_delivery_automatically(reason_code_input text,
+                                      idempotency_key_input uuid)
+  -> (code text, delivery_paused boolean)
+```
+
+Authorization uses a transaction advisory lock, locks the processing outbox
+row, rechecks release/pause/expiry/suppression plus consent or inbound-reply
+authority, counts same-day authorized reservations, and records only redacted
+metadata. Daily-limit rows return to pending for the next India day; ended
+authority cancels the row. Automatic pause releases other processing rows back
+to pending and records an immutable system event.
+
+### 3. Use the boundary from every delivery entry point
+
+**Files:** `features/outreach/processor.ts`,
+`features/managed-agents/processor.ts`, `app/api/outreach/process/route.ts`
+
+The batch processor calls `authorize_outreach_dispatch` before reading the
+private contact or preparing an invitation. Deferred/blocked jobs never reach
+the provider. The scheduled and dedicated processor paths run the same readiness
+evaluator before cleanup/scheduling/claim. Missing readiness, an ambiguous
+provider result or three consecutive provider failures invokes the automatic
+pause RPC and stops the batch. Provider unknown outcomes remain no-retry.
+
+### 4. Actionable operator state
+
+**Files:** `features/outreach/types.ts`, `features/outreach/queries.ts`,
+`features/outreach/outreach-console.tsx`
+
+Extend runtime health with the daily ceiling/reservation count and latest
+automatic-stop code/time. The administrator console displays those values and
+continues to expose explicit pause/resume, suppression, privacy deletion and
+bounded retry operations.
+
+### 5. Tests and documentation
+
+Add pure readiness tests, processor tests proving dispatch denial and automatic
+pause, migration/static privilege tests, and executable SQL tests for final
+consent/suppression recheck, daily deferral, immutable evidence and service-only
+access. Update the architecture/runbook with autonomous operation, prerequisites,
+automatic stop and recovery. Run focused Vitest, ESLint, TypeScript, the complete
+unit suite, production build, local Supabase reset/pgTAP where available and
+`git diff --check`.
+
+### Rollback
+
+Pause delivery first. Revert application callers to the prior Worker version
+if necessary; leave the forward-only tables and RPCs in place. The new daily
+ceiling and final authorization are additive and safe to retain. Never delete
+audit/reservation evidence or retry an ambiguous provider outcome.
+
+### Detailed todo list
+
+- [DONE] Implement and unit-test the pure readiness evaluator.
+- [DONE] Add the forward-only dispatch-check, daily-ceiling and automatic-stop
+  migration with service-only grants and immutable triggers.
+- [DONE] Call final authorization before all provider-bound work.
+- [DONE] Persistently pause on missing readiness, unknown provider outcome and the
+  three-failure circuit breaker.
+- [DONE] Surface daily reservations and automatic-stop evidence to administrators.
+- [DONE] Add SQL/static/processor tests and documentation.
+- [DONE] Run the available local verification gates and record the outcome.
+  Docker is not running, so the new executable pgTAP file is authored but a
+  clean Supabase reset is explicitly not claimed in this worktree.
+
+### Plan approval checkpoint
+
+Approved for implementation by the product owner's direct 2026-08-22 request
+to make content and consented outreach autonomous while preserving the stated
+safety, privacy, legal, budget, audit and automatic-stop controls.
+
+## 2026-08-24 addendum: Customer Farm Visits request and organic-farm video
+
+### Purpose / observable outcome
+
+After this release, any visitor can open `/farm-visits`, watch one
+rights-cleared portrait video labelled “Visiting organic farm”, understand what
+a FarmerBook visit can and cannot establish, and see the matching process. An
+authenticated member with the exact `customer` role can submit a private India
+address and bounded visit preferences. The success screen says that FarmerBook
+will first find a suitable farm and check with the Farmer; it does not promise
+or confirm a visit. The durable request is stored privately and one
+transactional notification containing the planning details is sent to the two
+code-reviewed owner inboxes.
+
+The feature is controlled by `ENABLE_FARM_VISITS`. The source default is false;
+the production release sets it true only after the forward migration, media
+permission, Postmark configuration, tests and smoke checks pass.
+
+### Progress and todo list
+
+- [DONE] Deeply research authentication roles, enquiry actions/forms, private
+  Supabase/RLS patterns, Postmark, navigation/localization/static media and the
+  current production migration/deployment topology; record it in `research.md`.
+- [DONE] Write this implementation, test, release and rollback plan.
+- [DONE] Product owner confirms that the second owner inbox is
+  `ceo@farmerbook.in`, correcting the supplied `ceo@farmbook.in` address.
+- [DONE] Product owner confirms that the video owner and identifiable participants
+  authorized public republication on FarmerBook.
+- [DONE] Add the default-off Farm Visits feature flag to application/build config.
+- [DONE] Add the private Farm Visits database model, authenticated create RPC,
+  service receipt RPC, RLS/grants, static migration tests and pgTAP coverage.
+- [DONE] Add strict schemas, the Customer-only server action and the dedicated
+  transactional Postmark notification adapter.
+- [DONE] Add the responsive public page, Customer gate/form/success state,
+  Indian-English and Telugu copy, explicit fallback disclosure, route metadata,
+  sitemap/robots/proxy/navigation integration and focused UI tests.
+- [DONE] Optimize/copy only the approved farm video and poster into the public
+  release, and add media-signature/dimension/duration tests.
+- [DONE] Run focused tests and TypeScript after every significant change, followed
+  by ESLint, full Vitest, production build, strict Wrangler dry run, clean local
+  migration apply, all pgTAP suites and `git diff --check`.
+- [DONE] Inspect the final diff for address leakage, public table grants,
+  client-controlled email recipients, duplicate/ambiguous sends, unrelated
+  dirty-worktree changes and asset-rights wording.
+- [DONE] Record the current Worker/binding/migration baseline and take a protected
+  production backup.
+- [DONE] Prove that the linked migration dry run includes only the new Farm Visits
+  migration; apply it without `--include-all`.
+- [DONE] Build and deploy with `ENABLE_FARM_VISITS=true` while preserving every
+  existing binding, secret, route, schedule, Durable Object and Workflow.
+- [DONE] Verify the live page/video/gate and complete one owner-controlled
+  synthetic Customer request; confirm both inbox receipts and the database
+  notification status, then close/scrub the synthetic row.
+- [DONE] Record the production version, evidence and exact rollback target.
+
+### 1. Release flag and public routing
+
+**Files:** `lib/feature-flags.ts`, `.env.example`, `vite.config.ts`, `proxy.ts`,
+`components/public-header.tsx`, `components/public-footer.tsx`, `app/sitemap.ts`,
+`app/robots.ts`, `tests/platform-routes.test.ts`.
+
+Add `ENABLE_FARM_VISITS` to the typed flag list and generated Worker vars. Keep
+the example value false. The page calls `notFound()` when disabled, and public
+navigation renders the link only when enabled. Add `/farm-visits` as an exact
+public subtree and exclude MP4/WebM poster/media requests from authentication
+middleware. Add the enabled page to the sitemap and robots allowlist.
+
+```ts
+const farmVisitsEnabled = isFeatureEnabled("ENABLE_FARM_VISITS");
+
+{farmVisitsEnabled ? (
+  <Link href="/farm-visits">{t("farmVisits")}</Link>
+) : null}
+```
+
+This provides an immediate application rollback without removing stored
+requests or weakening the database.
+
+### 2. Private database control plane
+
+**Files:** new
+`supabase/migrations/20260824120000_farm_visit_requests.sql`, new
+`supabase/tests/farm_visit_requests_test.sql`, new
+`tests/farm-visit-migration.test.ts`.
+
+Create `public.farm_visit_requests` with only the fields needed to plan a visit:
+requester/profile identity, authentication email snapshot, phone, structured
+India address, farming interest, party size, preferred schedule, optional note,
+consent version/time, request status, notification state/receipt/failure,
+idempotency key and timestamps. Use bounded checks, an `(requester_id,
+idempotency_key)` unique constraint and a partial unique index allowing one open
+request per Customer. The profile foreign key uses `on delete cascade` so
+account deletion removes the visit request.
+
+```sql
+create table public.farm_visit_requests (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references public.profiles(id) on delete cascade,
+  requester_name text not null check (char_length(requester_name) between 2 and 100),
+  requester_email text not null check (char_length(requester_email) between 3 and 254),
+  phone text not null check (phone ~ '^\\+91[6-9][0-9]{9}$'),
+  address_line_1 text not null check (char_length(address_line_1) between 4 and 160),
+  address_line_2 text,
+  locality text not null,
+  district text not null,
+  state text not null,
+  postal_code text not null check (postal_code ~ '^[1-9][0-9]{5}$'),
+  farming_interest text not null check (farming_interest in ('organic','natural','both','general')),
+  party_size smallint not null check (party_size between 1 and 20),
+  preferred_schedule text not null,
+  notes text,
+  consent_policy_version text not null,
+  consent_recorded_at timestamptz not null default now(),
+  status text not null default 'new',
+  notification_state text not null default 'pending',
+  notification_receipt_id text,
+  notification_failure_code text,
+  idempotency_key uuid not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (requester_id, idempotency_key)
+);
+```
+
+Enable and force RLS, revoke every table privilege from `public`, `anon` and
+`authenticated`, and add no browser table policy. Expose only:
+
+- `create_farm_visit_request(...)` to `authenticated`. It binds the actor to
+  `auth.uid()`, verifies an active/completed exact Customer profile, obtains the
+  email from the authenticated JWT claim, revalidates all fields, returns an
+  idempotent existing result on replay and returns `EXISTING_OPEN` for a second
+  open request without inserting or emailing again.
+- `record_farm_visit_notification(uuid,text,text,text)` to `service_role`. It
+  accepts only the known notification transitions and bounded provider
+  metadata; it cannot change Customer/address/request fields.
+
+The RPC result returns only `code`, `request_id`, `created_at` and
+`notification_state`. pgTAP proves anonymous denial, no direct authenticated
+table access, exact Customer-only insertion, server-bound identity/email,
+one-open/idempotency behavior, service-only notification updates, administrator
+isolation and cascade deletion.
+
+### 3. Validation, action and owner notification
+
+**Files:** new `features/farm-visits/schemas.ts`,
+`features/farm-visits/contracts.ts`, `features/farm-visits/notification.ts`,
+`features/farm-visits/actions.ts`; focused tests under `tests/`.
+
+Use one strict Zod schema with single-line/control-character bounds, an Indian
+phone, six-digit PIN, 1–20 party size, allowlisted farming interest and an exact
+consent version. The client never supplies name, account email, requester ID,
+notification recipients or notification state.
+
+```ts
+export const farmVisitRequestSchema = z.strictObject({
+  phone: indianPhone,
+  addressLine1: singleLine(4, 160),
+  addressLine2: optionalSingleLine(160),
+  locality: singleLine(2, 100),
+  district: singleLine(2, 100),
+  state: z.enum(INDIA_STATES_AND_UNION_TERRITORIES),
+  postalCode: z.string().regex(/^[1-9]\d{5}$/),
+  farmingInterest: z.enum(["organic", "natural", "both", "general"]),
+  partySize: z.coerce.number().int().min(1).max(20),
+  preferredSchedule: singleLine(2, 120),
+  notes: boundedMultiline(500).optional(),
+  consent: z.literal(true),
+  idempotencyKey: z.uuid(),
+});
+```
+
+`submitFarmVisitRequestAction` fails closed when the flag or Supabase is
+unavailable, requires an active non-demo exact Customer account, calls only the
+create RPC and sends only when the RPC returns a newly created request. It then
+passes a server-built immutable envelope to the notification adapter and
+records `sent`, `failed` or `unknown` through the service RPC. A notification
+failure never erases the durable request and never triggers a blind retry.
+
+The dedicated adapter reuses the production Postmark token/from-address/
+transactional-stream bindings but not the outreach marketing wrapper. Its
+recipient tuple is a code-reviewed constant, proposed as:
+
+```ts
+export const FARM_VISIT_NOTIFICATION_RECIPIENTS = [
+  "gnm444@gmail.com",
+  "ceo@farmerbook.in",
+] as const;
+```
+
+It sends one plain-text operational message with no tracking, no links, a
+stable Message-ID and a bounded timeout. Tests assert the exact To/From/Stream,
+that no browser field can alter recipients or identity, that 4xx is `failed`,
+and that timeout/5xx/malformed acceptance is `unknown` and not retried.
+
+### 4. Customer experience and localization
+
+**Files:** new `app/farm-visits/page.tsx`, new
+`features/farm-visits/farm-visit-request-gate.tsx`, new
+`features/farm-visits/farm-visit-request-form.tsx`, `app/globals.css`,
+`lib/i18n/messages/en-IN.ts`, `lib/i18n/messages/te-IN.ts` and the remaining
+locale catalogs as explicit Indian-English fallbacks; new UI tests.
+
+The page uses `PublicHeader`/`PublicFooter`, a compact portrait-video card and a
+two-column explanation/form layout. Indian-English and Telugu copy are fully
+provided; other locales reuse Indian English and display a fallback notice.
+The explanatory sequence is:
+
+1. Customer shares a private address and visit preferences.
+2. FarmerBook finds a suitable participating farm near that location.
+3. FarmerBook checks the Farmer's availability and willingness.
+4. FarmerBook contacts the Customer with an option; no visit exists until both
+   sides confirm.
+
+The form shows the server-derived account name/email as read-only context and
+collects only the schema fields. Its consent states that the full details are
+stored privately and emailed to the two named FarmerBook operators for visit
+planning; they are not published or sent to a Farmer at this stage. The success
+state repeats that it is not a confirmed booking. Visitors see “Sign in as a
+Customer” and “Create a Customer account”; Farmers and other roles see an
+honest Customer-only message.
+
+The page also states that a farm visit provides context and relationship, not
+organic certification, laboratory assurance or a guarantee for every product,
+plot, season or batch.
+
+### 5. Video preparation and delivery
+
+**Files after permission:** new
+`public/farm-visits/organic-farm-visit.mp4`, new
+`public/farm-visits/organic-farm-visit-poster.webp`, and new
+`tests/farm-visit-media.test.ts`.
+
+Optimize the approved source mechanically with H.264/AAC fast-start while
+preserving portrait framing and intelligible speech. Do not alter the people or
+imply FarmerBook ownership. Extract one representative poster from the same
+approved video. The component uses native controls, `playsInline`,
+`preload="metadata"`, a descriptive title/caption and text summary; it does not
+autoplay. Tests inspect the MP4 signature, file ceiling, 478:850-style portrait
+aspect, playable streams and roughly 90-second duration.
+
+```tsx
+<video
+  controls
+  playsInline
+  preload="metadata"
+  poster="/farm-visits/organic-farm-visit-poster.webp"
+>
+  <source src="/farm-visits/organic-farm-visit.mp4" type="video/mp4" />
+</video>
+```
+
+### 6. Test and review gates
+
+Run focused tests after each layer:
+
+```text
+npx vitest run tests/farm-visit-schemas.test.ts tests/farm-visit-notification.test.ts tests/farm-visit-actions.test.ts
+npm run typecheck
+npx vitest run tests/farm-visit-page.test.tsx tests/farm-visit-media.test.ts tests/platform-routes.test.ts tests/farm-visit-migration.test.ts
+npm run typecheck
+```
+
+Then run repository ESLint, full TypeScript, full Vitest and the production
+build. Apply every migration to an isolated local database and run all pgTAP
+suites, including the Farm Visits suite. Run a strict Wrangler dry run and
+inspect generated routes, vars, static assets and exact binding names. Use
+`git diff --check` and an explicit changed-path audit so unrelated owner work is
+not reformatted, reverted or released accidentally.
+
+### 7. Production release and verification
+
+Before mutation, record the current 100%-traffic Worker
+`36b29fcd-4fe9-4fad-a5ac-ee926f92703e`, current deployment ID, binding-name
+set and linked migration ledger. Take a mode-700 schema/data/role backup. Run
+the linked migration dry run and stop unless its only action is
+`20260824120000`. Apply that migration normally, never with `--include-all`.
+
+Build the exact inspected tree with all current production vars plus
+`ENABLE_FARM_VISITS=true`. The deploy must preserve every existing secret,
+service binding, Durable Object, Workflow, cron, Images binding and custom
+domain. Verify health/home and all previously critical routes before checking:
+
+- `/farm-visits` returns 200 with expected canonical metadata and copy;
+- MP4 and poster return 200 with correct media/content types and range support;
+- anonymous and non-Customer users cannot submit;
+- one owner-controlled Customer can submit a clearly synthetic address;
+- exactly one request row exists with no public read path;
+- both approved owner inboxes receive the same request ID and expected details;
+- the database row records the provider receipt without the message body; and
+- a replay does not insert or email again.
+
+Close or privacy-scrub the synthetic request after verification. Record the new
+Worker version, migration, inbox/provider receipt evidence and rollback target
+without copying private addresses into logs or documentation.
+
+### Rollback
+
+For a UI/action regression, set `ENABLE_FARM_VISITS=false` or route traffic back
+to Worker `36b29fcd-4fe9-4fad-a5ac-ee926f92703e`; do not delete the table or
+request rows. The migration is additive and safe to retain with all browser
+grants revoked. For notification trouble, leave the request durable, record
+`failed` or `unknown`, disable the feature flag and investigate without retrying
+an ambiguous send. If video permission is withdrawn, remove it in a corrective
+application deployment immediately while retaining the non-media request data
+only for its stated retention/deletion policy.
+
+### Open decisions / approval checkpoint
+
+Implementation and any production mutation waited for one explicit reply that
+approved this plan and confirmed both facts:
+
+1. Use `gnm444@gmail.com` and **`ceo@farmerbook.in`** as the two recipients
+   (not `ceo@farmbook.in`).
+2. The owner of the Nagamani House organic-farm video and the identifiable
+   participants have authorized public republication on FarmerBook.
+
+Approved on 2026-08-24 when the product owner replied: “Send customer details
+to gnm444@gmail.com and ceo@farmerbook.in Plan approved. Both confirmed.”
+Proceed with implementation, continuous verification and the production
+release exactly as planned.
+
+## Implementation Plan: Sandeep Dasari profile, reported products and optional professional-source gate
+
+### Approach
+
+Publish Sandeep Dasari through FarmerBook's existing Featured Farmer editorial
+surface, never through member-profile or marketplace seller records. Add a
+private database policy control that makes only the two professional-website
+requirements optional and defaults to optional mode. Keep citations, confirmed
+owned social, three story sections, media rights, current fact check,
+correction path and editorial/non-certified disclosures mandatory.
+
+Show the supplied products in a non-orderable **Reported farm products** section
+on the editorial preview. Do not call it a store or create live listings until
+Sandeep owns and approves a FarmerBook account and supplies the required
+commercial and food-business details. The first implementation stop is a local
+rendered preview; production remains a separate content-review checkpoint.
+
+### 1. Add one reversible policy control
+
+**Files:**
+
+- `supabase/migrations/20260825120000_optional_featured_farmer_professional_sources.sql`
+- `features/featured-farmers/queries.ts`
+- `features/featured-farmers/source-policy.ts`
+- `features/featured-farmers/editorial-workspace.tsx`
+- `app/(product)/admin/featured-farmers/[researchId]/page.tsx`
+
+Add private control key `featured_farmer_professional_sources_required` with
+`enabled=false`. Replace `refresh_featured_farmer_readiness` in the new
+forward-only migration so the professional-domain and authoritative-source
+blockers apply only when this control is true. Do not edit the historical
+migration.
+
+Load that private control with the admin workspace and pass it explicitly to
+the client policy assessment:
+
+```ts
+assessFeaturedFarmerReadiness({
+  ...evidence,
+  requireProfessionalSources: policy.professionalSourcesRequired,
+});
+```
+
+Optional mode keeps reporting professional-source counts but does not convert
+them into blockers. All other blockers remain. The admin UI must visibly say
+that professional websites are temporarily optional and that this does not
+mean the claims are independently verified.
+
+### 2. Add a typed non-transactional product catalog
+
+**Files:**
+
+- `features/featured-farmers/queries.ts`
+- `features/featured-farmers/public-profile.tsx`
+- `features/featured-farmers/public-messages.ts`
+- only the locale catalogs necessary to preserve their explicit English
+  fallback behavior
+
+Extend the immutable snapshot schema with optional `reportedProducts`. Each
+item contains only a display name, supported category slug, evidence/source
+URLs and a fixed `reported` status. It must not contain price, quantity,
+minimum order, stock, delivery, certification or contact data.
+
+Render a section headed “Reported farm products,” followed by this disclosure:
+
+> These products were supplied by the FarmerBook operator and have not been
+> confirmed for current stock, price, delivery, certification or food-business
+> registration. This editorial catalog is not an order page.
+
+The initial products are Desi cow milk, buffalo milk, Desi chicken, Desi eggs,
+paneer, ghee, cold-pressed oils (types not yet specified), jaggery and mulberry.
+The section may link only to cited source pages and the farm-owned channel. It
+must not render marketplace cards, enquiry forms, prices or `/store` links.
+
+### 3. Convert the draft into a typed curated publication
+
+**Files:**
+
+- Rename `artifacts/featured-farmers/sandeep-reddy-avani-van-draft.md` to
+  `artifacts/featured-farmers/sandeep-dasari-avani-van-draft.md`
+- Add `features/featured-farmers/sandeep-dasari.ts`
+
+Build a `FeaturedFarmerPublication` with Sandeep's corrected name; slug
+`sandeep-dasari-avani-van-farms`; Bommalaramaram, Telangana; the confirmed
+`@AvanivanFarms` channel; the first-party farm tour; the Mi Andhra interview
+and supplied timestamps; at least three cited sections and two cited claims;
+the reported-product catalog; no copied image; and an attributed YouTube-hosted
+preview.
+
+Claims must use language such as “Sandeep says,” “he describes,” and “his
+stated goal.” Date and attribute the ₹140–₹150 milk-cost estimate. Present the
+six-year self-sufficiency statement as a goal. State explicitly that the page
+is not membership, verification, certification, endorsement or medical advice.
+
+### 4. Register both curated stories without duplicates
+
+**File:** `features/featured-farmers/queries.ts`
+
+Replace the one-off Narayana special case with a small curated list:
+
+```ts
+const curatedPublications = [
+  sandeepDasariPublication,
+  narayanaReddyPublication,
+];
+```
+
+Merge database publications by slug and resolve curated slugs before querying
+Supabase. Keep ordering and limits deterministic. The existing sitemap should
+discover Sandeep through the loader.
+
+### 5. Preserve the real-store ownership boundary
+
+Do not create an auth user, member profile, seller handle, produce listing or
+buyer-enquiry target for Sandeep in this tranche. Do not weaken RLS or the
+authenticated `farmer_id = auth.uid()` insert rule.
+
+A later real-store tranche requires all of the following from Sandeep:
+
+- an active FarmerBook Farmer account that he controls and has completed;
+- pre-publication approval linking the editorial page to that account;
+- for each product: exact type/variety, current quantity/unit, minimum order,
+  price/unit, availability, grade, delivery options/radius and description;
+- current certification wording, with no certified-organic label unless
+  FarmerBook approves the certificate;
+- applicable FSSAI registration/licence evidence and product-specific review;
+  and
+- consent to receive and manage buyer enquiries.
+
+Once those exist, Sandeep should create or explicitly approve listings through
+the existing seller action; administrators must not impersonate him.
+
+### 6. Test policy modes, story and no-store behavior
+
+**Files:**
+
+- `tests/featured-farmer-source-policy.test.ts`
+- a focused forward-migration test
+- `supabase/tests/featured_farmer_profiles_test.sql`
+- `tests/featured-farmer-public-profile.test.tsx`
+- `tests/featured-farmer-metadata.test.ts`
+- focused loader/sitemap tests
+
+Required assertions:
+
+- optional mode accepts cited YouTube evidence plus a confirmed owned channel
+  while still rejecting missing claims, social, sections or media rights;
+- required mode preserves both professional-source blockers;
+- the private control defaults false and guards exactly those two SQL checks;
+- Sandeep's snapshot passes its Zod schema and renders name, location, story,
+  citations, owned channel, third-party interview and limitations;
+- all nine reported product groups render with the non-orderable disclosure;
+- there is no price, order, enquiry, store, verified or certified-organic UI;
+- both curated profiles list and resolve exactly once; and
+- unrelated namesakes and private contact data are absent.
+
+Run focused tests and typecheck after policy changes, then after publication
+registration. Finish with lint, full TypeScript, focused/full Vitest,
+production build, `git diff --check` and a changed-path audit. If local Supabase
+is available, rebuild and run the Featured Farmer pgTAP suite.
+
+### 7. Documentation, visual review and production checkpoint
+
+**Files:**
+
+- `README.md`
+- `docs/PRODUCTION_RUNBOOK.md`
+- `docs/REQUIREMENTS.md`
+- `implementation-log.md`
+- `.structured-dev-state`
+
+Document the temporary optional evidence rule, persistent safeguards, current
+YouTube-only source basis, reported-product limitation, real-store prerequisites
+and the exact re-enable operation:
+
+```sql
+update public.ecosystem_release_controls
+set enabled = true
+where control_key = 'featured_farmer_professional_sources_required';
+```
+
+Build and run locally, capture desktop/mobile collection and story previews,
+and inspect links, credits, overflow, disclosures and no-order behavior. Present
+the rendered profile for product-owner content approval. Do not mark it
+fact-checked or deploy it before that approval.
+
+After approval, inspect the entire dirty-tree build and Cloudflare bindings.
+Apply only the new migration if the production newsroom schema is present and
+preflight is exact; otherwise the curated story can ship without activating
+the newsroom migration. Deploy the reviewed Worker, verify the collection,
+story, sitemap, metadata, source links and no-store behavior on all production
+hostnames, and record the version and rollback target.
+
+### Rollback
+
+Remove Sandeep from the curated list or roll Worker traffic back to withdraw
+the story. Retain the additive policy migration; setting
+`featured_farmer_professional_sources_required=true` immediately restores the
+stronger database gate. Never delete immutable publication/event history.
+
+### Detailed todo list
+
+- [DONE] Add the private optional/required professional-source control.
+- [DONE] Make application and database readiness consume the same control.
+- [DONE] Add visible admin disclosure for temporary optional mode.
+- [DONE] Add the typed, non-orderable reported-products snapshot field and UI.
+- [DONE] Rename and finalize the Sandeep draft.
+- [DONE] Add the curated Sandeep publication with safe attributions.
+- [DONE] Register and de-duplicate curated publications.
+- [DONE] Add policy, migration, rendering, metadata, loader and sitemap coverage.
+- [DONE] Prove the real marketplace ownership rules remain unchanged in the feature code and focused no-store tests.
+- [DONE] Run focused tests/typecheck after each significant layer.
+- [DONE] Run full local verification and inspect changed paths; local pgTAP was unavailable because Docker is not running.
+- [DONE] Render and visually inspect desktop/mobile previews.
+- [DONE] Obtain product-owner pre-publication content approval; approved on 2026-08-25.
+- [DONE] Preflight the optional newsroom migration and complete an inspected deployment; production does not yet contain the prerequisite Featured Farmer newsroom schema, so no migration was applied and the independent curated story shipped safely.
+- [DONE] Verify live routes, sources, disclosures and no-store behavior on the apex and `www` custom domains.
+- [DONE] Record release and rollback evidence: deployment `3eacacde-4404-4fa0-a9bd-42a9d866ac72`, Worker version `b17c8986-5467-47f2-84f7-603283bfb16c`, rollback Worker `3c416ab2-0a8f-4ab0-83c5-105b424b2cc1`.
+
+### Approval checkpoint
+
+Approved on 2026-08-25 when the product owner replied: “Plan approved.” The
+product owner then explicitly approved Sandeep's profile for publication and
+requested deployment on 2026-08-25. The approved story is live at
+`/featured-farmers/sandeep-dasari-avani-van-farms` through deployment
+`3eacacde-4404-4fa0-a9bd-42a9d866ac72`.
+
+## 2026-08-25 implementation addendum: Sandeep contact, questions, recommendations and profile views
+
+### Outcome and fixed decisions
+
+Enhance only Sandeep Dasari's existing Featured Farmer editorial page with:
+
+- the owner-authorized public email `avanivanfarms@gmail.com` in the bio/contact
+  area;
+- a private question/comment form that sends one transactional email to that
+  fixed address and never posts the message publicly;
+- moderated LinkedIn-style Customer recommendations that do not use stars or
+  claim a verified FarmerBook transaction; and
+- an approximate aggregate labelled `Profile views`, counted at most once per
+  browser per UTC day without storing IPs, fingerprints or visitor records.
+
+Keep this separate from Sandeep's nonexistent member/seller account and from
+marketplace reviews. Add one default-off application flag and one standalone
+forward migration. Do not depend on or enable the absent production Featured
+Farmer newsroom schema.
+
+### 1. Add a standalone, least-privilege engagement schema
+
+**Files:**
+
+- `supabase/migrations/20260825130000_featured_farmer_engagement.sql`
+- `supabase/tests/featured_farmer_engagement_test.sql`
+- `tests/featured-farmer-engagement-migration.test.ts`
+
+Create:
+
+1. `featured_farmer_engagement_subjects`, seeded only with Sandeep's slug,
+   display name, public email, three enabled capability switches and a
+   non-negative aggregate `profile_view_count`.
+2. `featured_farmer_question_deliveries`, storing only subject, keyed sender
+   HMAC, kind, idempotency, notification state/receipt/failure and timestamps;
+   never raw name, email or message.
+3. `featured_farmer_recommendations`, tied to a real Customer profile with
+   bounded relationship context/body and `pending`, `approved`, `rejected` or
+   `withdrawn` status.
+4. `featured_farmer_recommendation_events`, an append-only administrator audit
+   of moderation transitions.
+
+Force RLS on every table and revoke every direct browser grant. Add narrowly
+granted functions for public subject/approved-recommendation reads,
+service-only view increment and question delivery reservation/receipt,
+authenticated Customer create/edit/withdraw, and admin-only queue/moderation.
+All functions use an empty search path, schema-qualified objects, bounded
+inputs, explicit role checks and idempotent outcomes.
+
+The question reservation atomically enforces one row per idempotency UUID,
+three submissions per keyed sender/profile/24 hours and 100 per profile/day.
+The recommendation function derives `auth.uid()`, requires an active,
+onboarding-complete Customer, and permits one current pending/approved
+recommendation per Customer/profile. An edit returns the row to `pending`.
+
+### 2. Add a server-owned engagement registry and configuration gate
+
+**Files:**
+
+- `features/featured-farmers/engagement-registry.ts`
+- `features/featured-farmers/engagement-configuration.ts`
+- `lib/feature-flags.ts`
+- `.env.example`
+- `vite.config.ts`
+- focused configuration/registry tests
+
+Add `ENABLE_FEATURED_FARMER_ENGAGEMENT=false` and require Supabase, service
+role, `FEATURED_FARMER_ENGAGEMENT_HASH_SECRET`, exact-action Turnstile and the
+existing Postmark transactional sender/stream before accepting questions.
+
+The registry owns this immutable mapping:
+
+```ts
+{
+  "sandeep-dasari-avani-van-farms": {
+    displayName: "Sandeep Dasari / Avani Van Farms",
+    recipientEmail: "avanivanfarms@gmail.com",
+  },
+}
+```
+
+Actions accept only a slug and resolve the recipient from this registry. They
+never accept a `to`, recipient, sender identity, review status or visitor-count
+value from the browser.
+
+### 3. Add the public email and private question delivery
+
+**Files:**
+
+- `features/featured-farmers/sandeep-dasari.ts`
+- `features/featured-farmers/queries.ts`
+- `features/featured-farmers/engagement-schemas.ts`
+- `features/featured-farmers/question-notification.ts`
+- `features/featured-farmers/engagement-actions.ts`
+- `features/featured-farmers/question-form.tsx`
+- `features/featured-farmers/public-messages.ts`
+
+Extend the snapshot with optional `contactEmail` and set Sandeep's value to the
+supplied address. Render a visible `mailto:` link in his contact/bio area.
+
+Build a public question/comment form with name, reply email, type, message,
+consent, idempotency UUID, honeypot and Turnstile. Validate the known slug and
+configuration before processing. Normalize the reply email, calculate a
+server-only HMAC, reserve the private delivery row, and only for `CREATED` send
+one Postmark transactional email:
+
+```ts
+{
+  From: `FarmerBook profile questions <ceo@farmerbook.in>`,
+  To: "avanivanfarms@gmail.com",
+  ReplyTo: validatedVisitorEmail,
+  TrackOpens: false,
+  TrackLinks: "None",
+  Tag: "featured-farmer-question",
+}
+```
+
+Include the trusted profile name, request ID and bounded visitor content in the
+email body. Do not log or persist the raw fields. Record exactly one terminal
+`sent`, `failed` or `unknown` provider outcome and never automatically retry an
+ambiguous send. On success, clearly tell the visitor that the message was sent
+privately and will not appear as a public recommendation.
+
+### 4. Add authenticated LinkedIn-style Customer recommendations
+
+**Files:**
+
+- `features/featured-farmers/recommendation-form.tsx`
+- `features/featured-farmers/recommendation-list.tsx`
+- `features/featured-farmers/engagement-actions.ts`
+- `features/featured-farmers/engagement-queries.ts`
+- `features/featured-farmers/public-messages.ts`
+- focused action/query/render tests
+
+Load approved recommendations for every visitor. For an eligible signed-in
+Customer, show a form for relationship/purchase context, a 50–1,000 character
+recommendation and explicit consent to display the account name publicly. For
+anonymous/non-Customer visitors, show a sign-in/Customer-account explanation
+instead of a writable form.
+
+New recommendations remain `pending` until moderation. Show no pending text to
+the public. Approved cards contain public name, optional public handle,
+relationship context, recommendation text and date, followed by:
+
+> Relationship self-declared · reviewed for publication · not a verified
+> FarmerBook transaction.
+
+No star rating, verified-purchase badge, buyer email, user UUID, admin note or
+unapproved content may reach the public projection. A Customer may edit or
+withdraw their own recommendation; edit returns it to moderation.
+
+### 5. Add an independent administrator moderation queue
+
+**Files:**
+
+- `app/(product)/admin/featured-farmer-engagement/page.tsx`
+- `features/featured-farmers/engagement-admin.tsx`
+- `features/featured-farmers/engagement-admin-actions.ts`
+- `features/featured-farmers/engagement-queries.ts`
+- optional link from the existing Featured Farmer newsroom header
+
+Require an authenticated administrator before loading any queue data. Display
+the recommendation, Customer public identity, status and timestamps; do not
+show auth email because moderation does not require it. Approve, reject or hide
+through one audited RPC that records the prior/new state, administrator and a
+required bounded reason. Revalidate the profile and queue after a successful
+decision.
+
+Keep this route functional even when the private Featured Farmer newsroom is
+unavailable in production.
+
+### 6. Add the privacy-minimal profile view counter
+
+**Files:**
+
+- `features/featured-farmers/profile-view-counter.tsx`
+- `features/featured-farmers/engagement-actions.ts`
+- `features/featured-farmers/engagement-queries.ts`
+- tests for aggregation, cookies, bot rejection and copy
+
+Render the latest aggregate as `Profile views`. After a real client render,
+call a same-origin server action with the known slug. The action:
+
+1. checks the feature flag and registry;
+2. rejects obvious bot/crawler user agents;
+3. reads a first-party HttpOnly, Secure-in-production, SameSite=Lax cookie whose
+   value is only the last counted UTC date for this profile;
+4. skips the write when already counted that day;
+5. otherwise atomically increments the service-only aggregate and updates the
+   non-identifying cookie; and
+6. returns the new count.
+
+Never store IP address, user agent, random visitor ID, auth identity, referrer
+or fingerprint. Add help text that the number is approximate and once-per-
+browser-per-day, not a count of uniquely identified people.
+
+### 7. Integrate the responsive public surface
+
+**Files:**
+
+- `app/featured-farmers/[slug]/page.tsx`
+- `features/featured-farmers/public-profile.tsx`
+- `features/featured-farmers/featured-farmer-engagement.tsx`
+- `app/globals.css`
+- focused React and Playwright tests
+
+Load mutable engagement separately from the cached editorial publication.
+Place the contact/view summary near the profile aside, then place the private
+question form and public recommendations below the editorial story. Preserve
+the current portrait, farm background, video thumbnails, reported-products
+disclosure, citations and mobile layout. Add semantic headings, labels,
+announced success/error states, keyboard focus, reduced-motion behavior and
+honest empty/pending/sign-in states.
+
+### 8. Verify locally and release through an isolated production path
+
+Run in this order:
+
+1. focused schema/registry/HMAC/notification/action/query/component tests;
+2. migration structure tests;
+3. clean local migration apply and pgTAP when Docker is available;
+4. ESLint, TypeScript and focused/full Vitest;
+5. production build and `git diff --check`;
+6. desktop/mobile Playwright and visual inspection for Sandeep's page and admin
+   queue;
+7. strict `npx wrangler@4.120.0 deploy --dry-run` and exact binding comparison.
+
+Before production, take a protected Supabase backup. Rehearse against both a
+clean database and the production-shaped migration set. Apply only
+`20260825130000_featured_farmer_engagement.sql` in one reviewed transaction;
+do not use unrestricted `db push` or `--include-all`. Prove all raw tables are
+unreadable by `anon` and ordinary `authenticated` roles, then deploy the
+inspected Worker with the new flag enabled and all existing bindings preserved.
+
+Live checks cover apex and `www`: public email, form availability, no raw
+recipient action field, empty/approved recommendation projection, sign-in gate,
+profile-view daily de-duplication, existing videos/images/sources, sitemap and
+health. Do not send a synthetic email to Sandeep and do not publish a fabricated
+customer recommendation during release validation without separate explicit
+authorization.
+
+### Rollback
+
+Set `ENABLE_FEATURED_FARMER_ENGAGEMENT=false` for the narrowest rollback, or
+route traffic back to Worker `bd06a4c2-2692-4a32-b60c-4ad2ff28aceb`. Retain the
+additive tables, delivery receipts, aggregate count and moderation audit; do
+not destructively roll back the database. If question email delivery is
+uncertain, disable the feature and investigate the recorded `unknown` state
+without retrying. Hide an unsafe recommendation through the audited admin path.
+The public contact email can be removed in a corrective curated-publication
+revision if Sandeep withdraws display permission.
+
+### Detailed todo and approval checkpoint
+
+- [DONE] Research the current profile, review trust model, email path,
+  Turnstile, analytics, moderation, migration topology and rollback version.
+- [DONE] Record the standalone data model, privacy boundary, visitor-count
+  semantics and test/release plan.
+- [DONE] Obtain explicit product-owner approval for this engagement plan.
+- [DONE] Implement the standalone migration and pgTAP coverage.
+- [DONE] Implement the registry, flag, question email and visitor-safe forms.
+- [DONE] Implement Customer recommendations and independent admin moderation.
+- [DONE] Implement the approximate daily-deduplicated profile-view counter.
+- [DONE] Complete local quality gates and responsive visual review.
+- [DONE] Back up production, apply only the isolated migration, deploy with the
+  pinned Wrangler version and preserve all bindings.
+- [DONE] Verify live behavior without sending a synthetic farm email or
+  publishing a fabricated testimonial.
+- [DONE] Record the final Worker, deployment, migration, verification and
+  rollback evidence.
+
+Approved on 2026-08-25 when the product owner replied: “Plan approved.” The
+structured-development checkpoint is cleared for implementation, verification,
+the isolated production migration and deployment. The no-synthetic-email and
+no-fabricated-testimonial boundaries remain in force.
+
+Completed on 2026-08-25. A protected schema/data/roles backup preceded the
+isolated production dry run and apply; only migration `20260825130000` was
+applied. Corrective deployment `93bc6162-4527-4a90-8a9f-8328284a41de` places
+Worker `91b72a67-a4f0-426a-99f5-5c09b1f8dd38` at 100 percent, preserving 13
+Durable Objects, AI, Images, one Workflow, one service binding, 33 prior plain
+variables, and all 13 prior secrets while adding one engagement flag and one
+hashing secret. Browser verification proved the HttpOnly date-only cookie
+counts at most once across same-browser reloads, three video thumbnails render,
+and desktop/mobile layouts have no horizontal overflow. Apex and `www` return
+200 with the email, private form and honest empty recommendation state; no
+question email or fabricated recommendation was submitted. Rollback Worker:
+`bd06a4c2-2692-4a32-b60c-4ad2ff28aceb`.
+## Raitu Nestham founder-only research snapshot addendum — 2026-08-25
+
+### Approach
+
+Add a new read-only page beneath the already deployed founder-only sourced
+research workspace. Reuse the exact `requireSourcedFarmerResearchOwner()` gate,
+perform that check before dynamically importing the dataset, render entirely on
+the server, and keep all records separate from Farmer contacts, consent,
+members, outreach, verification and public publication.
+
+This is a narrow explicit exception to the older transient-only YouTube policy:
+the 41 manually reviewed profiles and 37 public professional phone numbers will
+be retained in a private server bundle so the founder can inspect them. The
+numbers remain `public/unverified` research evidence and never become outreach
+consent.
+
+### 1. Add the typed server-only snapshot
+
+**File:** `features/sourced-farmers/raitunestham-research.server.ts`
+
+Create a readonly record type, the 41 reviewed records, deterministic summary
+helpers and a bounded server-side filter. The module must never be imported by a
+`"use client"` component.
+
+```ts
+export const RAITU_NESTHAM_RESEARCH = [/* reviewed rows */] as const;
+
+export function filterRaituNesthamResearch(input: {
+  q: string;
+  priority?: "recent" | "method" | "allied";
+}) {
+  // Normalize and filter only the fixed in-memory snapshot.
+}
+```
+
+Rationale: a server-only fixed snapshot meets the current request without a
+database migration or an invalid import into the consented contact database.
+The local Markdown/CSV export remains the review source.
+
+Implementation note: the Vinext application does not install the optional
+`server-only` sentinel package. Preserve the `.server.ts` filename, import the
+module dynamically only after authorization, and enforce the no-client-import
+boundary with a changed-path source test instead of adding a dependency solely
+for the sentinel.
+
+### 2. Build the founder-only server-rendered page
+
+**Files:**
+
+- `app/(product)/admin/sourced-farmers/raitunestham/page.tsx`
+- `features/sourced-farmers/raitunestham-research-view.tsx`
+
+The route is `force-dynamic`, uncached and `robots: noindex, nofollow, nocache`.
+Enforce access before loading data:
+
+```ts
+const access = await requireSourcedFarmerResearchOwner();
+if (!access.ok) notFound();
+const { filterRaituNesthamResearch } = await import(
+  "@/features/sourced-farmers/raitunestham-research.server"
+);
+```
+
+Parse a bounded `q` and allowlisted `priority` from `searchParams`. Render exact
+summary counts, a GET filter form, responsive results, source links and phone
+links labeled `Public/unverified · not outreach consent`. Provide no mutation,
+message, invite, import, publish or verification controls.
+
+### 3. Add private navigation and responsive styling
+
+**Files:**
+
+- `app/(product)/admin/sourced-farmers/page.tsx`
+- `app/globals.css`
+
+Add `Raitu Nestham profiles` to the existing private page header actions. Reuse
+existing cards, tags and table primitives. Add a bounded grid/table layout that
+does not overflow on 360px mobile screens. Do not add the page to public
+navigation, robots allowlists or the sitemap.
+
+### 4. Update requirement and operating documentation
+
+**Files:**
+
+- `docs/REQUIREMENTS.md`
+- `README.md`
+- `docs/PRODUCTION_RUNBOOK.md`
+- `implementation-log.md`
+- `.structured-dev-state`
+
+Record `FB-REQ-026` as the explicit founder-only reviewed-snapshot exception.
+Clarify that it does not weaken the official discovery agent: future YouTube API
+responses remain transient/contact-redacted, while only this manually reviewed,
+dated snapshot is retained. Record local verification and, only if deployed,
+the live Worker/rollback evidence.
+
+### 5. Test the privacy boundary and data integrity
+
+**Files:**
+
+- `tests/raitunestham-research-data.test.ts`
+- `tests/raitunestham-research-view.test.tsx`
+- `tests/e2e/sourced-farmers.spec.ts`
+- optional changed-path source-boundary test
+
+Test 41 unique rows, 37 phone-bearing rows, valid video URLs, phone shape,
+filtering, exact caution copy and safe external links. Extend the demo/anonymous
+browser tests so the new route returns 404/noindex and leaks neither a known
+farmer name nor a known phone. Statically prove no client module imports the
+server data.
+
+Run focused tests after each significant change, followed by ESLint, TypeScript,
+the production build, `git diff --check`, and desktop/mobile Playwright.
+
+### 6. Release and live verification
+
+After local gates pass, inspect the Wrangler output/binding diff and deploy the
+Worker without changing the database, feature flags, secrets, schedules or
+other bindings. Verify:
+
+1. anonymous access returns 404 and leaks no snapshot content;
+2. the authenticated configured founder can search and filter all 41 records;
+3. phone/source links render with the exact unverified/consent disclaimer;
+4. public routes, health, sitemap and existing sourced research remain healthy;
+5. no farmer is called, messaged, imported or otherwise contacted.
+
+Rollback is the prior healthy Worker version. Because this tranche creates no
+database rows or external messages, rollback requires only returning traffic to
+that Worker.
+
+### Detailed todo and approval checkpoint
+
+- [DONE] Deeply audit the existing admin/auth, sourced-research, consent-contact,
+  privacy, UI and test patterns and append findings to `research.md`.
+- [DONE] Document the policy conflict and select a separate server-only snapshot
+  instead of the consent database.
+- [DONE] Write this implementation plan, test strategy, release checks and
+  rollback path.
+- [DONE] Obtain explicit product-owner approval for this plan and its narrow
+  retained-YouTube-data exception.
+- [DONE] Add the server-only typed dataset and filter helpers.
+- [DONE] Add the owner-gated dynamic page and read-only renderer.
+- [DONE] Add private navigation and responsive styles.
+- [DONE] Add unit, source-boundary and anonymous browser tests.
+- [DONE] Update requirement/README/runbook/state documentation.
+- [DONE] Run focused and full local quality gates.
+- [DONE] Inspect the production artifact/bindings and deploy without database or
+  secret changes.
+- [DONE] Verify anonymous denial and founder-only live rendering without contacting
+  any farmer.
+
+Approved on 2026-08-25 when the product owner replied: “Plan approved.” Proceed
+with implementation and local verification. Deployment remains limited to this
+read-only route and must preserve every existing binding and database state.
+
+Completed on 2026-08-25. The fixed server-only snapshot contains 41 unique
+reviewed records and 37 public/unverified phones. ESLint, TypeScript, the
+production build, 186 Vitest files/848 tests, eight desktop/mobile sourced-page
+Playwright journeys, client-bundle sentinel checks and `git diff --check`
+passed. A production-shaped rebuild and strict Wrangler dry run preserved the
+live topology. Deployment `be171f32-5d0a-4810-9745-b8308b3f394d` placed Worker
+`e8754058-586c-4671-8284-85958dbd43d5` at 100 percent, preserving 14 Durable
+Objects, two Workflows, AI, Images, the owned-social service, 34 plain variables
+and 14 encrypted secrets. Anonymous production requests redirect to login with
+no snapshot content; authenticated founder Chrome rendered all 41 profiles and
+proved a `groundnut` + `recent` filter returns the single matching cited record.
+Both custom-domain health endpoints return 200 and the sitemap excludes the
+private route. No database row, secret, feature control, schedule, message,
+invitation, member profile, consent, verification, publication or farmer
+contact changed. Rollback Worker: `91b72a67-a4f0-426a-99f5-5c09b1f8dd38`.

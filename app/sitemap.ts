@@ -27,7 +27,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const paths: readonly string[] = [
     ...publicPaths,
     ...(isFeatureEnabled("ENABLE_AGRI_BUSINESSES") ? ["/companies"] : []),
-    ...(isFeatureEnabled("ENABLE_OUTREACH_AGENT") ? ["/join"] : []),
+    ...(isFeatureEnabled("ENABLE_OUTREACH_AGENT")
+      ? ["/join", "/partner-interest"]
+      : []),
+    ...(isFeatureEnabled("ENABLE_FARM_VISITS") ? ["/farm-visits"] : []),
     "/featured-farmers",
   ];
   return [
@@ -43,7 +46,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               ? 0.7
               : 0.5,
     })),
-    ...featuredPublications.map((publication) => ({
+    ...featuredPublications
+      .filter((publication) => publication.publication_status !== "preview")
+      .map((publication) => ({
       url: new URL(
         `/featured-farmers/${publication.slug}`,
         origin,
@@ -51,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(publication.fact_checked_at),
       changeFrequency: "yearly" as const,
       priority: 0.8,
-    })),
+      })),
     ...blogPublications.map((publication) => ({
       url: new URL(`/blog/${publication.slug}`, origin).toString(),
       lastModified: new Date(publication.updatedAt),

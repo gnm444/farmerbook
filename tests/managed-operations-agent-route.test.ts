@@ -46,6 +46,7 @@ describe("private managed-agent processor route", () => {
     mocks.flags.set("ENABLE_OUTREACH_AGENT", true);
     mocks.flags.set("ENABLE_PROFILE_RESEARCH_AGENT", true);
     mocks.flags.set("ENABLE_SUPPORT_SOCIAL_PILOT", true);
+    mocks.flags.set("ENABLE_AI_COMPANY", true);
     mocks.process.mockReset();
     mocks.process.mockResolvedValue({
       code: "SUCCEEDED",
@@ -95,5 +96,17 @@ describe("private managed-agent processor route", () => {
     expect((await POST(request(supportBody))).status).toBe(404);
     mocks.flags.set("ENABLE_SUPPORT_SOCIAL_PILOT", true);
     expect((await POST(request(supportBody))).status).toBe(200);
+  });
+
+  it("keeps company roles behind the separate AI company gate", async () => {
+    const companyBody = {
+      ...validBody,
+      role: "executive_strategy",
+      instanceName: "farmerbook-company-executive-strategy",
+    };
+    mocks.flags.set("ENABLE_AI_COMPANY", false);
+    expect((await POST(request(companyBody))).status).toBe(404);
+    mocks.flags.set("ENABLE_AI_COMPANY", true);
+    expect((await POST(request(companyBody))).status).toBe(200);
   });
 });

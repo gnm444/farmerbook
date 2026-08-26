@@ -10,6 +10,7 @@ const publicPrefixes = [
   "/auth",
   "/invite",
   "/join",
+  "/partner-interest",
   "/confirm-email",
   "/unsubscribe",
   "/api/health",
@@ -30,6 +31,7 @@ const publicPrefixes = [
   "/terms",
   "/license",
   "/eco-products",
+  "/farm-visits",
 ];
 
 export function isPublicPath(pathname: string) {

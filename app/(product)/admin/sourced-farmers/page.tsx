@@ -45,7 +45,7 @@ export default async function SourcedFarmersPage({
         eyebrow="Founder administrator · private research"
         title="Sourced Farmer research"
         description="Run a single checkpointed YouTube batch, inspect contact-free transient sources, and review only durable profiles backed by eligible independent evidence or documented subject consent."
-        action={<div className="report-actions"><Link className="button button--secondary" href="/admin/farmer-database">Private Farmer database</Link><Link className="button button--secondary" href="/admin/agents">Managed agents</Link></div>}
+        action={<div className="report-actions"><Link className="button button--secondary" href="/admin/sourced-farmers/raitunestham">Raitu Nestham profiles</Link><Link className="button button--secondary" href="/admin/farmer-database">Private Farmer database</Link><Link className="button button--secondary" href="/admin/agents">Managed agents</Link></div>}
       />
       <SourcedFarmerConsole
         dashboard={dashboard}

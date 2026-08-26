@@ -2,6 +2,7 @@ import { z } from "zod";
 import { sha256, uuidFromText } from "@/features/outreach/crypto";
 import { processOutreachBatch } from "@/features/outreach/processor";
 import { createConfiguredOutreachProvider } from "@/features/outreach/providers";
+import { evaluateOutreachAutonomyReadiness } from "@/features/outreach/autonomous-readiness";
 import {
   buildSocialContentDraft,
   buildSupportReplyDraft,
@@ -17,10 +18,12 @@ import { createBudgetedAiRuntime } from "@/features/ai-budget/runtime";
 import { DEFAULT_LOCALE, normalizeLocale } from "@/lib/i18n/locales";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  isCompanyAgentRole,
   managedAgentRunRequestSchema,
   type ManagedAgentRole,
   type ManagedAgentRunResult,
 } from "./contracts";
+import { runCompanyAgent } from "@/features/company-agents/processor";
 
 const beginRunSchema = z.object({
   code: z.enum(["STARTED", "IDEMPOTENT_REPLAY", "SKIPPED_BUSY"]),
@@ -92,14 +95,28 @@ async function managedProfileAgent(name: string) {
 
 async function runOutreachGrowth(maxItems: number): Promise<RunCounts> {
   const supabase = createAdminClient();
+  const provider = createConfiguredOutreachProvider();
+  const readiness = evaluateOutreachAutonomyReadiness({
+    providerConfigured: provider.configured,
+    processor: "managed_agent",
+  });
+  if (!readiness.ready) {
+    const pauseKey = await uuidFromText(
+      `outreach-readiness-stop:${readiness.code}:${new Date().toISOString().slice(0, 13)}`,
+    );
+    const paused = await supabase.rpc("pause_outreach_delivery_automatically", {
+      reason_code_input: readiness.code,
+      idempotency_key_input: pauseKey,
+    });
+    if (paused.error) throw new Error("OUTREACH_AUTO_PAUSE_FAILED");
+    throw new Error(readiness.code);
+  }
   const [cleanup, scheduled] = await Promise.all([
     supabase.rpc("purge_expired_outreach_research", { limit_input: 100 }),
     supabase.rpc("schedule_due_outreach_followups", { limit_input: 25 }),
   ]);
   if (cleanup.error) throw new Error("OUTREACH_CLEANUP_FAILED");
   if (scheduled.error) throw new Error("OUTREACH_SCHEDULING_FAILED");
-  const provider = createConfiguredOutreachProvider();
-  if (!provider.configured) throw new Error("OUTREACH_PROVIDER_NOT_CONFIGURED");
   const result = await processOutreachBatch({
     supabase,
     provider,
@@ -113,6 +130,8 @@ async function runOutreachGrowth(maxItems: number): Promise<RunCounts> {
       expiredResearchPurged: Number(cleanup.data ?? 0),
       followupsScheduled: Number(scheduled.data ?? 0),
       providerConfigured: true,
+      dispatchDeferred: result.deferred ?? 0,
+      dispatchBlocked: result.blocked ?? 0,
     },
     failureCode: result.failed > 0 ? "OUTREACH_DELIVERY_PARTIAL" : undefined,
   };
@@ -582,6 +601,7 @@ async function dispatchRole(
   runId: string,
   maxItems: number,
 ) {
+  if (isCompanyAgentRole(role)) return runCompanyAgent(role, runId);
   if (role === "outreach_growth") return runOutreachGrowth(maxItems);
   if (role === "profile_drafting") return runProfileDrafting(maxItems);
   if (role === "verification_triage") {

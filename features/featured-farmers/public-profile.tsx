@@ -5,6 +5,7 @@ import {
   BriefcaseBusiness,
   Camera,
   ExternalLink,
+  Mail,
   Users,
   Video,
 } from "lucide-react";
@@ -67,21 +68,27 @@ export function FeaturedFarmerCard({
 }) {
   const m = featuredFarmerPublicMessages(locale);
   const { snapshot } = publication;
+  const cardImage = snapshot.media ?? snapshot.sourceHostedPreview;
   return (
     <article className="featured-public-card">
       <Link
         href={`/featured-farmers/${publication.slug}`}
         className={`featured-public-card__visual${
-          snapshot.media ? "" : " featured-public-card__visual--no-photo"
+          cardImage ? "" : " featured-public-card__visual--no-photo"
+        }${
+          snapshot.sourceHostedPreview?.focalPoint
+            ? ` featured-public-card__visual--focal-${snapshot.sourceHostedPreview.focalPoint}`
+            : ""
         }`}
         aria-label={`${m.readStory}: ${snapshot.fullName}`}
       >
-        {snapshot.media ? (
+        {cardImage ? (
           <img
-            src={snapshot.media.assetUrl}
-            alt={snapshot.media.altText}
+            src={cardImage.assetUrl}
+            alt={cardImage.altText}
             width={960}
             height={620}
+            referrerPolicy={snapshot.media ? undefined : "no-referrer"}
           />
         ) : (
           <span className="featured-public-card__no-photo" aria-hidden="true">
@@ -113,7 +120,9 @@ export function FeaturedFarmerCard({
         <p>{snapshot.deck}</p>
         <div className="featured-public-card__footer">
           <span>
-            {snapshot.socialLinks.length
+            {publication.publication_status === "preview"
+              ? m.editorialPreview
+              : snapshot.socialLinks.length
               ? `${snapshot.socialLinks.length} social ${
                   snapshot.socialLinks.length === 1 ? "account" : "accounts"
                 }`
@@ -145,7 +154,24 @@ export function FeaturedFarmerStory({
 
   return (
     <article className="featured-story">
-      <header className="featured-story__hero">
+      <header
+        className={`featured-story__hero${
+          snapshot.sourceHostedBackground
+            ? " featured-story__hero--background"
+            : ""
+        }`}
+      >
+        {snapshot.sourceHostedBackground ? (
+          <div className="featured-story__hero-background" aria-hidden="true">
+            <img
+              src={snapshot.sourceHostedBackground.assetUrl}
+              alt=""
+              width={1280}
+              height={720}
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        ) : null}
         <div className="featured-story__hero-copy">
           <Link href="/featured-farmers" className="featured-story__back">
             ← {m.collectionTitle}
@@ -164,10 +190,14 @@ export function FeaturedFarmerStory({
               {snapshot.sources.length} {m.reviewedSources}
             </span>
             <span>
-              {m.published} {formatDate(publication.published_at, locale)}
+              {publication.publication_status === "preview"
+                ? m.editorialPreview
+                : `${m.published} ${formatDate(publication.published_at, locale)}`}
             </span>
             <span>
-              {m.lastChecked} {formatDate(publication.fact_checked_at, locale)}
+              {publication.publication_status === "preview"
+                ? m.reviewPending
+                : `${m.lastChecked} ${formatDate(publication.fact_checked_at, locale)}`}
             </span>
           </div>
         </div>
@@ -187,11 +217,15 @@ export function FeaturedFarmerStory({
             />
           ) : snapshot.sourceHostedPreview ? (
             <a
-              className="featured-story__portrait-source"
+              className={`featured-story__portrait-source${
+                snapshot.sourceHostedPreview.focalPoint
+                  ? ` featured-story__portrait-source--focal-${snapshot.sourceHostedPreview.focalPoint}`
+                  : ""
+              }`}
               href={snapshot.sourceHostedPreview.sourceUrl}
               target="_blank"
               rel="noreferrer"
-              aria-label={`Watch the source documentary: ${snapshot.fullName}`}
+              aria-label={`Watch the source video featuring ${snapshot.fullName}`}
             >
               <img
                 src={snapshot.sourceHostedPreview.assetUrl}
@@ -231,6 +265,18 @@ export function FeaturedFarmerStory({
                 >
                   {snapshot.sourceHostedPreview.credit}
                 </a>
+                {snapshot.sourceHostedBackground ? (
+                  <>
+                    {" · Farm background: "}
+                    <a
+                      href={snapshot.sourceHostedBackground.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {snapshot.sourceHostedBackground.credit}
+                    </a>
+                  </>
+                ) : null}
               </>
             ) : (
               m.photoPending
@@ -260,6 +306,9 @@ export function FeaturedFarmerStory({
           ) : null}
           {snapshot.questions?.length ? (
             <a href="#questions">Questions answered</a>
+          ) : null}
+          {snapshot.reportedProducts?.length ? (
+            <a href="#reported-products">{m.reportedProducts}</a>
           ) : null}
         </div>
       </nav>
@@ -352,20 +401,67 @@ export function FeaturedFarmerStory({
             </section>
           ) : null}
 
+          {snapshot.reportedProducts?.length ? (
+            <section
+              className="featured-story__reported-products"
+              id="reported-products"
+            >
+              <p className="eyebrow">Farm catalog</p>
+              <h2>{m.reportedProducts}</h2>
+              <p>{m.reportedProductsDisclosure}</p>
+              <ul>
+                {snapshot.reportedProducts.map((product) => (
+                  <li key={`${product.categorySlug}:${product.name}`}>
+                    <span aria-hidden="true">Reported</span>
+                    <strong>{product.name}</strong>
+                    <small>{product.categorySlug.replaceAll("-", " ")}</small>
+                    <SourceCitations
+                      sourceUrls={product.sourceUrls}
+                      sources={snapshot.sources}
+                      sourceNumber={sourceNumber}
+                      label={m.source}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           {snapshot.coverage.length ? (
             <section className="featured-story__coverage">
               <p className="eyebrow">{m.coverage}</p>
               <div>
                 {snapshot.coverage.map((item) => (
                   <a
+                    className={
+                      item.thumbnail
+                        ? "featured-story__video-card"
+                        : undefined
+                    }
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
                     key={item.url}
                   >
-                    <span>{item.sourceType}</span>
-                    <strong>{item.title}</strong>
-                    <small>{item.publisher}</small>
+                    {item.thumbnail ? (
+                      <span className="featured-story__video-thumbnail">
+                        <img
+                          src={item.thumbnail.assetUrl}
+                          alt={item.thumbnail.altText}
+                          width={1280}
+                          height={720}
+                          referrerPolicy="no-referrer"
+                        />
+                        <span aria-hidden="true">
+                          <Video size={22} />
+                        </span>
+                      </span>
+                    ) : null}
+                    <span className="featured-story__coverage-copy">
+                      <small>{item.sourceType}</small>
+                      <strong>{item.title}</strong>
+                      <small>{item.publisher}</small>
+                    </span>
                     <ExternalLink size={16} aria-hidden="true" />
                   </a>
                 ))}
@@ -443,6 +539,19 @@ export function FeaturedFarmerStory({
                   );
                 })}
               </div>
+            </section>
+          ) : null}
+          {snapshot.contactEmail ? (
+            <section>
+              <p className="eyebrow">{m.farmContact}</p>
+              <a
+                className="featured-story__email"
+                href={`mailto:${snapshot.contactEmail}`}
+              >
+                <Mail size={18} aria-hidden="true" />
+                <span>{snapshot.contactEmail}</span>
+              </a>
+              <small>{m.emailFarm}</small>
             </section>
           ) : null}
           <section className="featured-story__limitations">

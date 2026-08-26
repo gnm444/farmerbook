@@ -320,3 +320,306 @@
   health, all icon assets, manifest, exact favicon hash, safe AI handoff,
   reviewed zero-token greeting and default-off managed route passed. Rollback
   remains `0519d890-8923-46ec-a347-66b6b224dec9`.
+- 2026-08-19: Implemented the approved human-governed AI company control plane
+  locally as FB-REQ-023. Added 15 role-locked named instances of one private
+  `CompanyOperationsAgent`, three 180-day growth objectives, aggregate-only KPI
+  snapshots, deterministic zero-inference `company-policy-v1` proposals,
+  optimistic administrator review, immutable redacted decision events and the
+  `/admin/agents` command center. Proposal approval creates only an operating
+  backlog decision; no send, publish, deploy, spend, account mutation,
+  moderation or verification connector exists. A clean local Supabase rebuild
+  applied all 30 migrations and all 8 executable pgTAP/RLS suites passed. ESLint,
+  TypeScript, 152 Vitest files/687 tests, the Vinext production build, strict
+  Wrangler dry run, generated private binding/migration inspection, raw-route
+  and inference search, and diff validation passed. Production migration,
+  deployment, application/database controls, schedules, model calls, proposals
+  and external actions remain unchanged.
+- 2026-08-19: Completed the explicitly approved FB-REQ-023 production release
+  and validation. Preserved a protected pre-activation public-schema and data
+  backup, then applied only the production bridge and AI-company control-plane
+  migrations to Supabase project `kdmtjavpxxcppmbzlttr`. Deployment
+  `3f0fff5b-4aa2-42ae-88e9-063aefbf7ad4` placed Cloudflare Worker version
+  `1b42b9b8-373f-4322-a522-84b683abdfa2` at 100 percent with both application
+  flags enabled, both database controls enabled, the private
+  `COMPANY_OPERATIONS_AGENT` namespace and the processor secret. All 15
+  schedules are enabled. One bounded manual production run per role succeeded,
+  creating exactly 15 aggregate-only KPI snapshots and 15 pending proposals;
+  every run reports zero model calls and zero external actions. Apex and `www`
+  health return 200 and unsigned processor access returns 403. The shareable
+  HTML, Markdown, JSON and browser screenshots under `artifacts/` contain no
+  authentication secrets or member-level data. Six temporary test-login
+  sessions were revoked by their exact creation window while older sessions
+  were preserved. Rollback Worker version:
+  `160f3eba-2a44-4959-a4ad-efd830028d1e`.
+- 2026-08-19: Staged the approved consent-first outreach canary in production
+  without sending a message. Repaired anonymous `/partner-interest` access,
+  exposed both consent forms through robots/sitemap only while enabled, and
+  added the authenticated 15-agent operating guide. ESLint, TypeScript, 154
+  Vitest files/692 tests, the enabled production build, strict Wrangler dry
+  run, zero-vulnerability production audit, clean 31-migration Supabase reset,
+  all eight pgTAP/RLS suites and 58 desktop/mobile Playwright journeys passed.
+  A new mode-700 production roles/schema/data backup passed SHA-256 checks.
+  No-traffic Worker candidate `d7d9f647-586b-46fe-967b-a61f6cc76b35` matched
+  all 13 encrypted secrets, 25 plain settings, 11 Agent namespaces, AI binding
+  and Workflow; only `ENABLE_OUTREACH_AGENT` changed from false to true and the
+  expected Images binding was added. It now receives 100 percent traffic, the
+  database `outreach_agent` control is enabled, both live forms render, unsigned
+  webhooks return 403, delivery remains paused, `outreach_growth` remains
+  disabled/paused at 900 seconds and ten items, and the outreach tables remain
+  empty. The owner canary and Facebook timeline post await action-time
+  confirmation. Rollback Worker: `1b42b9b8-373f-4322-a522-84b683abdfa2`.
+- 2026-08-19: Completed the confirmed owner-controlled outreach canary and
+  activated consented processing. The first run failed closed before sending
+  because the production bridge lacked `purge_expired_outreach_research`; a
+  protected repair backup was taken and forward migration
+  `20260819130000_outreach_cleanup_compatibility.sql` added a bounded,
+  service-role-only RPC. The retry then found PostgREST offset datetimes were
+  rejected by `z.iso.datetime()`; the processor now accepts explicit offsets.
+  ESLint, TypeScript, 155 Vitest files/693 tests, clean 32-migration rebuild,
+  eight pgTAP/RLS suites, production-shaped compatibility rehearsal, build,
+  strict Wrangler dry run and diff checks passed. Worker version
+  `ab9ac737-8adc-42d2-aafb-a51d48e14abe` is active at 100 percent.
+  The tagged owner Gmail received one Postmark confirmation and one invitation
+  from `FarmerBook CEO <ceo@farmerbook.in>` with signed domain, reply handoff,
+  postal/privacy footer, unsubscribe and `STOP`. The confirmed unsubscribe
+  withdrew two purpose receipts, scrubbed the contact, created one suppression
+  and one withdrawal event, and left zero pending/processing rows. Delivery is
+  active and the `Growth & Outreach` Durable Object was reset and explicitly
+  scheduled every 900 seconds with a maximum of ten consented jobs. The first
+  eight automatic cycles all succeeded with zero claimed recipients and zero
+  failures. The local one-time processor-token file was deleted; the encrypted
+  Worker secret was retained. Rollback version:
+  `652053a9-2689-4756-b1fe-a52d3e0e227e`.
+- 2026-08-19: Published the approved bilingual Telugu/English AP/Telangana
+  FarmerBook invitation once to the signed-in personal Facebook timeline with
+  its existing Friends audience. The post invites Farmers, customers and
+  wholesalers through `/join` and tool manufacturers/dealers plus agriculture
+  service businesses through `/partner-interest`; both live forms and their
+  consent/spam controls were rechecked first. No group, Page, direct message,
+  friend automation, comment, boost or repeated post was used because the two
+  reviewed joined farming groups prohibit promotion. Permalink:
+  `https://www.facebook.com/narasimha.gonapa/posts/pfbid0oYqhLfFvUJX6KgLCZWjf7GsNrsnM4S2snRQvZCgfCj7gJw6ijgDiHG2XPuBHDUnml`.
+- 2026-08-20: Implemented the approved Live Agent Execution Phase 1 control
+  plane locally and default-off. Added one private Cloudflare coordinator Agent,
+  one durable approval/execution Workflow, a PostgreSQL authorization/approval/
+  attempt/budget/receipt/event ledger, immutable server-derived policy, exact
+  redacted scopes, reserved executor/verifier principal bindings, zero-retry
+  dispatch, DB-attempt-derived provider idempotency keys, one-action exact-
+  target authorizations, unknown-outcome auto-pause and an administrator action
+  console with per-executor kill switches. All eight executors remain paused,
+  shadow-only and at canary zero; both release gates default false, executor
+  resume is hard-disabled, the registry is empty, environment-configured
+  principals are rejected until restricted database roles replace the broad
+  service role, no principal JWT is configured, and no production database, provider,
+  message, publication, deployment or spend changed. Validation passed 39
+  focused tests, 161 Vitest files/732 tests, ESLint, TypeScript, production
+  build, strict Wrangler dry run, local migration apply, all nine pgTAP/RLS
+  files and diff validation. Actual executor integrations, independent verifier
+  service, dedicated restricted PostgREST roles, isolated connector services,
+  authorization/start and approval-wake integration, observed seven-day shadow
+  period and a named production canary remain pending.
+- 2026-08-20: Published the founder-approved Blog editorial **“Money Is a
+  Mirror: What Organic Farming Teaches Us About Character.”** It connects the
+  founder's experience of money revealing character with the repeated,
+  transparent transactions through which farmers and consumers earn trust, and
+  the conclusion ends with `— Narasimha Gonapa`. The supplied screenshot was
+  not copied because it contains a search overlay and lacks a recorded
+  republication right. A release-only production build excluded the unapproved
+  Live Agent Phase 1 routes, bindings and classes. Focused tests passed 14/14;
+  the production build and strict Wrangler upload passed; the uploaded version
+  had the same 52 bindings as the prior production version. Deployment
+  `a82e47b2-3551-4743-a4d8-1bc7f56ee66c` placed Worker version
+  `abab508b-b74d-451b-bc31-1ced28b6b205` at 100 percent. Article, blog index,
+  sitemap and health returned 200, and live HTML contained the exact title and
+  signature. Rollback version: `ab9ac737-8adc-42d2-aafb-a51d48e14abe`.
+  A separate daily Blog Agent plan is complete, but no daily schedule or
+  autonomous publication was enabled.
+- 2026-08-20: Implemented and activated the explicitly approved review-only
+  Daily Blog Agent. It now schedules one source-bounded private draft every day
+  at 09:00 IST, with an India-date run ledger, one-inference-per-day
+  idempotency, 31-run monthly ceiling, the unchanged USD 2 Blog/USD 10 fleet
+  caps, 30 reviewed topic briefs, 180-day source freshness stop, revision-bound
+  administrator review, immutable reason/quality evidence, exact schedule
+  pause/resume and fail-closed public-route verification. ESLint, TypeScript,
+  163 Vitest files/741 tests, production build, generated binding types,
+  strict Wrangler dry run and startup profiling passed. A release-only package
+  excluded the separately unapproved Live Agent Phase 1 surface; no-traffic
+  version `770bd7c8-0cce-470a-bd12-7fa89095d1da` matched all 52 existing
+  bindings and deployment `ee65816d-5244-430b-b000-239392f198b4` placed it at
+  100 percent. The live admin console reports scheduled, zero stale sources and
+  no failure. One manual Stage 1 run created the private revision-1 draft
+  **“Understanding 'Under Conversion' in Your Organic Farming Journey”**; a
+  second run used no additional inference or draft, and the public blog stayed
+  at four reviewed articles. Rollback version:
+  `abab508b-b74d-451b-bc31-1ced28b6b205`. Autonomous publication remains
+  unapproved.
+## 2026-08-20 — standing-policy Blog and owned-social implementation
+
+- Recorded the product owner's one-time approval to remove per-post review for
+  bounded low-risk FarmerBook content. Confirmed Facebook Page and Instagram
+  professional assets; LinkedIn Organization Page is absent.
+- Added `owned-blog-standing-policy-2026-08-20-v1`, which permits only current-
+  day low-risk farmer-consumer trust and traceability briefs and rejects stale
+  or changed sources, schema drift, contact/testimonial material, numeric/
+  commercial/certification/treatment claims, unsafe markup and quota breaches.
+- Extended `BlogWritingAgent` forward-only with manual/autonomous mode, policy,
+  idempotency, content hash and private/provisional/public/quarantined fields.
+  Existing waiting drafts stay manual/private. Autonomous work is capped at one
+  per India day and 31/month inside the existing USD 2 Blog allocation.
+- Added a separate `BlogPublicationVerifierAgent`. It waits 90 seconds, fetches
+  the real article route, compares the independently rendered SHA-256, and
+  either finalizes public visibility or quarantines the row and pauses the
+  writer. No ambiguous publication retry exists.
+- Added a default-paused `OwnedSocialPublisherAgent` with a private hashed
+  outbox, deterministic UTM copy, one post/article/channel, one/channel/day,
+  31/channel/month, ₹0 spend, provider receipt requirements and channel pause
+  on unknown outcomes. It has no DM, group or personal-profile capability.
+- Added the isolated, route-less `farmerbook-owned-social-connector` Worker.
+  Its Facebook Page path performs one create call and reads the exact Page post
+  back before reporting verified. It defaults release-disabled and has no
+  credential. Instagram remains hard-stopped pending rights-cleared media.
+- Updated `/admin/blog`, requirements, Blog Agent documentation, production
+  runbook, plan and structured state. No Meta token, connector deployment,
+  production flag, autonomous article or social post was created at this
+  checkpoint.
+- Activated the approved Phase A standing-policy Blog canary. The initial
+  zero-traffic upload correctly failed because Cloudflare permits new Durable
+  Object migrations only through a non-versioned deployment; after appending
+  both migration tags after every deployed tag, the production build, strict
+  dry run, TypeScript, 31 focused tests and diff check passed. Deployment
+  `9672fbe1-1c5f-4ed6-9dd6-63af70c126f9` placed Worker version
+  `59676b01-86bb-4d25-86e5-5892281f7dac` at 100 percent. Health, home and blog
+  returned 200; an unknown article returned 404; the founder article retained
+  Narasimha Gonapa's signature and rendered SHA-256 marker; and the historical
+  “Under Conversion” draft remained private. The Blog autonomous flag is true.
+  Facebook, Instagram, Instagram media, all owned-social publishing and Live
+  Action execution remain false, no connector is bound, no Meta token exists,
+  and no social post was sent. Rollback Worker:
+  `770bd7c8-0cce-470a-bd12-7fa89095d1da`.
+- 2026-08-20: Connected the official FarmerBook Facebook Page to the owned-
+  social standing-policy Agent. Created the dedicated FarmerBook Meta business
+  portfolio, Farmer Network Publisher app and FarmerBook Publisher system user;
+  the system user has Page Content access and the app-admin role Meta requires
+  for system-user tokens. Generated a non-expiring token with only
+  `pages_manage_posts`, `pages_read_engagement` and `pages_show_list` (plus
+  Meta's automatic `public_profile`), verified Graph API v26.0 returned Page
+  `FarmerBook` with ID `1198487616689227`, stored the credential only as the
+  connector Worker's encrypted `META_PAGE_ACCESS_TOKEN` secret and cleared the
+  clipboard. Deployed the route-less connector as version
+  `50888eb0-f0da-45cd-8c52-25e87f38af4d`; it has no public target. Production
+  deployment `f4601ed1-3203-49d8-bace-1080675359b0` placed FarmerBook Worker
+  version `563686e9-0065-4212-9530-17e1c55c14fb` at 100 percent with the private
+  service binding, global owned-social and Facebook flags true, Instagram and
+  Instagram-media flags false, and Live Action execution false. The production
+  Agent console confirms the connector is bound and Facebook is configured and
+  enabled; one/day, 31/month, ₹0-spend, duplicate, receipt/read-back and
+  unknown-outcome pause controls remain active. Apex, `www`, blog and health
+  smoke checks returned 200. No social post was created during connection.
+  Instagram remains paused pending its isolated connector, verifier and
+  rights-cleared media pipeline.
+- 2026-08-21: Created and configured the dedicated `@farmerbook2026` Instagram
+  identity as a Professional Business account in the Agriculture category,
+  owned by the FarmerBook Meta business portfolio. Added the public FarmerBook
+  mission bio and connected the account to the FarmerBook Facebook Page. Meta
+  Business Settings confirms one Instagram asset is connected to the Page.
+  Replaced the prior profile image with the FarmerBook-owned website brand mark
+  from `public/icon-512.png` and visually verified it on the public profile.
+  Shared Instagram Inbox access is disabled, and no separate people, partner,
+  ad-account or publishing-agent access was granted. Instagram publishing and
+  media flags remain off; no Instagram post, message, ad or other external
+  action was created. Instagram desktop does not permit website-link editing,
+  so `https://farmerbook.in` remains a one-time mobile profile step.
+- 2026-08-22: Completed the repository-only autonomous consented-outreach
+  hardening. Added a shared fail-closed readiness evaluator, service-only
+  just-in-time authorization before private preparation and again immediately
+  before the provider, immutable redacted dispatch reservations, a fixed
+  25-per-India-day ceiling, and persistent automatic database pause for missing
+  readiness, invalid authorization, ambiguous Postmark outcomes and a
+  three-failure circuit. The administrator console now shows readiness,
+  reservation use and the latest automatic-stop reason. Consent, STOP,
+  unsubscribe, bounce/complaint suppression, legal sender configuration,
+  one-plus-one message limits, role boundaries, privacy operations and manual
+  emergency pause/resume remain intact. ESLint, TypeScript, all 170 Vitest
+  files/779 tests, the Vinext production build, focused circuit tests and
+  `git diff --check` passed. Docker was unavailable, so the executable pgTAP
+  migration test was authored but no clean local database reset is claimed.
+  No external account, hosted database, provider, recipient, message, secret,
+  feature/control, schedule, Worker version, traffic or deployment changed.
+- 2026-08-23: Published founder editorial **“The Wealth We Accumulate, the
+  Health We Abandon: Our Dangerous Paradox of Prosperity”**, signed by
+  Narasimha Gonapa, at
+  `/blog/wealth-we-accumulate-health-we-abandon`. The Blog Writing Agent edit
+  preserves the founder's central argument and cultural reference while
+  replacing absolute disease-prevention claims with source-bounded WHO,
+  ICMR–NIN and FAO guidance. Added an original AI-generated 1600×878 WebP hero
+  illustration, explicit fictional-image disclosure, Open Graph/Twitter image
+  metadata, JSON-LD image provenance, blog-index discovery and sitemap
+  discovery. ESLint, TypeScript, all 170 Vitest files/782 tests, production
+  build, strict Wrangler dry-run and local Worker article/index/image/sitemap
+  smoke checks passed. Worker version
+  `45300b31-4c12-41d7-aa0c-5b04e573587d` is deployed at 100 percent through
+  deployment `89d8b3ab-850b-4561-b320-13ce64212789`; the previous healthy
+  rollback target is `63c81eb9-b798-4bd6-94e5-21e6660c4b44`. Production apex
+  and `www` health checks, article, blog index, WebP asset and sitemap returned
+  200 and the live HTML contains the exact title, author signature, sources,
+  AI-image disclosure and large-image social metadata. Existing autonomous
+  Blog, Facebook and consented-outreach controls were preserved; Instagram
+  remains disabled and Live Action execution remains false with no coordinator
+  or workflow binding.
+- 2026-08-23: Activated the approved owned-social standing policy on both
+  official Meta business channels. Added a provenance-bound media registry and
+  production SHA-256 verification for the reviewed 1600×878 AI-generated JPEG,
+  then implemented Instagram create, container-status, publish and exact
+  read-back verification. Hardened Facebook publishing to use form-encoded
+  Graph requests and to exchange the stored system-user credential for the
+  exact assigned Page-scoped token in memory; neither token nor provider error
+  text is logged or returned. Confirmed failures may receive one reason-bound
+  recovery after a code/configuration change, while ambiguous outcomes remain
+  non-retriable and auto-pause the channel. Connector version
+  `1a765e0b-3f12-4233-8eb3-1292492d0241` is active at 100 percent; FarmerBook
+  Worker version `36b29fcd-4fe9-4fad-a5ac-ee926f92703e` remains active with
+  `ENABLE_LIVE_AGENT_EXECUTION=false`. The 12:45 IST Agent handoff published
+  the editorial to `@farmerbook2026`; the 13:15 IST handoff published it to the
+  FarmerBook Facebook Page. Both provider objects passed exact read-back
+  verification, the live console records one verified post per channel, and
+  both public profiles visibly show the editorial. One/article/channel,
+  one/channel/day, 31/channel/month, ₹0 ad-spend, no-DM/group/personal-profile
+  restrictions remain enforced. Full validation passed: 170 Vitest files, 789
+  tests, TypeScript, focused ESLint, production build and `git diff --check`.
+- 2026-08-24: Released the approved Customer Farm Visits experience at
+  `/farm-visits`. Added a rights-cleared 90-second Nagamani House organic-farm
+  video and poster, responsive public explanation, exact Customer-only private
+  India address/preferences form, clear suitable-farm/Farmer-availability
+  wording and a no-certification disclosure. The private forced-RLS table has
+  no browser grants; its authenticated create RPC binds the requester identity
+  and email to the session, enforces one open request/idempotency and records a
+  service-only notification outcome. The dedicated Postmark adapter sends one
+  plain-text operational message from `ceo@farmerbook.in` to the immutable
+  recipient pair `gnm444@gmail.com` and `ceo@farmerbook.in`; it has no tracking
+  and does not retry ambiguous outcomes. Migration `20260824120000` was the
+  sole linked dry-run action and applied successfully after a protected
+  schema/data/roles backup. Full validation passed: ESLint, TypeScript, 176
+  Vitest files/816 tests, production build, strict Wrangler dry run, clean
+  local migration apply, all 11 pgTAP files/14 tests, responsive visual review
+  and `git diff --check`. Corrected deployment
+  `1c3cc505-241e-4d1b-a1e1-96c213fb1b17` placed Worker version
+  `3c416ab2-0a8f-4ab0-83c5-105b424b2cc1` at 100 percent while preserving the
+  existing Meta service binding, every Durable Object/Workflow/cron and all 13
+  encrypted secrets; `ENABLE_FARM_VISITS=true` was the only binding-name
+  addition relative to rollback Worker
+  `36b29fcd-4fe9-4fad-a5ac-ee926f92703e`. Apex, `www`, home, login, signup,
+  marketplace, blog, Farm Visits, sitemap, robots, MP4 and poster all returned
+  200. Cloudflare served the MP4 as a complete 16.9 MB object rather than a 206
+  byte-range response, while live Chrome decoded the full 90.059-second video
+  with ready state 4 and no media error. One owner-controlled synthetic
+  Customer canary reached `notification_state=sent` with a provider receipt;
+  Gmail verified a single TLS/DKIM message addressed to both approved inboxes.
+  The exact synthetic auth user, profile, request row and the two synthetic
+  inbox messages were then removed; database verification returned zero rows.
+  The live replay was intentionally not resent; duplicate/open-request behavior
+  remains covered by unit and executable pgTAP tests.
+- 2026-08-25: Implemented and locally verified the approved Sandeep Dasari / Avani Van Farms Featured Farmer preview. Added a reversible private `featured_farmer_professional_sources_required` control defaulting false and guarded only the two professional-source readiness blockers; claim citations, owned-social confirmation, story depth and media rights remain mandatory. Added a typed nine-item `Reported farm products` catalog with no price, stock, delivery, order, enquiry or story-level store link, plus the exact non-certified limitation. The curated preview uses the confirmed farm-owned YouTube channel, attributed first-party tour and Mi Andhra interview, source-hosted thumbnail credit, generic person metadata, `noindex`, no JSON-LD and no sitemap entry while content review is pending. No auth user, member profile, marketplace listing, hosted migration, deployment or production control changed. ESLint, TypeScript, all 178 Vitest files/823 tests, the production build, 10 desktop/mobile Featured Farmer browser tests and `git diff --check` pass. Desktop/mobile screenshots show no overflow and all disclosures/products; local pgTAP could not run because Docker is not running.
+- 2026-08-25: Published the product-owner-approved Sandeep Dasari / Avani Van Farms Featured Farmer story. Deployment `3eacacde-4404-4fa0-a9bd-42a9d866ac72` placed Worker version `b17c8986-5467-47f2-84f7-603283bfb16c` at 100 percent on the apex and `www` custom domains, with `3c416ab2-0a8f-4ab0-83c5-105b424b2cc1` retained as the exact rollback target. The production-shaped build preserved 13 Durable Objects, AI, Images, one workflow, the owned-social service connector, 33 plain variables and all 13 encrypted secret bindings. Strict Wrangler dry run and all 10 published desktop/mobile browser tests passed. Live checks returned 200 for health, collection, story, Farm Visits, blog and sitemap; verified canonical/indexable metadata, Article JSON-LD, publication/fact-check dates, exactly one sitemap entry, three supplied YouTube sources, the exact non-certified limitation, all nine reported products, a live credited thumbnail and no ordering action. The workers.dev hostname remains access-restricted with 403 while both public custom domains are healthy. No database migration was applied because production lacks the prerequisite Featured Farmer newsroom schema; the curated story is independent. No auth user, member profile, marketplace listing, store or enquiry target was created. The optional local startup analyzer could not evaluate compatibility date 2026-08-11 because its bundled binary supports only through 2026-08-08; Cloudflare's production runtime started the Worker successfully in 301 ms.
+- 2026-08-25: Corrected the live Sandeep Dasari story to Gir cows only and removed every Ongole reference. Publication revision 2 adds a clearly cropped, source-hosted Avanivan Farms YouTube portrait of Sandeep beside a Gir cow, a separate attributed Avani Van farm-tour background, and three clickable coverage cards with first-/third-party YouTube thumbnails instead of plain links. No images were generated or copied into FarmerBook. ESLint, TypeScript, all 178 Vitest files/823 tests, production build, strict Wrangler dry run, 10 desktop/mobile browser tests, desktop/mobile visual inspection and `git diff --check` passed. Corrective deployment `28f0e572-8060-485b-9ccc-aaf07092b385` placed Worker `bd06a4c2-2692-4a32-b60c-4ad2ff28aceb` at 100 percent and preserved 13 Durable Objects, AI, Images, one workflow, one service, 33 plain variables and all 13 encrypted secrets. Both custom domains serve the corrected Gir-only story with no Ongole text, all three image endpoints return JPEG 200, and health, Featured Farmers, Farm Visits, blog and sitemap remain 200. Rollback Worker: `b17c8986-5467-47f2-84f7-603283bfb16c`. No database or marketplace records changed.
+- 2026-08-25: Released the approved Sandeep Dasari / Avani Van Farms engagement surface. The page now displays `avanivanfarms@gmail.com`, a Turnstile-protected private question/comment form with a code-owned recipient and metadata-only delivery ledger, an approved-only LinkedIn-style Customer recommendation section with an independent administrator queue, and an approximate profile-view aggregate with no IP, fingerprint, visitor row, user-agent or auth-identity persistence. A protected Supabase backup preceded an isolated dry run that named only `20260825130000_featured_farmer_engagement.sql`; that migration applied successfully and appears in the remote ledger. Validation passed a clean local reset, all 12 pgTAP files/15 tests, ESLint, TypeScript, 183 Vitest files/842 tests, production build and strict Wrangler dry run. The live browser check exposed and then verified the correction for vinext `.rsc` cookie path matching: one non-bot browser incremented once and stayed unchanged on reload with a Secure, HttpOnly, SameSite=Lax date-only cookie scoped to `/featured-farmers/`. Desktop/mobile visual checks have no horizontal overflow and show all three YouTube thumbnail cards. Deployment `93bc6162-4527-4a90-8a9f-8328284a41de` places Worker `91b72a67-a4f0-426a-99f5-5c09b1f8dd38` at 100 percent with 13 Durable Objects, AI, Images, one workflow, one service, 34 plain variables and 14 encrypted secrets. Apex, `www`, health and the profile return 200; no Ongole text, synthetic farm email or fabricated recommendation was created. Rollback Worker: `bd06a4c2-2692-4a32-b60c-4ad2ff28aceb`.
+- 2026-08-25: Released the product-owner-approved founder-only Raitu Nestham research snapshot at `/admin/sourced-farmers/raitunestham`. The read-only dynamic/noindex route reuses the exact sourced-research owner gate before dynamically importing its server-only data, renders 41 manually reviewed source-linked profiles and 37 publicly advertised professional phone numbers, and labels every number `Public/unverified · not outreach consent`. Search and allowlisted group filtering run on the server; there are no import, message, invite, publish, verify or mutation controls. Focused and full verification passed: ESLint, TypeScript, production build, 186 Vitest files/848 tests, eight desktop/mobile sourced-page Playwright journeys, `git diff --check`, and client-build sentinel checks. Deployment `be171f32-5d0a-4810-9745-b8308b3f394d` placed Worker `e8754058-586c-4671-8284-85958dbd43d5` at 100 percent while preserving 14 Durable Objects, two Workflows, AI, Images, the owned-social service, 34 plain variables and 14 encrypted secrets. Anonymous requests redirect to login without reviewed content; signed-in founder Chrome rendered the full summary and verified a live search/group filter. Apex and `www` health return 200, and the sitemap excludes the route. No database row, secret, feature control, schedule, external message, invitation, member profile, consent, verification, publication or farmer contact changed. Rollback Worker: `91b72a67-a4f0-426a-99f5-5c09b1f8dd38`.

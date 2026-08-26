@@ -11,45 +11,49 @@ exists**. Scheduled discovery runs, database queues, and provider webhooks are
 less expensive and more reliable than keeping multiple language-model sessions
 running continuously.
 
-No new production agent, schedule, provider, or feature flag is activated by
-this design.
+Production activation is canary-first and separately release-controlled. The
+existing delivery Agent is scheduled only after the public consent path,
+provider lifecycle and suppression checks pass.
 
 ## Current FarmerBook baseline
 
-FarmerBook already implements four purpose-limited Cloudflare agents:
+FarmerBook implements six purpose-limited Cloudflare agents:
 
 1. `OutreachGrowthAgent` processes consented outreach jobs.
 2. `ProfileDraftingAgent` creates private, unclaimed profile previews.
 3. `VerificationTriageAgent` records recommendations but cannot grant badges.
-4. `OperationsSupervisorAgent` detects stale or failing runs.
+4. `CustomerSupportAgent` creates private support-reply proposals.
+5. `SocialContentAgent` creates copy-ready owned-channel drafts.
+6. `OperationsSupervisorAgent` detects stale or failing runs.
 
 They use SQLite-backed Durable Object state, bounded batch sizes, idempotency,
-audit records, automatic pause after three failures, and default-off release
-flags. Production messaging is disabled because the production database,
-sender/provider, processor secrets, consent campaign, and staged release gates
-are not yet complete.
+audit records, automatic pause after three failures, and separate release
+flags. The 15 company-planning Agents are documented separately in
+[`AI_COMPANY_OPERATING_GUIDE.md`](AI_COMPANY_OPERATING_GUIDE.md); they never
+perform email delivery.
 
 ## Professional sender decision
 
 `ceo@farmerbook.in` is FarmerBook's canonical professional outreach and reply
-identity. Cloudflare Email Routing currently forwards it to the product owner's
-Gmail and a controlled inbound test was recorded as `Forwarded`. It is not a
-Gmail `Send mail as` identity and is therefore receive-only today.
+identity. Cloudflare Email Routing forwards it to the product owner's Gmail and
+a controlled inbound test was recorded as `Forwarded`. It is not a Gmail `Send
+mail as` identity and is never sent through Gmail.
 
 The application must not spoof that address or send through the owner Gmail.
-It may become the configured `From` address only after the approved outbound
-provider verifies `farmerbook.in` and the required SPF, DKIM, Return-Path and
-DMARC alignment. Provider readiness also requires a valid business postal
-address, transactional and optional Broadcast streams, signed lifecycle and
-inbound webhooks, and a successful owner-controlled canary. Until all gates
-pass, delivery remains paused and the public intake fails closed.
+Postmark manually approved the FarmerBook account on 2026-08-17 and separately
+verified `farmerbook.in` DKIM plus the custom Return-Path. The Worker has the
+valid postal address, transactional/Broadcast streams and authenticated
+lifecycle/inbound webhooks. Each deployment still fails closed until its own
+release control, runtime state and complete configuration pass. A one-time
+owner-controlled double-opt-in canary must prove the complete message, receipt,
+reply, unsubscribe and suppression lifecycle before that deployment is resumed.
 
 ## Recommended low-budget pilot
 
-Do not create a large autonomous fleet. Add one bounded discovery role and keep
-the existing delivery and supervision roles:
+Do not create a large autonomous fleet. Keep discovery separate from the
+existing delivery and supervision roles:
 
-### 1. YouTube Discovery Agent — new, read-only
+### 1. YouTube Discovery — existing read-only research workspace
 
 Purpose: identify public agriculture channels that may be relevant to
 FarmerBook.
@@ -118,6 +122,12 @@ Rules:
   notice, and clear opt-out.
 - Suppress duplicates, withdrawals, complaints, bounces, and `STOP` replies.
 - Keep immutable provider receipts and source/consent evidence.
+- Reauthorize every claimed row immediately before reading its private contact
+  or calling the provider. A withdrawal, suppression or pause that races with a
+  claim must win.
+- Reserve no more than 25 provider-bound attempts per India calendar day. The
+  ceiling is conservative: a failed or unknown provider outcome still consumes
+  its reservation.
 - Process confirmed natural, organic, regenerative and agroecological interests
   before other confirmed introductions. Never delay email confirmation itself,
   and never infer the priority from a public profile or discovery result.
@@ -176,20 +186,45 @@ Consent Intake Gate --active channel consent--> Outreach Growth Agent
 Discovery does not connect directly to delivery. Consent is a mandatory state
 transition between them.
 
+## Autonomous delivery authority
+
+The scheduled Growth & Outreach Agent needs no routine per-message approval.
+Its standing authority is narrower than a campaign approval: process only
+FarmerBook-originated double opt-in confirmations, one purpose-matched
+introduction, one separately consented follow-up, and one bounded reply to an
+allowlisted inbound onboarding question.
+
+`claim_outreach_outbox` performs the first database consent/pause check. The
+processor must then call `authorize_outreach_dispatch` immediately before any
+private-contact read, invitation preparation or provider call. That RPC
+rechecks release, pause, expiry, suppression and purpose-specific authority,
+serializes an India-day reservation and records only redacted decision
+metadata. It never stores a contact value or message body.
+
+Missing sender/legal/provider readiness, an invalid authorization response, an
+ambiguous Postmark outcome or three consecutive provider failures invokes
+`pause_outreach_delivery_automatically`. The database pause survives Agent
+restart, releases still-valid claimed work to pending, cancels work whose
+authority ended, and records an immutable bounded system reason. Operators
+investigate and explicitly resume after correction; this recovery action is an
+emergency control, not routine approval.
+
 ## Cost controls
 
 Recommended initial configuration:
 
 - Discovery: administrator-initiated only, no more than 10 current results per
   search and no automatic pagination.
-- Outreach: every six hours, no more than 10 already-consented jobs per run.
+- Outreach: every 15 minutes, no more than 10 already-consented jobs per run
+  and no more than 25 authorized dispatch reservations per India day.
 - Supervisor: once per day and after provider failure events.
 - Reply handling: webhook-driven, so it runs only when a reply arrives.
 - AI: run deterministic deduplication and keyword scoring first. Invoke a small
   model only for ambiguous relevance or reply classification.
 - Persist query/quota outcomes, not YouTube result items or contacts.
 - Email first. Keep WhatsApp off until its provider and consent setup are ready.
-- Human-review the first 100 candidates and every first-contact template.
+- Approve the fixed consent statement and templates once per reviewed release;
+  monitor the canary and aggregate outcomes without approving each recipient.
 - Enforce daily provider and model-spend caps with a fail-closed switch.
 
 This provides 24/7 availability without paying for 24/7 model execution.
@@ -251,6 +286,8 @@ an approved opt-in flow independently of YouTube discovery.
 - WhatsApp delivery is impossible without explicit opt-in and an approved
   template/provider.
 - Repeated failures pause the affected role without stopping unrelated roles.
+- Missing readiness, an unknown delivery outcome or a three-failure provider
+  circuit persistently pauses all email delivery before another recipient.
 - All production flags default to false and require a separate release action.
 
 ## Authoritative platform references

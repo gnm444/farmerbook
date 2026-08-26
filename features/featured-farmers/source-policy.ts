@@ -57,6 +57,7 @@ export function assessFeaturedFarmerReadiness(input: {
   claims: FeaturedFarmerClaim[];
   socialLinks: FeaturedFarmerReadinessSocial[];
   sectionCount: number;
+  requireProfessionalSources?: boolean;
   media?: { rightsApproved: boolean } | null;
 }) {
   const selected = input.sources.filter((source) => source.decision === "selected");
@@ -93,8 +94,12 @@ export function assessFeaturedFarmerReadiness(input: {
     );
   });
   const blockers: string[] = [];
-  if (professionalHosts.size < 2) blockers.push("Add selected professional sources from at least two publisher domains.");
-  if (!hasAuthoritative) blockers.push("Add an official, institutional, or independent source.");
+  if (input.requireProfessionalSources !== false && professionalHosts.size < 2) {
+    blockers.push("Add selected professional sources from at least two publisher domains.");
+  }
+  if (input.requireProfessionalSources !== false && !hasAuthoritative) {
+    blockers.push("Add an official, institutional, or independent source.");
+  }
   if (citedClaims.length < 2) blockers.push("Add at least two claims cited only to selected sources.");
   if (validSocialLinks.length < 1) blockers.push("Confirm at least one Farmer-owned social account.");
   if (input.sectionCount < 3) blockers.push("Write at least three cited story sections.");

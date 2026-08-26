@@ -15,6 +15,7 @@ export async function PublicFooter() {
   const { t: eco, locale: ecoLocale } = await getServerTranslations("ecoSuppliers");
   const companiesEnabled = isFeatureEnabled("ENABLE_AGRI_BUSINESSES");
   const outreachEnabled = isFeatureEnabled("ENABLE_OUTREACH_AGENT");
+  const farmVisitsEnabled = isFeatureEnabled("ENABLE_FARM_VISITS");
   return (
     <footer className="public-footer">
       <div className="container footer-main">
@@ -28,6 +29,7 @@ export async function PublicFooter() {
           <Link href="/marketplace">{t("marketplace")}</Link>
           <Link href="/featured-farmers">{t("featuredFarmers")}</Link>
           <Link href="/blog">{t("blog")}</Link>
+          {farmVisitsEnabled ? <Link href="/farm-visits">{t("farmVisits")}</Link> : null}
           {companiesEnabled ? <Link href="/companies">{t("companiesOffers")}</Link> : null}
           <Link href="/eco-products" {...ecoSupplierFallbackLanguageProps(ecoLocale)}>{eco("eyebrow")}</Link>
           <Link href="/#segments">{t("whoFor")}</Link>

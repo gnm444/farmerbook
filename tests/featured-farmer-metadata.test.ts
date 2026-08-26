@@ -9,6 +9,10 @@ const historicalProfile = readFileSync(
   "features/featured-farmers/narayana-reddy.ts",
   "utf8",
 );
+const sandeepProfile = readFileSync(
+  "features/featured-farmers/sandeep-dasari.ts",
+  "utf8",
+);
 
 describe("Featured Farmer metadata", () => {
   it("uses Article-about-Person semantics with owned sameAs and citations", () => {
@@ -22,6 +26,10 @@ describe("Featured Farmer metadata", () => {
     expect(storyRoute).toContain('"@type": "BreadcrumbList"');
     expect(storyRoute).toContain("wordCount:");
     expect(storyRoute).toContain("keywords:");
+    expect(storyRoute).toContain("personMetadata");
+    expect(storyRoute).toContain('publication.publication_status !== "preview"');
+    expect(storyRoute).toContain("index: false");
+    expect(storyRoute).not.toContain('alternateName: ["L Narayana Reddy"');
     expect(storyRoute).not.toContain('"@type": "FAQPage"');
     expect(storyRoute).not.toContain('"@type": "ProfilePage"');
     expect(storyRoute).not.toContain("interactionStatistic");
@@ -43,5 +51,16 @@ describe("Featured Farmer metadata", () => {
     expect(historicalProfile).toContain("media: null");
     expect(storyRoute).not.toContain("farmer-network-hero.webp");
     expect(historicalProfile).not.toContain("ProfilePage");
+  });
+
+  it("keeps the approved Sandeep publication free of member/store semantics", () => {
+    expect(sandeepProfile).toContain('publication_status: "published"');
+    expect(sandeepProfile).toContain("Sandeep Dasari");
+    expect(sandeepProfile).toContain("Bommalaramaram");
+    expect(sandeepProfile).toContain("@AvanivanFarms");
+    expect(sandeepProfile).toContain("nzB61ZhIc1Q");
+    expect(sandeepProfile).toContain("reportedProducts");
+    expect(sandeepProfile).not.toContain("farmer_id");
+    expect(sandeepProfile).not.toContain("produce_listings");
   });
 });

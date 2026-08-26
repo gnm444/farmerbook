@@ -20,12 +20,17 @@ begin
   loop
     execute 'drop table ' || relation.qualified_name || ' cascade';
   end loop;
-  delete from public.ecosystem_release_controls where control_key = 'outreach_agent';
+  -- Recreate the 2026-08-17 production baseline. Later migrations add the
+  -- ai_company control, which the older compatibility constraint did not yet
+  -- allow and which is intentionally outside this isolated rehearsal.
+  delete from public.ecosystem_release_controls
+  where control_key in ('outreach_agent', 'ai_company');
 end;
 $$;
 
 \ir /tmp/farmerbook-outreach-production-compatibility.sql
 \ir /tmp/farmerbook-outreach-production-safety-completion.sql
+\ir /tmp/farmerbook-outreach-cleanup-compatibility.sql
 
 do $$
 declare
@@ -72,6 +77,7 @@ begin
     'validate_outreach_invitation(text)',
     'redeem_outreach_invitation(text,uuid,uuid)',
     'schedule_due_outreach_followups(integer)',
+    'purge_expired_outreach_research(integer)',
     'withdraw_outreach_consent(uuid,text,uuid)',
     'record_outreach_provider_event(uuid,jsonb,uuid)',
     'list_outreach_prospects(integer)',

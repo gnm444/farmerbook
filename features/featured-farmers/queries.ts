@@ -17,6 +17,7 @@ import {
   featuredFarmerStorySectionSchema,
 } from "./schemas";
 import { narayanaReddyPublication } from "./narayana-reddy";
+import { sandeepDasariPublication } from "./sandeep-dasari";
 import { buildFeaturedFarmerResearchQueries } from "./web-research";
 
 const researchPurposes = [
@@ -159,6 +160,7 @@ export type FeaturedFarmerMediaRow = z.infer<
 
 export type FeaturedFarmerWorkspace = FeaturedFarmerResearchRow & {
   researchQueries: ReturnType<typeof buildFeaturedFarmerResearchQueries>;
+  professionalSourcesRequired: boolean;
   sources: FeaturedFarmerSourceRow[];
   draft: FeaturedFarmerDraftRow | null;
   claims: Array<z.infer<typeof featuredFarmerClaimSchema> & { id: string }>;
@@ -177,8 +179,29 @@ const snapshotSourceSchema = z.object({
   association: z.string().optional(),
 });
 
+const sourceHostedImageSchema = z
+  .object({
+    assetUrl: z.url(),
+    sourceUrl: z.url(),
+    altText: z.string(),
+    credit: z.string(),
+    creditUrl: z.url(),
+    provider: z.literal("youtube_oembed"),
+    focalPoint: z.enum(["left", "center", "right"]).optional(),
+  })
+  .strict();
+
+const sourceHostedThumbnailSchema = z
+  .object({
+    assetUrl: z.url(),
+    altText: z.string(),
+    provider: z.literal("youtube_oembed"),
+  })
+  .strict();
+
 export const featuredFarmerSnapshotSchema = z.object({
   fullName: z.string(),
+  contactEmail: z.email().optional(),
   district: z.string().nullable(),
   state: z.string().nullable(),
   locale: z.string(),
@@ -210,8 +233,22 @@ export const featuredFarmerSnapshotSchema = z.object({
       publisher: z.string(),
       title: z.string(),
       sourceType: z.string(),
+      thumbnail: sourceHostedThumbnailSchema.optional(),
     }),
   ),
+  reportedProducts: z
+    .array(
+      z
+        .object({
+          name: z.string().trim().min(2).max(100),
+          categorySlug: z.string().trim().min(2).max(100),
+          status: z.literal("reported"),
+          sourceUrls: z.array(z.url()).min(1).max(4),
+        })
+        .strict(),
+    )
+    .max(20)
+    .optional(),
   milestones: z
     .array(
       z.object({
@@ -238,16 +275,19 @@ export const featuredFarmerSnapshotSchema = z.object({
       keywords: z.array(z.string()),
     })
     .optional(),
-  sourceHostedPreview: z
+  personMetadata: z
     .object({
-      assetUrl: z.url(),
-      sourceUrl: z.url(),
-      altText: z.string(),
-      credit: z.string(),
-      creditUrl: z.url(),
-      provider: z.literal("youtube_oembed"),
+      alternateNames: z.array(z.string()).max(8).optional(),
+      birthDate: z.string().optional(),
+      deathDate: z.string().optional(),
+      jobTitles: z.array(z.string()).min(1).max(8),
+      homeLocation: z.string(),
+      knowsAbout: z.array(z.string()).min(1).max(20),
     })
+    .strict()
     .optional(),
+  sourceHostedPreview: sourceHostedImageSchema.optional(),
+  sourceHostedBackground: sourceHostedImageSchema.optional(),
   media: z
     .object({
       assetUrl: z.string(),
@@ -263,12 +303,21 @@ const publicationRowSchema = z.object({
   publication_id: z.uuid(),
   slug: z.string(),
   publication_revision: z.number().int().positive(),
+  publication_status: z.enum(["preview", "published"]).optional(),
   snapshot: featuredFarmerSnapshotSchema,
   fact_checked_at: z.string(),
   published_at: z.string(),
 });
 
 export type FeaturedFarmerPublication = z.infer<typeof publicationRowSchema>;
+
+const curatedPublications: FeaturedFarmerPublication[] = [
+  sandeepDasariPublication,
+  narayanaReddyPublication,
+];
+const curatedPublicationBySlug = new Map(
+  curatedPublications.map((publication) => [publication.slug, publication]),
+);
 
 function administrationAvailable(demo: boolean) {
   return (
@@ -391,14 +440,24 @@ export async function loadFeaturedFarmerWorkspace(
   if (!administrationAvailable(administrator.demo)) {
     return { available: false, workspace: null };
   }
-  const result = await createAdminClient()
-    .from("featured_farmer_research")
-    .select("*")
-    .eq("id", researchId)
-    .eq("created_by", administrator.id)
-    .gt("retention_expires_at", new Date().toISOString())
-    .maybeSingle();
-  if (result.error) throw new Error("FEATURED_FARMER_WORKSPACE_UNAVAILABLE");
+  const supabase = createAdminClient();
+  const [result, professionalSourcesControl] = await Promise.all([
+    supabase
+      .from("featured_farmer_research")
+      .select("*")
+      .eq("id", researchId)
+      .eq("created_by", administrator.id)
+      .gt("retention_expires_at", new Date().toISOString())
+      .maybeSingle(),
+    supabase
+      .from("ecosystem_release_controls")
+      .select("enabled")
+      .eq("control_key", "featured_farmer_professional_sources_required")
+      .maybeSingle(),
+  ]);
+  if (result.error || professionalSourcesControl.error) {
+    throw new Error("FEATURED_FARMER_WORKSPACE_UNAVAILABLE");
+  }
   if (!result.data) return { available: true, workspace: null };
   const research = featuredFarmerResearchRowSchema.parse(result.data);
   const parts = await loadWorkspaceParts(research);
@@ -406,6 +465,8 @@ export async function loadFeaturedFarmerWorkspace(
     available: true,
     workspace: {
       ...research,
+      professionalSourcesRequired:
+        professionalSourcesControl.data?.enabled === true,
       researchQueries: buildFeaturedFarmerResearchQueries({
         fullName: research.subject_name,
         ...(research.district_hint ? { districtHint: research.district_hint } : {}),
@@ -432,23 +493,25 @@ async function publicClient() {
 
 export async function loadFeaturedFarmerPublications(limit = 24) {
   const supabase = await publicClient();
-  if (!supabase) return [narayanaReddyPublication].slice(0, limit);
+  if (!supabase) return curatedPublications.slice(0, limit);
   const result = await supabase.rpc("list_featured_farmer_publications", {
     limit_input: limit,
     offset_input: 0,
   });
   if (result.error) throw new Error("FEATURED_FARMER_PUBLICATIONS_UNAVAILABLE");
   const publications = z.array(publicationRowSchema).parse(result.data ?? []);
+  const curatedSlugs = new Set(curatedPublicationBySlug.keys());
   return [
-    narayanaReddyPublication,
+    ...curatedPublications,
     ...publications.filter(
-      (publication) => publication.slug !== narayanaReddyPublication.slug,
+      (publication) => !curatedSlugs.has(publication.slug),
     ),
   ].slice(0, limit);
 }
 
 export async function loadFeaturedFarmerPublication(slug: string) {
-  if (slug === narayanaReddyPublication.slug) return narayanaReddyPublication;
+  const curated = curatedPublicationBySlug.get(slug);
+  if (curated) return curated;
   const supabase = await publicClient();
   if (!supabase) return null;
   const result = await supabase.rpc("get_featured_farmer_publication", {

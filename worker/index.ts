@@ -5,11 +5,19 @@ import { getAgentByName } from "agents";
 import { withSecurityHeaders } from "../lib/security-headers";
 import { websiteGreeterRequestSchema } from "../features/website-greeter/contracts";
 import type { WebsiteGreetingAgent } from "../features/website-greeter/agent";
+import type { LiveActionCoordinatorAgent } from "../features/action-control/coordinator-agent";
+import type { LiveActionWorkflowInput } from "../features/action-control/contracts";
+import type { OwnedSocialPublisherAgent } from "../features/social-publisher/agent";
 
 export { FarmerProfileAgent } from "../features/profile-agent/managed-agent";
 export { AiFleetBudgetAgent } from "../features/ai-budget/agent";
 export { WebsiteGreetingAgent } from "../features/website-greeter/agent";
 export { BlogWritingAgent } from "../features/blog/agent";
+export { BlogPublicationVerifierAgent } from "../features/blog/publication-verifier-agent";
+export { OwnedSocialPublisherAgent } from "../features/social-publisher/agent";
+export { CompanyOperationsAgent } from "../features/company-agents/agent";
+export { LiveActionCoordinatorAgent } from "../features/action-control/coordinator-agent";
+export { LiveActionExecutionWorkflow } from "../features/action-control/execution-workflow";
 export { FarmerProfileApprovalWorkflow } from "../features/profile-agent/approval-workflow";
 export {
   CustomerSupportAgent,
@@ -33,6 +41,10 @@ interface Env {
     };
   };
   WEBSITE_GREETING_AGENT: DurableObjectNamespace<WebsiteGreetingAgent>;
+  ENABLE_LIVE_AGENT_EXECUTION?: string;
+  LIVE_ACTION_COORDINATOR_AGENT?: DurableObjectNamespace<LiveActionCoordinatorAgent>;
+  LIVE_ACTION_EXECUTION_WORKFLOW?: Workflow<LiveActionWorkflowInput>;
+  OWNED_SOCIAL_PUBLISHER_AGENT?: DurableObjectNamespace<OwnedSocialPublisherAgent>;
 }
 
 interface ExecutionContext {
@@ -102,6 +114,20 @@ const worker = {
 
     const response = await handler.fetch(request, env, ctx);
     return withSecurityHeaders(request, response, env.NEXT_PUBLIC_SUPABASE_URL);
+  },
+  async scheduled(
+    _controller: { cron: string; scheduledTime: number },
+    env: Env,
+    ctx: ExecutionContext,
+  ) {
+    if (!env.OWNED_SOCIAL_PUBLISHER_AGENT) return;
+    ctx.waitUntil((async () => {
+      const socialPublisher = await getAgentByName(
+        env.OWNED_SOCIAL_PUBLISHER_AGENT!,
+        "farmerbook-owned-social-publisher",
+      ) as DurableObjectStub<OwnedSocialPublisherAgent>;
+      await socialPublisher.scanStaticPublications();
+    })());
   },
 };
 

@@ -1,0 +1,18 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "farmerbook-owned-social-connector",
+  "main": "./index.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "vars": {
+    "CONNECTOR_RELEASE_ENABLED": "true",
+    "META_GRAPH_API_VERSION": "v26.0",
+    "META_INSTAGRAM_ACCOUNT_ID": "17841434684058850",
+    "META_PAGE_ID": "1198487616689227"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

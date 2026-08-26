@@ -15,7 +15,7 @@ export default async function BlogAgentPage() {
       <ProductHeader
         eyebrow="Administrator · evidence-aware publishing"
         title="FarmerBook Blog Writing Agent"
-        description="A Cloudflare managed agent prepares one source-bounded farming draft each week and translates approved articles. It cannot publish a new article until an authenticated administrator records an explicit approval."
+        description="A dedicated Cloudflare Agent prepares at most one source-bounded private draft every day at 09:00 IST and translates approved articles. It cannot publish a new article until an authenticated administrator reviews the exact revision and records an explicit decision."
         action={<div className="report-actions"><Link className="button button--secondary" href="/blog">Open public blog</Link><Link className="button button--secondary" href="/admin/agents">Open agent fleet</Link></div>}
       />
       <BlogAgentConsole {...desk} />

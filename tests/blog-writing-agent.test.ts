@@ -5,16 +5,21 @@ import {
   CALCULATED_TRANSITION_SLUG,
   FOOD_TRACEABILITY_SLUG,
   GHEE_TRUST_SLUG,
+  MONEY_CHARACTER_SLUG,
+  WEALTH_HEALTH_PARADOX_SLUG,
   foundingBlogPublication,
 } from "@/features/blog/published";
 import { foodTraceabilityPublication } from "@/features/blog/publications/food-traceability";
 import { gheeTrustPublication } from "@/features/blog/publications/ghee-trust";
+import { moneyCharacterPublication } from "@/features/blog/publications/money-character";
+import { wealthHealthParadoxPublication } from "@/features/blog/publications/wealth-health-paradox";
 import { blogUi, translationNotice } from "@/features/blog/presentation";
 import { SUPPORTED_LOCALES } from "@/lib/i18n/locales";
 import { isPublicPath } from "@/proxy";
 
 describe("managed FarmerBook Blog Writing Agent", () => {
   const agent = readFileSync("features/blog/agent.ts", "utf8");
+  const dailyEditorial = readFileSync("features/blog/daily-editorial.ts", "utf8");
   const vite = readFileSync("vite.config.ts", "utf8");
   const worker = readFileSync("worker/index.ts", "utf8");
   const blogPage = readFileSync("app/blog/page.tsx", "utf8");
@@ -25,14 +30,17 @@ describe("managed FarmerBook Blog Writing Agent", () => {
     expect(vite).toContain('class_name: "BlogWritingAgent"');
     expect(vite).toContain('tag: "blog-writing-agent-v1"');
     expect(worker).toContain('export { BlogWritingAgent }');
-    expect(agent).toContain('WEEKLY_CRON_UTC = "30 3 * * 2"');
-    expect(agent).toContain('"prepareWeeklyDraft"');
-    expect(agent).toContain('category: "food_safety"');
-    expect(agent).toContain('category: "farm_to_table"');
+    expect(agent).toContain("DAILY_EDITORIAL_CRON_UTC");
+    expect(agent).toContain("DAILY_EDITORIAL_CALLBACK");
+    expect(agent).toContain("prepareDailyDraft");
+    expect(agent).toContain("blog_agent_runs");
+    expect(agent).toContain("cancelEditorialSchedules");
+    expect(dailyEditorial).toContain('category: "food_safety"');
+    expect(dailyEditorial).toContain('category: "farm_to_table"');
     expect(agent).toContain("natural-farming and food editor");
   });
 
-  it("uses the cheapest allowlisted model within a four-dollar cap", () => {
+  it("uses the cheapest allowlisted model within a two-dollar cap", () => {
     expect(agent).toContain('@cf/ibm-granite/granite-4.0-h-micro');
     expect(agent).toContain('@cf/ai4bharat/indictrans2-en-indic-1B');
     expect(agent).toContain("SUPPORTED_MODELS");
@@ -41,11 +49,17 @@ describe("managed FarmerBook Blog Writing Agent", () => {
     expect(agent).toContain("estimatedAiSpendMicros");
   });
 
-  it("keeps agent-written drafts private until an administrator reviews them", () => {
+  it("keeps manual drafts review-bound and autonomous publication policy-bound", () => {
     expect(agent).toContain("'awaiting_review'");
     expect(agent).toContain('decision === "publish"');
     expect(agent).toContain("WHERE status = 'published'");
-    expect(agent).not.toContain("autoPublish");
+    expect(agent).toContain("autonomouslyPublishDraft");
+    expect(agent).toContain("BLOG_AUTONOMOUS_PUBLISHING");
+    expect(agent).toContain("visibility_status IN ('provisional', 'public')");
+    expect(vite).toContain('name: "BLOG_PUBLICATION_VERIFIER_AGENT"');
+    expect(vite).toContain('tag: "blog-publication-verifier-agent-v1"');
+    expect(worker).toContain('export { BlogPublicationVerifierAgent }');
+    expect(storyPage).toContain("data-publication-sha256");
   });
 
   it("exposes public collection and citation-rich article routes", () => {
@@ -59,6 +73,89 @@ describe("managed FarmerBook Blog Writing Agent", () => {
     expect(isPublicPath(`/blog/${CALCULATED_TRANSITION_SLUG}`)).toBe(true);
     expect(isPublicPath(`/blog/${GHEE_TRUST_SLUG}`)).toBe(true);
     expect(isPublicPath(`/blog/${FOOD_TRACEABILITY_SLUG}`)).toBe(true);
+    expect(isPublicPath(`/blog/${MONEY_CHARACTER_SLUG}`)).toBe(true);
+    expect(isPublicPath(`/blog/${WEALTH_HEALTH_PARADOX_SLUG}`)).toBe(true);
+  });
+});
+
+describe("founder wealth, health and stewardship editorial", () => {
+  it("publishes valid reviewed content with an original AI-image disclosure", () => {
+    expect(blogPublicationSchema.parse(wealthHealthParadoxPublication)).toEqual(
+      wealthHealthParadoxPublication,
+    );
+    expect(wealthHealthParadoxPublication.author).toBe("Narasimha Gonapa");
+    expect(wealthHealthParadoxPublication.english.title).toBe(
+      "The Wealth We Accumulate, the Health We Abandon: Our Dangerous Paradox of Prosperity",
+    );
+    expect(wealthHealthParadoxPublication.heroImage).toMatchObject({
+      src: "/images/blog/wealth-health-paradox-editorial.webp",
+      provenance: "ai_generated",
+      width: 1_600,
+      height: 878,
+    });
+    expect(wealthHealthParadoxPublication.english.conclusion).toMatch(
+      /— Narasimha Gonapa$/,
+    );
+  });
+
+  it("keeps medical and organic-food claims evidence-calibrated", () => {
+    const article = JSON.stringify(wealthHealthParadoxPublication);
+    expect(article).toContain("cannot promise");
+    expect(article).toContain("do not guarantee");
+    expect(article).not.toContain("chemical-free food");
+    expect(article).not.toContain("Disease-Free Longevity");
+    expect(article).not.toContain("prevent chronic illness");
+    expect(article).not.toContain("health insurance paid directly to the farmer");
+    expect(wealthHealthParadoxPublication.sources.map((source) => new URL(source.url).hostname))
+      .toEqual(expect.arrayContaining([
+        "www.who.int",
+        "nin.res.in",
+        "www.fao.org",
+        "icar.gov.in",
+        "isha.sadhguru.org",
+        "www.youtube.com",
+      ]));
+    expect(article).toContain("The silent crisis at the source: farmers and our land");
+    expect(article).toContain("From extraction to expression: reclaiming how we relate");
+    expect(article).toContain("Life Is Enriched By Giving, Not By Extraction");
+  });
+
+  it("renders image metadata, disclosure and structured data", () => {
+    const storyPage = readFileSync("app/blog/[slug]/page.tsx", "utf8");
+    const hero = readFileSync(
+      "public/images/blog/wealth-health-paradox-editorial.webp",
+    );
+    expect(storyPage).toContain("summary_large_image");
+    expect(storyPage).toContain("publication.heroImage.caption");
+    expect(storyPage).toContain("AI-generated editorial illustration");
+    expect(new TextDecoder().decode(hero.subarray(0, 4))).toBe("RIFF");
+    expect(new TextDecoder().decode(hero.subarray(8, 12))).toBe("WEBP");
+  });
+});
+
+describe("founder money and organic-farming editorial", () => {
+  it("publishes the reviewed article under Narasimha Gonapa's name", () => {
+    expect(blogPublicationSchema.parse(moneyCharacterPublication)).toEqual(
+      moneyCharacterPublication,
+    );
+    expect(moneyCharacterPublication.author).toBe("Narasimha Gonapa");
+    expect(moneyCharacterPublication.english.title).toBe(
+      "Money Is a Mirror: What Organic Farming Teaches Us About Character",
+    );
+    expect(moneyCharacterPublication.english.conclusion).toContain(
+      "Money may reveal our real character",
+    );
+    expect(moneyCharacterPublication.english.conclusion).toMatch(
+      /— Narasimha Gonapa$/,
+    );
+  });
+
+  it("does not claim certification, guaranteed trust, or image rights", () => {
+    const publication = JSON.stringify(moneyCharacterPublication);
+    expect(publication).toContain("does not guarantee");
+    expect(publication).toContain("rights-cleared source was not available");
+    expect(publication).not.toContain("certified organic farmer");
+    expect(publication).not.toContain("hero_image");
   });
 });
 

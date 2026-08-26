@@ -34,6 +34,7 @@ import type {
   OutreachProspect,
   OutreachRuntimeHealth,
 } from "./types";
+import type { OutreachAutonomyReadiness } from "./autonomous-readiness";
 
 const summaryCards: Array<[
   keyof OutreachDashboardSummary,
@@ -189,9 +190,11 @@ function readScreenshot(file: File) {
 function DeliveryControls({
   health,
   enabled,
+  readiness,
 }: {
   health: OutreachRuntimeHealth;
   enabled: boolean;
+  readiness: OutreachAutonomyReadiness;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -229,13 +232,30 @@ function DeliveryControls({
         {health.deliveryPaused ? <PauseCircle aria-hidden="true" /> : <PlayCircle aria-hidden="true" />}
       </div>
       <p>{health.pauseReason}</p>
+      {!readiness.ready ? (
+        <div className="form-error" role="status">
+          <strong>{readiness.code.replaceAll("_", " ")}</strong>
+          <span>{readiness.action}</span>
+        </div>
+      ) : null}
       <div className="tag-row">
         <span className="tag">{health.pendingCount} pending</span>
         <span className="tag">{health.failedCount} failed</span>
         <span className="tag">
           Last delivery {health.lastDeliveredAt ? new Date(health.lastDeliveredAt).toLocaleString("en-IN") : "none"}
         </span>
+        <span className="tag">
+          Today {health.dailyAuthorizedCount}/{health.dailyDeliveryLimit} authorized
+        </span>
       </div>
+      {health.lastAutomaticStopCode ? (
+        <p className="form-helper">
+          Last automatic stop: {health.lastAutomaticStopCode.replaceAll("_", " ")}
+          {health.lastAutomaticStopAt
+            ? ` · ${new Date(health.lastAutomaticStopAt).toLocaleString("en-IN")}`
+            : ""}
+        </p>
+      ) : null}
       <label className="field">
         <span>Operational reason</span>
         <input value={reason} onChange={(event) => setReason(event.target.value)} minLength={5} maxLength={500} />
@@ -244,7 +264,7 @@ function DeliveryControls({
       <button
         className={`button ${health.deliveryPaused ? "" : "button--secondary"}`}
         type="button"
-        disabled={!enabled || isPending || reason.trim().length < 5}
+        disabled={!enabled || !readiness.ready || isPending || reason.trim().length < 5}
         onClick={updatePauseState}
       >
         {health.deliveryPaused ? <PlayCircle size={17} aria-hidden="true" /> : <PauseCircle size={17} aria-hidden="true" />}
@@ -389,6 +409,7 @@ export function OutreachConsole({
   summary,
   health,
   failures,
+  readiness,
   enabled,
   profileAgentEnabled = false,
   nameSearchEnabled = false,
@@ -397,6 +418,7 @@ export function OutreachConsole({
   summary: OutreachDashboardSummary;
   health: OutreachRuntimeHealth;
   failures: OutreachFailure[];
+  readiness: OutreachAutonomyReadiness;
   enabled: boolean;
   profileAgentEnabled?: boolean;
   nameSearchEnabled?: boolean;
@@ -457,7 +479,11 @@ export function OutreachConsole({
         ))}
       </section>
 
-      <DeliveryControls health={health} enabled={enabled} />
+      <DeliveryControls
+        health={health}
+        enabled={enabled}
+        readiness={readiness}
+      />
       <FailureRecovery failures={failures} />
       <NameDiscoveryControl enabled={nameSearchEnabled} />
 

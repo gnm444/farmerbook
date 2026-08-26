@@ -14,7 +14,7 @@ a Supabase-backed application boundary with email authentication, PostgreSQL Row
 Security, storage policies, seller/customer authorization, purchase reviews,
 and administrator moderation actions.
 
-## Managed AI fleet and the $50 inference ceiling
+## Managed AI fleet and the $10 inference ceiling
 
 The public site includes a Cloudflare Agent named `WebsiteGreetingAgent`. It is
 available on demand 24/7 through a SQLite-backed Durable Object; it does not run
@@ -51,11 +51,39 @@ Cloudflare AI Gateway can later route this Agent to newer Anthropic, Google or
 Workers AI models. A new model must not be enabled merely by changing an
 environment value: add its reviewed input/output pricing to the server-side
 allowlist, recalculate the conservative reservation, run the budget tests, and
-keep the $50 fleet ceiling. This avoids silently turning “latest” into an
+keep the $10 fleet ceiling. This avoids silently turning “latest” into an
 uncapped bill.
 
 The Agent stores only a random session identifier, counters and timestamps in
 its Durable Object. It does not store visitor message text.
+
+## AI company command center
+
+FarmerBook has a default-off operating layer for the six-month goal of 100,000
+registered users, 40,000 activated users, and 25,000 monthly active users. One
+private `CompanyOperationsAgent` class supplies 15 role-locked named Durable
+Object instances: executive strategy, operations coordination, data and
+experimentation, governance and risk, independent audit, growth strategy,
+Farmer acquisition, buyer acquisition, Farmer onboarding, marketplace
+matching, SEO/editorial, product management, engineering planning, QA and
+reliability, and support/trust.
+
+These roles do not consume Workers AI budget. A deterministic,
+version-controlled `company-policy-v1` reads aggregate counters and creates at
+most one reviewable proposal per run. Supabase stores the three objectives,
+run-linked KPI snapshots, proposals, optimistic revisions, and immutable
+decision events. Snapshots contain no names, contacts, messages, support text,
+prompts, or participant-level records.
+
+An administrator reviews proposals at `/admin/agents`. Approval means “accept
+into the operating backlog”; there is deliberately no connector that can send,
+publish, deploy, spend, modify users, moderate content, or grant verification.
+The shared managed-operations flag, separate `ENABLE_AI_COMPANY` flag, private
+`managed_operations_agents` database control, and private `ai_company` control
+must all pass before a role can run. All controls and all 15 roles default off.
+The first production activation completed on 2026-08-19 with all 15 schedules
+enabled and proposal execution still human-gated. See the production runbook
+before any configuration change or rollback.
 
 ## Organic certification labels
 
@@ -136,10 +164,12 @@ English are selectable. Set it to `false` only as an emergency rollback;
 unreviewed strings disclose their Indian-English fallback.
 
 The public farming library is at `/blog`. A dedicated Cloudflare
-`BlogWritingAgent` prepares one evidence-bounded draft each Tuesday at 09:00
-IST, stores it privately, and requires an authenticated administrator to
-publish it from `/admin/blog`. Its cheapest allowlisted Workers AI model has a
-hard default USD 2/month inference cap inside the shared USD 10 fleet budget.
+`BlogWritingAgent` prepares at most one evidence-bounded private draft every
+day at 09:00 IST and requires an authenticated administrator to review the
+exact revision before publishing it from `/admin/blog`. India-calendar run
+keys prevent scheduled retries and manual tests from creating or funding a
+second draft that day. Its cheapest allowlisted Workers AI model has a hard
+default USD 2/month inference cap inside the shared USD 10 fleet budget.
 Reviewed Telugu and Indian English articles are canonical; the other supported
 Indian languages receive cached, clearly disclosed AI-assisted translations
 with an honest English fallback. See `docs/BLOG_WRITING_AGENT.md`.
@@ -180,11 +210,16 @@ at most five text-only candidates for no more than 30 days, and never copies
 media, thumbnails, comments, transcripts, statistics, or cookies.
 
 Publication at `/featured-farmers/[slug]` is an editorial article about a
-person, not a FarmerBook member profile or verification claim. Readiness
-requires two current professional sources on separate domains, at least one
-authoritative or independent source, two cited significance claims, three story
-sections, a fact check within 24 hours, and at least one manually confirmed
-Farmer-owned LinkedIn, Instagram, Facebook or YouTube account. Posts, reels,
+person, not a FarmerBook member profile or verification claim. Two current
+professional sources on separate domains and at least one authoritative or
+independent source are controlled by the private
+`featured_farmer_professional_sources_required` switch; it temporarily defaults
+to false and can be restored without a schema change. Readiness always requires
+two cited significance claims, three story sections, a fact check within 24
+hours, and at least one manually confirmed Farmer-owned LinkedIn, Instagram,
+Facebook or YouTube account. Optional professional-source mode does not mean
+independent verification: every public claim must still cite selected evidence.
+Posts, reels,
 interviews and watch URLs remain citations and cannot become social-profile
 links. Every displayed claim keeps its selected sources; only original
 photographs with recorded republication rights may be shown. A provider-hosted
@@ -192,6 +227,16 @@ preview may appear only when it stays on the provider, links to the source and
 shows clear attribution; otherwise the public page remains image-free. Stories expose
 their fact-check date, citations, editorial disclosure, and correction/removal
 path. The legacy `/admin/known-farmers` route redirects to this newsroom.
+
+Sandeep Dasari's curated story also has a standalone Featured Farmer engagement
+surface. It displays the owner-authorized Avani Van Farms email, sends public
+questions privately through exact-action Turnstile and a server-owned Postmark
+recipient, publishes only administrator-approved self-declared Customer
+recommendations, and shows an approximate profile-view aggregate. The view
+counter stores no visitor row, IP, user agent, fingerprint or auth identity; a
+date-only HttpOnly cookie limits counting to once per browser per UTC day. This
+surface is independent of marketplace verified-purchase reviews and the gated
+Featured Farmer newsroom schema.
 
 `ENABLE_FEATURED_FARMER_PROFILES` and the database release control
 `featured_farmer_profiles` both default to false. Before enabling either one,
@@ -201,6 +246,13 @@ withdrawal in staging, and approve the first subjects. Review the criteria and
 published collection at least annually. Do not publish private contact details,
 sensitive personal data, inferred attributes, copied third-party media, or any
 claim that the subject joined or endorsed FarmerBook.
+
+Editorial snapshots may also include a `Reported farm products` catalog. It is
+operator-supplied context only: it contains no price, stock, delivery, order or
+enquiry action and is never a substitute for seller-owned marketplace listings.
+A real store requires an active, onboarding-complete account controlled by the
+seller, current commercial fields, applicable food-business evidence and the
+seller's approval.
 
 Consented messages receive one-time signed invitations that link the resulting
 authenticated account to its prospect record without placing contact data in
@@ -213,10 +265,28 @@ The first concrete email adapter targets Postmark with a verified FarmerBook
 domain, separate transactional and optional Broadcast Message Streams, signed
 double opt-in, per-message inbound reply routing, bounce/complaint suppression
 and one-click unsubscribe. `ceo@farmerbook.in` is the selected professional
-identity and currently forwards inbound mail to the owner Gmail. It remains
-receive-only and cannot be used as `From` until Postmark verifies the domain and
-outbound SPF/DKIM/DMARC alignment; the owner Gmail is never used as the
-autonomous sender.
+identity and forwards inbound mail to the owner Gmail. Postmark manually
+approved the FarmerBook account on 2026-08-17 and verified the domain DKIM and
+custom Return-Path; the application may use this address as `From` only through
+the reviewed Postmark adapter after the owner canary and release gates pass.
+The owner Gmail is never used as the autonomous sender.
+
+Once the one-time release and canary are complete, `Growth & Outreach` processes
+the consented queue every 15 minutes without per-message approval. A service-
+only final dispatch RPC rechecks pause, expiry, suppression and exact-purpose
+authority immediately before any contact read or provider call. It reserves at
+most 25 attempts per India calendar day and stores only redacted immutable
+decision evidence. Missing credentials/legal configuration, an invalid final
+check, an ambiguous provider outcome or a three-failure circuit break
+persistently pauses delivery and exposes an actionable reason in the admin
+console. Resume remains an explicit recovery operation; it cannot override
+consent or suppression.
+
+The 15 aggregate-only company Agents are operated through
+`/admin/agents`; their browser guide is at `/admin/agents/guide` and the
+repository guide is [`docs/AI_COMPANY_OPERATING_GUIDE.md`](docs/AI_COMPANY_OPERATING_GUIDE.md).
+Company proposal approval creates backlog work only. Consented email delivery
+belongs to the separate `Growth & Outreach` specialized Agent.
 
 The private Farmer database at `/admin/farmer-database` is a founder-owner-only
 contact store for direct interest, existing-member, approved partner, and
@@ -239,6 +309,16 @@ subject consent or cited, independently reviewed non-YouTube evidence. It does
 not create contacts, members, consent, outreach, verification, or public
 profiles. Both `ENABLE_SOURCED_FARMER_RESEARCH` and the database control
 `sourced_farmer_research` default to false.
+
+One dated, product-owner-approved exception is available at
+`/admin/sourced-farmers/raitunestham`: a fixed, manually reviewed server-side
+snapshot of 41 Raitu Nestham profiles and 37 publicly advertised professional
+phone numbers. It uses the same exact founder-owner gate, is read-only and
+noindex, is absent from client bundles and public navigation, and labels every
+number `Public/unverified · not outreach consent`. The snapshot does not change
+the official YouTube discovery flow above: future API responses remain
+transient and contact-redacted, and no snapshot entry becomes a contact,
+member, consent record, outreach target, verification result, or publication.
 
 ## Supervised support and social-content pilot
 

@@ -39,6 +39,15 @@ describe("outreach administrator console", () => {
           failedCount: 1,
           lastDeliveredAt: null,
           lastProviderEventAt: null,
+          dailyDeliveryLimit: 25,
+          dailyAuthorizedCount: 3,
+          lastAutomaticStopCode: "POSTMARK_DELIVERY_UNKNOWN",
+          lastAutomaticStopAt: "2026-08-10T10:30:00.000Z",
+        }}
+        readiness={{
+          ready: true,
+          code: "OUTREACH_AUTONOMY_READY",
+          action: "All repository-verifiable consented-delivery prerequisites are present.",
         }}
         failures={[
           {
@@ -79,6 +88,9 @@ describe("outreach administrator console", () => {
     expect(screen.getByText(/audit and privacy controls/i)).toBeInTheDocument();
     expect(screen.queryByText(/grower@example/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/force send/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/today 3\/25 authorized/i)).toBeInTheDocument();
+    expect(screen.getByText(/last automatic stop: postmark delivery unknown/i))
+      .toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /find and build private sample/i }),
     ).toBeEnabled();

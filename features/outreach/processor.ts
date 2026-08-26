@@ -23,7 +23,9 @@ const jobSchema = z.object({
   ]),
   message_body: z.string().min(20).max(2_000),
   attempts: z.number().int().min(1).max(5),
-  created_at: z.iso.datetime(),
+  // PostgREST serializes timestamptz values with an explicit UTC offset
+  // (`+00:00`). Accept that canonical database representation as well as Z.
+  created_at: z.iso.datetime({ offset: true }),
 });
 
 const preparedInvitationSchema = z.object({
@@ -40,6 +42,13 @@ const preparedProfilePreviewSchema = z.object({
 const prospectDeliverySchema = z.object({
   followup_requested: z.boolean(),
   engagement_type: z.enum(["membership", "collaboration"]),
+});
+
+const dispatchAuthorizationSchema = z.object({
+  authorized: z.boolean(),
+  code: z.string().regex(/^[A-Z0-9_]{2,80}$/),
+  check_id: z.uuid().nullable(),
+  next_eligible_at: z.iso.datetime({ offset: true }).nullable(),
 });
 
 type ConfiguredProvider = ConsentAcquisitionProvider & OutreachDeliveryProvider;
@@ -70,30 +79,60 @@ export async function processOutreachBatch(options: {
   const jobs = z.array(jobSchema).parse(data ?? []);
   let delivered = 0;
   let failed = 0;
+  let deferred = 0;
+  let blocked = 0;
   let consecutiveFailures = 0;
+
+  async function pauseAutomatically(reasonCode: string) {
+    const idempotencyKey = await uuidFromText(
+      `outreach-automatic-pause:${reasonCode}:${new Date().toISOString().slice(0, 13)}`,
+    );
+    const paused = await options.supabase.rpc(
+      "pause_outreach_delivery_automatically",
+      {
+        reason_code_input: reasonCode,
+        idempotency_key_input: idempotencyKey,
+      },
+    );
+    if (paused.error) throw new Error("OUTREACH_AUTO_PAUSE_FAILED");
+  }
 
   for (const job of jobs) {
     const resultIdempotencyKey = await uuidFromText(
       `outreach-result:${job.id}:${job.attempts}`,
     );
-    if (consecutiveFailures >= 3) {
-      const recorded = await options.supabase.rpc(
-        "record_outreach_delivery_result",
-        {
-          outbox_id_input: job.id,
-          result_input: {
-            delivered: false,
-            retryable: job.attempts < 5,
-            failureCode: "PROVIDER_CIRCUIT_OPEN",
-          },
-          idempotency_key_input: resultIdempotencyKey,
-        },
-      );
-      if (recorded.error) throw new Error("DELIVERY_FAILURE_WRITE_FAILED");
-      failed += 1;
-      continue;
-    }
     try {
+      const authorizationResult = await options.supabase.rpc(
+        "authorize_outreach_dispatch",
+        { outbox_id_input: job.id },
+      );
+      if (authorizationResult.error) {
+        await pauseAutomatically("DISPATCH_AUTHORIZATION_FAILED");
+        failed += 1;
+        break;
+      }
+      const authorizationResultParsed = dispatchAuthorizationSchema.safeParse(
+        Array.isArray(authorizationResult.data)
+          ? authorizationResult.data[0]
+          : authorizationResult.data,
+      );
+      if (!authorizationResultParsed.success) {
+        await pauseAutomatically("DISPATCH_AUTHORIZATION_INVALID");
+        failed += 1;
+        break;
+      }
+      const authorization = authorizationResultParsed.data;
+      if (!authorization.authorized) {
+        if (
+          authorization.code === "DAILY_DELIVERY_LIMIT_REACHED"
+          || authorization.code === "RUNTIME_PAUSED_BEFORE_DISPATCH"
+        ) {
+          deferred += 1;
+        } else {
+          blocked += 1;
+        }
+        continue;
+      }
       const contactResult = await options.supabase
         .from("outreach_contact_candidates")
         .select("private_value")
@@ -171,6 +210,40 @@ export async function processOutreachBatch(options: {
           throw new Error("PROFILE_PREVIEW_PREPARE_FAILED");
         }
       }
+      // Recheck after all private preparation and immediately before the
+      // provider boundary. The database reuses this attempt's daily reservation
+      // while re-evaluating a STOP, suppression, expiry or emergency pause that
+      // may have arrived since claim.
+      const finalAuthorizationResult = await options.supabase.rpc(
+        "authorize_outreach_dispatch",
+        { outbox_id_input: job.id },
+      );
+      if (finalAuthorizationResult.error) {
+        await pauseAutomatically("DISPATCH_REAUTHORIZATION_FAILED");
+        failed += 1;
+        break;
+      }
+      const finalAuthorizationParsed = dispatchAuthorizationSchema.safeParse(
+        Array.isArray(finalAuthorizationResult.data)
+          ? finalAuthorizationResult.data[0]
+          : finalAuthorizationResult.data,
+      );
+      if (!finalAuthorizationParsed.success) {
+        await pauseAutomatically("DISPATCH_REAUTHORIZATION_INVALID");
+        failed += 1;
+        break;
+      }
+      if (!finalAuthorizationParsed.data.authorized) {
+        if (
+          finalAuthorizationParsed.data.code === "DAILY_DELIVERY_LIMIT_REACHED"
+          || finalAuthorizationParsed.data.code === "RUNTIME_PAUSED_BEFORE_DISPATCH"
+        ) {
+          deferred += 1;
+        } else {
+          blocked += 1;
+        }
+        continue;
+      }
       const receipt =
         job.purpose === "consent_confirmation"
           ? await options.provider.requestConsent({
@@ -226,6 +299,17 @@ export async function processOutreachBatch(options: {
       if (recorded.error) throw new Error("DELIVERY_FAILURE_WRITE_FAILED");
       failed += 1;
       consecutiveFailures += 1;
+      if (
+        code === "POSTMARK_DELIVERY_UNKNOWN"
+        || consecutiveFailures >= 3
+      ) {
+        await pauseAutomatically(
+          code === "POSTMARK_DELIVERY_UNKNOWN"
+            ? code
+            : "PROVIDER_CIRCUIT_OPEN",
+        );
+        break;
+      }
     }
   }
   return {
@@ -233,5 +317,7 @@ export async function processOutreachBatch(options: {
     claimed: jobs.length,
     delivered,
     failed,
+    deferred,
+    blocked,
   };
 }

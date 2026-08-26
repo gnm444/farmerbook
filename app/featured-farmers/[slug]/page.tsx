@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { FeaturedFarmerStory } from "@/features/featured-farmers/public-profile";
+import { FeaturedFarmerEngagementSection } from "@/features/featured-farmers/featured-farmer-engagement";
+import { loadFeaturedFarmerEngagement } from "@/features/featured-farmers/engagement-queries";
 import { loadFeaturedFarmerPublication } from "@/features/featured-farmers/queries";
 import { getSiteUrl } from "@/lib/env";
 import { getServerI18n } from "@/lib/i18n";
@@ -52,6 +54,10 @@ export async function generateMetadata({
       description,
       images: media ? [media.assetUrl] : undefined,
     },
+    robots:
+      publication.publication_status === "preview"
+        ? { index: false, follow: false }
+        : undefined,
   };
 }
 
@@ -61,9 +67,10 @@ export default async function FeaturedFarmerStoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [publication, { locale }] = await Promise.all([
+  const [publication, { locale }, engagement] = await Promise.all([
     getPublication(slug),
     getServerI18n(),
+    loadFeaturedFarmerEngagement(slug),
   ]);
   if (!publication) notFound();
   const canonicalUrl = new URL(
@@ -72,6 +79,7 @@ export default async function FeaturedFarmerStoryPage({
   ).toString();
   const personId = `${canonicalUrl}#person`;
   const publisherId = `${getSiteUrl()}#organization`;
+  const personMetadata = publication.snapshot.personMetadata;
   const articleText = [
     publication.snapshot.deck,
     publication.snapshot.whyFeatured,
@@ -119,21 +127,23 @@ export default async function FeaturedFarmerStoryPage({
         "@type": "Person",
         "@id": personId,
         name: publication.snapshot.fullName,
-        alternateName: ["L Narayana Reddy", "Varthur Narayana Reddy"],
-        birthDate: "1935",
-        deathDate: "2019-01-14",
-        jobTitle: ["Organic farmer", "Farmer educator", "Agricultural writer"],
+        alternateName: personMetadata?.alternateNames,
+        birthDate: personMetadata?.birthDate,
+        deathDate: personMetadata?.deathDate,
+        jobTitle: personMetadata?.jobTitles ?? ["Farmer"],
         homeLocation: {
           "@type": "Place",
-          name: "Bengaluru Rural, Karnataka, India",
+          name:
+            personMetadata?.homeLocation ??
+            [publication.snapshot.district, publication.snapshot.state, "India"]
+              .filter(Boolean)
+              .join(", "),
         },
-        knowsAbout: [
-          "Organic farming",
-          "Natural farming",
-          "Farm biodiversity",
-          "Soil health",
-          "Farmer education",
-        ],
+        knowsAbout:
+          personMetadata?.knowsAbout ??
+          publication.snapshot.categorySlugs.map((slug) =>
+            slug.replaceAll("-", " "),
+          ),
         sameAs: publication.snapshot.socialLinks.map((social) => social.url),
         subjectOf: publication.snapshot.coverage.map((item) => item.url),
       },
@@ -173,12 +183,20 @@ export default async function FeaturedFarmerStoryPage({
       <PublicHeader />
       <main className="featured-story-page">
         <FeaturedFarmerStory publication={publication} locale={locale} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c"),
-          }}
-        />
+        {engagement && publication.publication_status !== "preview" ? (
+          <FeaturedFarmerEngagementSection
+            engagement={engagement}
+            locale={locale}
+          />
+        ) : null}
+        {publication.publication_status !== "preview" ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c"),
+            }}
+          />
+        ) : null}
       </main>
       <PublicFooter />
     </>

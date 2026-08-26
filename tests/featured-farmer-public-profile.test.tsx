@@ -182,7 +182,7 @@ describe("Featured Farmer public profile", () => {
     );
     expect(
       screen.getByRole("link", {
-        name: "Watch the source documentary: Anita Patil",
+        name: "Watch the source video featuring Anita Patil",
       }),
     ).toHaveAttribute("href", "https://www.youtube.com/watch?v=ABC123");
     expect(

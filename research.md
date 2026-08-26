@@ -3805,3 +3805,1566 @@ plus one shared inference wrapper covers both named Agents and administrator
 server actions, preserves prompt privacy, serializes reservations before model
 use and can expose honest administrator telemetry. No implementation has been
 performed at this checkpoint.
+## 2026-08-19 research addendum: AI company control plane for 100,000 users
+
+### Scope and approved operating model
+
+The product owner approved an AI-native operating-company design and directed
+implementation. The first fleet contains 15 logical company roles: Executive
+Strategy, Operations Coordinator, Data & Experimentation, Governance & Risk,
+Independent Auditor, Growth Strategy, Farmer Acquisition, Buyer Acquisition,
+Farmer Onboarding, Marketplace Matching, SEO & Editorial, Product Management,
+Engineering Planning, QA & Reliability, and Support & Trust. These roles report
+through an administrator-visible command center. They do not replace the six
+existing delivery workers for consented outreach, profile drafting,
+verification triage, customer-support drafting, social drafting, and fleet
+supervision.
+
+The six-month goal is not treated as 100,000 unqualified rows. The approved
+objective set is 100,000 registered users, 40,000 onboarding-complete users,
+and 25,000 monthly active users within 180 days. A monthly active user is a
+distinct non-null `product_events.user_id` observed in the trailing 30 days.
+This is a current product-event proxy rather than session telemetry, and the
+Data & Experimentation role must disclose that limitation in its proposal.
+
+### Existing runtime and why it should be extended
+
+`features/managed-agents/contracts.ts:3-60` is the canonical type and input
+boundary for scheduled roles. It limits schedules to 300 through 604,800
+seconds, batches to 1 through 25 items, instance names to a safe lowercase
+format, and summaries to scalar JSON values. The current six definitions at
+`features/managed-agents/contracts.ts:90-151` also publish an explicit role
+boundary for the administrator UI.
+
+`features/managed-agents/runtime.ts:38-224` supplies the correct lifecycle:
+clear old schedules before reconfiguration, create one recurring schedule,
+call only the private processor route, use a random idempotency key, retry a
+bounded number of times, and cancel schedules after three consecutive
+unsuccessful runs. The new company fleet should use these same mechanics. It
+must not expose `routeAgentRequest` or a public Agent endpoint.
+
+The six existing roles use one Durable Object class per role. Fifteen more
+classes and bindings would create avoidable configuration and migration
+surface. Cloudflare Durable Objects already isolate named instances of one
+class, so one `CompanyOperationsAgent` class can host 15 independent instance
+names such as `farmerbook-company-executive-strategy`. Its state locks to the
+first configured role; subsequent attempts to change that instance's role must
+fail. This preserves independent schedules and failure streaks while adding
+only one forward-only SQLite class migration.
+
+`features/managed-agents/actions.ts:52-75` currently maps each role to its
+private binding, and lines 77-174 combine administrator authorization, Worker
+flags, database release controls, processor-secret checks, database command
+evidence, Durable Object scheduling, and rollback-on-schedule-failure. Company
+roles should reuse this command path and select the shared company namespace.
+They require both `ENABLE_MANAGED_OPERATIONS_AGENTS` and a new
+`ENABLE_AI_COMPANY` flag.
+
+`app/api/managed-agents/run/route.ts` is the only scheduled processor ingress.
+It checks the main fleet flag, demo/configured state, a constant-time bearer,
+bounded schema, and role-specific feature prerequisites before calling
+`processManagedAgentRun`. Extending this exact route is safer than introducing
+a second scheduler secret or another ingress.
+
+`features/managed-agents/processor.ts:555-647` demonstrates the authoritative
+run protocol: a service-role RPC obtains an idempotent lease, the role-specific
+processor does bounded work, and another service-role RPC records only counts
+and a bounded summary. Company processors should add a deterministic dispatch
+branch which reads one aggregate snapshot, creates at most one proposal per
+role/run, and reports no personal or source content in the run summary.
+
+### Existing database control plane
+
+`supabase/migrations/20260812130000_managed_operations_agents.sql` creates the
+private agent, run, event, and verification-recommendation tables. It enforces
+service-only execution, administrator-only commands and dashboards, unique
+idempotency keys, 15-minute overlapping-run leases, immutable events, and
+automatic pause after three unsuccessful outcomes. The support/social forward
+migration expands this to six roles and redefines the hard-coded command
+allowlists at
+`supabase/migrations/20260816120000_support_social_pilot.sql:750-905`.
+Therefore the AI-company migration must be forward-only and must update all of
+the following consistently:
+
+- the release-control key constraint and new default-off `ai_company` row;
+- the `managed_operations_agents.role` check constraint;
+- 15 inserted role/configuration rows;
+- `request_managed_operations_agent_run` and
+  `configure_managed_operations_agent` allowlists and role-specific gate;
+- no weakening of the existing service/admin grants or RLS policies.
+
+The new tables should be private and additive:
+
+- `company_objectives` stores the three approved 180-day targets;
+- `company_kpi_snapshots` stores aggregate-only, versioned metric packets tied
+  to an immutable managed run;
+- `company_agent_proposals` stores one bounded recommendation, priority, risk,
+  evidence counters, state, revision, and administrator decision;
+- `company_agent_proposal_events` stores redacted immutable decision evidence.
+
+Browser roles must have no direct table grants. Service-role functions collect
+metrics and create snapshots/proposals. Authenticated administrators may only
+read through bounded dashboard functions and review a proposal through a
+revision-aware, idempotent function. Company agents cannot execute approved
+proposals in this release; approval means accepted into the human-controlled
+operating backlog.
+
+### Aggregate metrics that are already supportable
+
+The application already records durable product events in
+`supabase/migrations/20260729160000_initial_farmerbook.sql:152-191` and exposes a
+service-only pilot aggregate view at lines 693-704. The richer company snapshot
+can be computed entirely inside one service-role SQL function without exposing
+row data:
+
+- active and onboarding-complete profiles, with counts by `account_role`;
+- distinct product-event users in the trailing 30 days;
+- active posts and messages;
+- active produce listings and active listings with zero enquiries;
+- total and won marketplace enquiries;
+- open support cases and pending moderation reports;
+- pending company/action proposals;
+- managed-agent failed/partial runs in the trailing 24 hours.
+
+The marketplace tables and safe aggregate columns are defined at
+`supabase/migrations/20260730120000_marketplace_growth.sql:6-59`. The snapshot
+must not retain buyer names, email addresses, phone numbers, support text,
+profile names, handles, post bodies, messages, source excerpts, or model
+prompts/outputs.
+
+### Role policy instead of new model spend
+
+The central `AiFleetBudgetAgent` allocates the complete USD 10 monthly ceiling:
+USD 5 website greeting, USD 2 blog, USD 3 growth/OCR, and zero to profile,
+support, and social workstreams. There is no unallocated inference reserve.
+Giving 15 new roles model access would either violate the approved cap or
+silently starve an existing workstream.
+
+The first company fleet should therefore use `company-policy-v1`: a pure,
+versioned TypeScript decision builder which converts the aggregate metric
+packet and approved objectives into role-specific proposals. Examples include
+the onboarding gap, listings without enquiries, pending trust work, unhealthy
+agent runs, and the pace required to reach the deadline. This is meaningful
+autonomous analysis, remains testable, has zero inference cost, and cannot
+hallucinate private facts. A future model-assisted proposal writer would need a
+new explicit workstream allocation and separate approval.
+
+### Administrator experience
+
+`app/(product)/admin/agents/page.tsx` already combines the central inference
+budget and managed-role health. It is the correct command center. The page
+should add objective progress, the latest aggregate snapshot, and proposal
+review before the low-level schedule cards. `ManagedAgentDefinition` should
+gain a division label so the existing six operational workers and the 15
+company roles render in readable groups.
+
+The UI must show a conspicuous safely-off state until the application flag,
+database release control, binding, processor secret, and migration are all
+present. It must not imply that approved proposals were sent, published,
+deployed, paid for, or executed.
+
+### Test and release boundaries
+
+Focused tests must prove the exact 15 company roles, role immutability in the
+shared Durable Object class, deterministic proposal outputs, deadline/zero
+denominator behavior, aggregate-only evidence, feature gates, private bearer,
+one-proposal-per-run behavior, UI safely-off state, revision-aware review, RLS,
+service-only creation, administrator-only inspection, and unchanged safety for
+the six prior roles. The full ESLint, TypeScript, Vitest, production build,
+Supabase reset/pgTAP where available, strict Wrangler dry run, and diff check
+remain completion gates.
+
+Implementation is local and default-off. The approval to implement does not
+authorize a Supabase production migration, Worker deployment, release-control
+change, scheduled Agent activation, external message, social post, paid spend,
+or production data mutation.
+
+### Production validation outcome (2026-08-19)
+
+After explicit activation and testing approval, the production-shaped replay
+and protected backup passed and only the isolated bridge/control-plane
+migrations were applied. The active Worker is
+`1b42b9b8-373f-4322-a522-84b683abdfa2`; both application and database controls
+and all 15 schedules are enabled. One bounded manual run per role produced 15
+succeeded runs, 15 aggregate snapshots and 15 pending proposals with zero model
+calls and zero external actions. Browser evidence and exact deterministic test
+transcripts are stored under `artifacts/`. The temporary validation sessions
+were revoked without affecting older user sessions. This proves scheduling,
+role isolation, production metrics capture, proposal generation and the review
+boundary; it does not prove acquisition performance or authorize proposal
+execution.
+
+## 2026-08-19 research addendum: consented email outreach activation and agent operations
+
+### Requested outcome and safe interpretation
+
+The product owner asked to configure `ceo@farmerbook.in` for a social-media
+outreach agent that can maintain contact with prospective Farmers, customers
+and YouTube collaboration partners, and also asked how to use the 15 company
+agents. FarmerBook already has the necessary separation of duties:
+
+- the 15 company roles read aggregate counters and create reviewable operating
+  proposals only;
+- `Social Content Drafting` creates owned-channel drafts from administrator
+  briefs but cannot post or contact anybody;
+- `Growth & Outreach` is the delivery worker for email confirmations,
+  purpose-matched introductions, inbound replies and one optional follow-up.
+
+No new all-powerful or cold-email agent is needed. “Constant” operation can
+safely mean a recurring 15-minute queue processor that promptly handles new
+opt-ins, replies and eligible follow-ups. It cannot mean repeated unsolicited
+mail, public-address harvesting, automated YouTube comments or an unbounded
+sequence.
+
+### Current code and database controls
+
+The current outreach domain is already production-shaped and private. Public
+intake at `/join` and `/partner-interest` uses an HMAC nonce, route-bound
+Turnstile, exact introduction consent and optional follow-up consent. The
+service-only intake RPC creates a pending email-confirmation job. A signed
+48-hour link records the consent receipt and queues one introduction. A second
+message is possible only when follow-up consent was separately selected. STOP,
+unsubscribe, withdrawal, complaint and hard bounce cancel queued work and add
+the contact hash to the suppression ledger.
+
+`features/outreach/postmark-provider.ts` sends as
+`FarmerBook CEO <ceo@farmerbook.in>`, routes replies through the private inbound
+stream, separates transactional and Broadcast streams, disables open/click
+tracking, supplies `List-Unsubscribe` and one-click unsubscribe headers, and
+adds the privacy link, STOP instruction and physical postal footer. The
+processor claims at most 25 rows, currently defaults to ten, limits attempts,
+treats ambiguous provider results conservatively and opens its circuit after
+three consecutive failures. `OutreachGrowthAgent` already schedules that
+processor with a default 900-second interval and ten-item batch.
+
+The hosted outreach schema is present but intentionally empty. A read-only live
+check found zero prospects, zero outbox rows and zero active consents. The
+application release flag and `outreach_agent` database control are false, and
+`outreach_runtime_controls.delivery_paused` is true with the reason “Awaiting
+reviewed provider activation.” This is why no message can currently leave the
+system even though provider secrets are installed.
+
+### Provider and sender readiness
+
+The active Worker has the Postmark provider kind, `ceo@farmerbook.in`, the
+transactional/Broadcast stream names, postal footer and encrypted Postmark,
+inbound, webhook, action-token, invitation, consent and processor credentials.
+Secret values were not read or printed.
+
+The last repository note said Postmark review was pending. A read-only check of
+the signed-in owner mailbox on 2026-08-19 found the subsequent official
+approval notice: Postmark manually approved the FarmerBook account on
+2026-08-17 and said it can start sending. Separate Postmark notices confirm
+that `farmerbook.in` DKIM and the custom
+`pm-bounces.farmerbook.in` Return-Path were verified. Public DNS also exposes a
+monitoring DMARC record and a Postmark-aligned return path. This removes the
+provider-review blocker, but the exact end-to-end consent, receipt,
+unsubscribe/STOP and webhook lifecycle still needs one owner-controlled canary
+before public activation.
+
+Cloudflare Email Service is not a substitute for this path: its official
+documentation says the service is for transactional email and does not yet
+support marketing campaigns. The repository's Postmark Broadcast stream is
+the correct provider surface for the separately consented follow-up. A
+read-only `wrangler email sending list` attempt returned an authorization error
+because the current Cloudflare token lacks Email Sending permission; no new
+permission is required for the Postmark design.
+
+### Deliverability and platform-policy boundary
+
+Official Postmark broadcast guidance requires direct permission, rejects
+purchased, scraped, inherited and public-source lists, recommends double
+opt-in/CAPTCHA, one-click unsubscribe, separate streams and gradual warming:
+
+- https://postmarkapp.com/guides/best-practices-for-broadcast-sending
+- https://postmarkapp.com/support/article/how-to-create-and-send-through-message-streams
+- https://postmarkapp.com/support/article/managing-your-own-unsubscribe-process
+
+Google's sender guidance likewise requires authentication, easy unsubscribe,
+gradual volume growth and spam rates below 0.1%, with 0.3% never to be reached:
+https://support.google.com/mail/answer/81126?hl=en. YouTube prohibits
+high-volume repetitive or automated spam:
+https://support.google.com/youtube/answer/2801973?hl=en. Therefore the
+untracked `outreach/*.csv` research files remain non-delivery inputs and no
+email/phone value may be imported from a creator description or public contact
+page. Creator acquisition should distribute the public
+`/partner-interest` URL through FarmerBook-owned posts, approved partner
+surfaces or permission-bearing lead forms; the creator supplies and confirms
+their own email.
+
+The DPDP Act/Rules implementation timeline does not remove the product's need
+for clear consent evidence and easy withdrawal. The existing consent-first
+design should be retained, and actual cold-outreach expansion would require
+qualified legal review plus separate provider approval even if a public-data
+exception might be argued.
+
+### Public-funnel defect discovered in production
+
+`app/partner-interest/page.tsx` is implemented as a public collaboration form,
+but `proxy.ts` does not include `/partner-interest` in `publicPrefixes`.
+Consequently a live anonymous request receives HTTP 307 to
+`/login?next=%2Fpartner-interest`. `/join` returns HTTP 200 but renders the
+safely-unavailable state because the outreach flag is false. `robots.ts` and
+`sitemap.ts` also expose only `/join`. The proxy allowlist, route tests,
+sitemap and robots output must be repaired before the collaboration funnel is
+activated.
+
+### How the 15 company roles are actually operated
+
+All 15 company schedules are already enabled in production. A controlled test
+run for each role succeeded and produced one pending aggregate-only proposal;
+the exact conversations and screenshots are under `artifacts/`. The operating
+surface is `/admin/agents`:
+
+1. inspect objective progress, the latest aggregate snapshot and pending
+   proposals;
+2. review each proposal's role, risk, priority, summary and evidence counters;
+3. record a meaningful reason and choose `Approve for backlog`, `Reject` or
+   `Escalate`;
+4. use `Run now` only for a fresh aggregate proposal, `Pause` for maintenance or
+   anomalous output, and `Resume` with the reviewed interval/batch;
+5. remember that approval is a backlog decision only—none of the 15 roles can
+   send mail, publish, deploy, spend, moderate or change an account.
+
+The roles form a decision loop rather than 15 chat windows: Executive Strategy
+sets focus; Growth/Farmer/Buyer roles propose acquisition priorities;
+Onboarding, Marketplace, SEO, Product and Engineering propose bounded work;
+Data, QA, Governance, Support and the Independent Auditor challenge evidence
+and risk; Operations Coordinator surfaces blocked work. Delivery is handed to
+the relevant purpose-limited worker only after a person implements or
+authorizes that backlog item.
+
+### Research checkpoint
+
+The sender/provider configuration, current hosted gates, email lifecycle,
+production public routes, managed schedules, policy constraints and all 15
+company roles have been traced. Postmark is now approved and sender-domain
+alignment has been verified, but no canary has been sent and the collaboration
+form is accidentally authentication-gated. The next safe tranche is a small
+route/guide patch followed by an owner-only canary and only then gradual
+consented delivery. No code, database control, Worker version, schedule,
+prospect, consent, email or social message was changed during this research
+checkpoint.
+
+### Facebook AP/Telangana outreach addendum
+
+The product owner subsequently directed Codex to use the signed-in Facebook
+session to invite Farmers in Andhra Pradesh and Telangana, together with
+traders and agricultural tool businesses. Read-only Chrome inspection found no
+active managed Facebook Page; only deactivated historical Pages are listed.
+The account is a member of several agriculture groups, but the two strongest
+Telugu candidates are not permitted promotion surfaces:
+
+- `ప్రకృతి వ్యవసాయం` (about 332,400 members) explicitly prohibits personal,
+  group and Page promotions and spam;
+- `రైతు నేస్తం (For The Welfare Of Farmers)` (about 301,650 members) prohibits
+  self-promotion, spam and irrelevant links.
+
+FarmerBook will not violate those rules. The bounded initial Facebook action is
+one bilingual Telugu/English post on the signed-in account's own timeline after
+the public intake routes are live. Farmers, customers and wholesalers are sent
+to `/join`. Tool manufacturers, dealers and agriculture service businesses are
+sent to `/partner-interest` for an early collaboration request because
+`ENABLE_AGRI_BUSINESSES=false` and business-offer publication is not currently
+live. The copy may accurately say that Farmers can create professional
+profiles and harvest listings, customers/wholesalers can browse produce and
+send private enquiries, and FarmerBook charges no platform commission on
+direct enquiries. It must not guarantee sales, claim tool/business listings
+are live, scrape members, add friends, message individuals or cross-post into
+groups whose rules prohibit promotion.
+
+## 2026-08-20 research addendum: controlled live execution for the AI company
+
+### Requested outcome and research method
+
+The product owner wants the agent fleet to move beyond recommendations and take
+bounded live action, and explicitly requested a multi-subagent assessment. Three
+independent read-only audits examined the current architecture, execution
+boundaries, safety controls and six-month operating model. No email, post,
+deployment, database mutation or other external action was performed during
+this research phase.
+
+### Current execution boundary
+
+The existing separation is deliberate and should be preserved:
+
+- `features/company-agents/processor.ts:26-91` records one aggregate KPI
+  snapshot, applies deterministic `company-policy-v1`, records one proposal and
+  reports zero model calls and zero external actions.
+- `features/company-agents/actions.ts:14-50` lets an authenticated administrator
+  review a proposal, but approval only records a backlog decision.
+- `features/managed-agents/contracts.ts:12-28` defines the 15 company roles;
+  `:125-190` defines the six purpose-limited operational workers.
+- `features/managed-agents/processor.ts:95-120` is the only general managed-agent
+  branch that currently performs an external provider action: consent-bound
+  Postmark email through the Growth & Outreach worker.
+- Profile Drafting creates private samples and an approval Workflow;
+  Verification Triage records recommendations; Customer Support and Social
+  Content create proposals. None publishes a profile, changes a trust claim,
+  sends a support message or posts to a social network automatically.
+- `features/company-agents/agent.ts:83-100,229-260` and
+  `supabase/migrations/20260819110000_ai_company_production_bridge.sql:297-353`
+  bound each role and auto-pause it after three unsuccessful runs.
+
+The production evidence under `artifacts/` proves 15 isolated successful runs,
+15 proposals, zero model calls and zero external actions. It proves the control
+plane, not autonomous execution.
+
+### Controls that can be reused
+
+The system already has several strong foundations:
+
+- stable role identities, bounded schedules and batches;
+- feature flags plus independent database release controls;
+- idempotent commands, runs, proposals and reviews;
+- optimistic revision checks and immutable PostgreSQL events;
+- a fleet model-inference budget;
+- an outreach pause switch, purpose/channel-specific consent, suppression,
+  limited attempts, one-click unsubscribe, STOP, and conservative handling of
+  ambiguous provider outcomes.
+
+Cloudflare's current Agents documentation supports the required next layer:
+Agents can coordinate retained subagents, while Workflows can wait durably for
+approval. The current guidance recommends idempotent Workflow steps, explicit
+approval context, timeouts, audit trails and approval for side-effecting tools.
+Agent queues are persistent FIFO queues but are sequential, have no built-in
+dead-letter queue or circuit breaker, and remove an item after retries are
+exhausted. Therefore externally visible actions need their own PostgreSQL
+ledger and reconciliation states rather than relying on an Agent queue alone.
+
+Official references checked on 2026-08-20:
+
+- https://developers.cloudflare.com/agents/runtime/execution/sub-agents/
+- https://developers.cloudflare.com/agents/runtime/execution/agent-tools/
+- https://developers.cloudflare.com/agents/concepts/agentic-patterns/human-in-the-loop/
+- https://developers.cloudflare.com/agents/runtime/execution/run-workflows/
+- https://developers.cloudflare.com/agents/runtime/execution/queue-tasks/
+- https://developers.cloudflare.com/agents/runtime/execution/retries/
+
+### Missing controls for broader live action
+
+The current proposal state is not an execution authorization. It has no exact
+target, connector, payload hash, expiry, action/spend budget, canary cohort,
+revocation status, compensation instruction or execution receipt. Other gaps
+are:
+
+1. The managed fleet shares one processor bearer and a service-role-backed
+   dispatcher; live executors need capability-scoped credentials and narrow
+   database RPCs.
+2. `maxItemsPerRun` is a batch bound, not an atomic daily or monthly action
+   budget.
+3. Risk is descriptive; the database does not derive approval requirements from
+   connector and operation or require two distinct approvers for high-risk work.
+4. Canary cohorts and staged volume are procedural rather than database-enforced.
+5. A pause or consent withdrawal can race with a previously claimed outreach
+   row; dispatch needs a final short-lived authorization check immediately
+   before the provider call.
+6. There is no generic `dispatched -> verified | unknown | failed ->
+   compensated` lifecycle or provider reconciliation for uncertain outcomes.
+7. The Independent Auditor is role-separated but shares the same runtime,
+   secret and evidence source as the agents it audits.
+8. The current aggregate snapshot lacks safe AP/Telangana, language, role and
+   acquisition-channel cohorts needed to learn which growth work is effective.
+   Cohort metrics should enforce a minimum population before display and never
+   expose contacts or raw messages.
+9. There is no official social publishing connector. A personal Facebook
+   profile, group-member automation, comments or DMs must not become one; a
+   future connector should use a FarmerBook-owned Page and official API.
+
+### Target architecture
+
+```text
+safe aggregate signals
+        -> planner subagent(s)
+        -> company proposal
+        -> deterministic policy + risk classification
+        -> signed, expiring action authorization
+        -> capability-scoped executor
+        -> provider/internal receipt
+        -> independent verifier
+        -> outcome metric or automatic pause
+```
+
+Multiple subagents are useful for parallel research, drafting and challenge.
+They should not multiply credentials or authority. All 15 company roles remain
+planners. Governance and the Independent Auditor remain outside execution and
+cannot approve their own work. Executors are separate by capability and can do
+only operations named by a short-lived authorization.
+
+### Recommended authority tiers
+
+- Tier 0: autonomous aggregate observation and health checks.
+- Tier 1: autonomous proposals, drafts, private previews, code/test plans.
+- Tier 2: autonomous internal and reversible work under standing policy, such
+  as internal status changes, tests and draft preparation.
+- Tier 3: bounded live work inside an approved campaign, such as consented
+  email, authenticated in-app guidance and approved owned-channel publication.
+- Tier 4: per-action human approval, normally two-person for public release,
+  production deployment, spend, moderation, verification or material pricing.
+- Tier 5: never autonomous: unsolicited bulk outreach, scraping or personal
+  social-profile automation, money transfer, contracts, final KYC/dispute
+  decisions, secret rotation, destructive deletion or consent bypass.
+
+### Research checkpoint
+
+The existing planner fleet, purpose-limited workers, approval semantics,
+scheduling, audit, budget and outreach controls have been traced. The safe next
+step is a default-off action authorization ledger plus a small set of scoped
+executors in shadow mode. Broad production autonomy is not yet safe, and this
+research does not authorize implementation or any live action.
+# 2026-08-20 research: daily FarmerBook editorial agent
+
+## Existing implementation
+
+FarmerBook already has a purpose-built `BlogWritingAgent` in
+`features/blog/agent.ts`, addressed through the stable
+`farmerbook-blog-writing` Durable Object instance in
+`features/blog/runtime.ts`. The Worker binding and forward Durable Object class
+migration are already present in `vite.config.ts` and `worker/index.ts`.
+
+The Agent owns two SQLite tables: `blog_agent_drafts` and
+`blog_agent_translations`. A draft is written as `awaiting_review`; only
+`reviewDraft()` can change it to `published` or `rejected`, and
+`listPublished()` returns only published rows. `/admin/blog` calls the Agent
+through authenticated server actions, while `/blog` combines reviewed static
+publications with the Agent's published rows. This is the correct boundary to
+retain for a daily writing programme.
+
+The current schedule is `30 3 * * 2`, or Tuesday at 09:00 IST. Draft
+idempotency is based on an ISO-week Monday key, so changing only the cron to
+daily would still create at most one draft per week. The topic packet contains
+four briefs, which is too narrow for a useful daily programme. A schedule
+change would also create a second independent cron unless the legacy weekly
+schedule is found and cancelled, because Cloudflare deduplicates recurring
+schedules by the combination of cron, callback and payload.
+
+The Agent uses the cheapest allowlisted Workers AI writing model and the shared
+`AiFleetBudgetAgent`. Its Blog allocation is fixed at USD 2 per UTC month inside
+the existing USD 10 fleet ceiling. Both draft generation and translations
+reserve a conservative maximum before inference. Daily drafting can remain
+inside this existing cap, but the implementation must also impose a hard one-
+draft-per-India-calendar-day limit so a configuration or retry fault cannot
+convert the monthly budget into a burst.
+
+## Publication and content findings
+
+The founder editorial can use the existing static reviewed-publication path.
+This makes the exact reviewed text deployable, places it in `/blog`, sitemap and
+Article metadata, and does not depend on mutating the production Agent's SQLite
+database. The supplied screenshot must remain unused because it has a search
+overlay and no recorded republication right. The article's statement about
+accurate organic claims is supported by the official PGS-India Operational
+Manual, which describes participation, transparency, trust, verification and
+direct producer-consumer communication.
+
+Daily writing and daily publishing must remain different authorities. The
+Agent may prepare one private evidence-bounded draft per day. An authenticated
+administrator must still review every title, claim, source and image-rights
+record before publication. Future automatic publication is an owned-site live
+action and cannot start until the Live Agent control plane has dedicated
+restricted database roles, an isolated publisher, approval-to-Workflow wiring,
+an independent post-publication verifier and a separately approved canary.
+
+## Current Cloudflare guidance checked on 2026-08-20
+
+Cloudflare documents that Agent schedules are persisted in SQLite and survive
+Agent restarts. Cron tasks are idempotent only for an identical cron,
+callback and payload; a new daily cron does not replace the existing weekly
+one. Cloudflare recommends scheduling for recurring time-based work and
+Workflows for multi-step or human-approval work. Its human-in-the-loop guidance
+recommends explicit approval context, durable audit records, timeouts and
+graceful rejection. Sources:
+
+- `https://developers.cloudflare.com/agents/runtime/execution/schedule-tasks/`
+- `https://developers.cloudflare.com/agents/concepts/workflows/`
+- `https://developers.cloudflare.com/agents/concepts/agentic-patterns/human-in-the-loop/`
+
+## Required design changes
+
+1. Replace the weekly schedule with one idempotent daily cron at 03:30 UTC
+   (09:00 IST), cancelling the legacy weekly schedule by exact ID after the new
+   schedule is recorded.
+2. Introduce an Asia/Kolkata daily run key and a hard one-draft-per-day rule;
+   retries return the prior draft rather than spending twice.
+3. Expand to a code-reviewed topic and source registry with freshness dates,
+   allowed claim scope, risk class and minimum source count. No unrestricted
+   web browsing or user/contact data enters the model prompt.
+4. Keep every scheduled result private and awaiting review. Preserve the USD 2
+   monthly Blog allocation and the global fleet budget; budget exhaustion skips
+   the day and records a bounded failure code.
+5. Extend `/admin/blog` with the daily schedule, today's run, source freshness,
+   review SLA, rejection reason and pause/resume control. A pause must cancel the
+   daily schedule and never alter existing reviewed publications.
+6. Record privacy-safe quality metrics: prepared, approved, rejected, heavily
+   edited, source failure, budget failure, time-to-review and publication
+   verification. Do not retain unpublished personal stories, contact details or
+   unlicensed images.
+7. Run at least 30 consecutive days in review-required mode before considering
+   a separate automatic owned-site publishing canary.
+
+# 2026-08-20 research: standing-policy blog publication and owned social reach
+
+## Product direction and boundary
+
+The product owner has now asked to remove manual approval from the recurring
+content loop: “I don't want to approve manually keep posting and keep reaching
+more people on social media.” This is approval of the desired operating model,
+not permission for unsolicited messaging, personal-profile automation,
+scraping, group-member harvesting, paid advertising or bypassing provider
+rules. The safe interpretation is one standing release policy for FarmerBook's
+own website and business-owned social channels, with deterministic checks,
+quotas, receipts, verification and automatic pause replacing per-post review.
+
+## Live implementation findings
+
+The production `BlogWritingAgent` is a usable base but still has a hard human
+publication boundary. `createDraft()` writes `awaiting_review`,
+`reviewDraft()` is the only transition to `published`, and `listPublished()`
+selects every row whose status is `published` (`features/blog/agent.ts:605`,
+`:842`, `:923`). The row already records source-manifest version, source review
+time, risk class, revision, content hash events and publication-verification
+state. A failed verification pauses the daily schedule (`features/blog/agent.ts:892`).
+This means autonomous publication should extend this dedicated Agent rather
+than enable the broader Live Action Phase 1 scaffold.
+
+The current social system cannot publish. Its model prompt explicitly produces
+copy “for human approval,” always records `needsHuman: true`, and reports
+`postsPublished: 0` and `directMessagesSent: 0`
+(`features/customer-operations/ai.ts:274`,
+`features/managed-agents/processor.ts:498-524`). Production contains the
+`SOCIAL_CONTENT_AGENT` binding and a false `ENABLE_SUPPORT_SOCIAL_PILOT` flag,
+but no Facebook/Meta, Instagram, LinkedIn or X publishing credential. The
+existing `YOUTUBE_DATA_API_KEY` is used only for read-only public discovery.
+
+The local Live Action Phase 1 scaffold is intentionally unusable for this
+release. `LIVE_ACTION_EXTERNAL_EXECUTORS_READY` is a literal false, the default
+executor registry is empty (`features/action-control/executors.ts:79`, `:165`),
+and owned-site publishing is still classified as a high-risk two-approval
+action (`features/action-control/policy.ts:67`). It also retains the previously
+recorded production blockers: restricted database roles, isolated connectors,
+an independent verifier, authorization ingress, reconciliation and observed
+shadow evidence. Enabling it would weaken rather than complete the requested
+boundary.
+
+## Platform research
+
+Official platform publishing should target organization assets, never a signed-
+in person's timeline:
+
+- LinkedIn's Posts API supports organic organization posts. Publishing as an
+  organization requires `w_organization_social` and an appropriate Page role.
+  Requests also use LinkedIn version and protocol headers.
+  `https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api?view=li-lms-2025-09`
+- Meta's Instagram publishing guidance supports professional accounts. With
+  Facebook Login, the Instagram professional account must be linked to a Page
+  and the application needs publishing permissions such as
+  `instagram_content_publish`. Meta's official Page and Instagram publishing
+  references are `https://developers.facebook.com/docs/pages-api/posts/` and
+  `https://developers.facebook.com/docs/instagram-platform/content-publishing/`.
+- The YouTube Data API exposes videos, playlists, channels and related
+  resources but no Community-post publishing resource. An API key is not an
+  OAuth publishing credential. `https://developers.google.com/youtube/v3/docs`
+
+The only defensible first connectors are therefore a FarmerBook Facebook Page
+and/or LinkedIn Organization Page. Instagram can follow after a professional
+account is linked and every post has rights-cleared media. YouTube publication
+requires a separate video workflow and OAuth grant; the current discovery key
+cannot be repurposed. X remains unconfigured. A prior one-off Facebook post on
+the founder's personal Friends-only timeline must not become an automated
+connector.
+
+## Recommended standing-policy system
+
+### Owned-site publication
+
+Only low-risk briefs are auto-eligible. Certification status, food-safety,
+chemical, medical, veterinary, yield, income, price, guarantee and personal-
+story claims stay outside the automatic lane. A candidate must pass the strict
+`BlogPublication` schema, a fresh reviewed-source manifest, an exact allowed-
+claim policy, prohibited-claim scanning, URL allowlisting, source-count rules,
+PII/media exclusion and an exact content hash. Stale, ambiguous or medium-risk
+work is skipped; it is not queued for daily human approval.
+
+Publication remains capped at one article per India calendar day and 31 per
+month within the existing USD 2 Blog and USD 10 fleet inference budgets. The
+Agent records `publication_mode=autonomous`, policy version, payload hash and
+an idempotency key. A separately scheduled route check verifies the slug and
+content fingerprint after the publishing RPC completes. Until that check
+passes, the publication is provisional. Mismatch makes it non-public,
+preserves the evidence and pauses the schedule.
+
+Existing awaiting-review drafts are not retroactively published. In
+particular, the current “Under Conversion” draft has a certification-adjacent
+risk class and stays private.
+
+### Owned-channel social publication
+
+Social text should be derived deterministically from an already verified
+FarmerBook article: reviewed title, bounded excerpt, canonical URL, fixed
+campaign tags and UTM parameters. This avoids a second unconstrained model
+generation. Each configured business channel gets at most one post per article
+and one post per day, with a channel-specific outbox idempotency key, provider
+receipt, follow-up read verification and zero blind retries after an ambiguous
+outcome. Unknown, authorization, policy, rate-limit or receipt mismatch pauses
+only that channel.
+
+The social publisher does not send direct messages, invite friends, join or
+post into groups, comment, like, follow, scrape followers, profile users or buy
+ads. Reach is measured through aggregate UTM visits, registrations and
+activated profiles, not platform-person data. Connector credentials belong in
+an isolated publisher service, not in the Blog Agent or central coordinator.
+
+## Research checkpoint
+
+The production Blog Agent can be evolved into a guarded autonomous publisher,
+but the current social system is draft-only and no official social publishing
+credential is configured. Implementation therefore has two releases: first the
+owned-site standing-policy canary; then individually enabled business-page
+connectors after the product owner confirms those assets exist and completes
+their one-time official authorization. No production state or external post
+was changed during this research checkpoint.
+
+## 2026-08-22 research addendum: autonomous consented-delivery completion
+
+### Requested outcome and retained boundary
+
+The product owner has now selected content and outreach as the first workflows
+that should operate without routine human approval. The existing standing-policy
+Blog path already supplies bounded daily drafting, deterministic low-risk
+eligibility, a separate rendered-hash verifier, quarantine, budget ceilings and
+automatic schedule pause. The existing Growth & Outreach Agent already handles
+double-opt-in confirmations, introductions, replies and one separately
+consented follow-up on a recurring schedule. This tranche therefore does not
+create a new broad agent or remove the existing consent, suppression, legal
+sender, role, audit, retention or emergency-pause controls.
+
+### Dispatch race and stop-condition gap
+
+`claim_outreach_outbox(integer)` checks the database release control, runtime
+pause, expiry, purpose-specific consent, reply authorization and suppression
+before changing a row from `pending` to `processing`. The TypeScript processor
+then reads the private contact, may prepare an invitation and calls the provider.
+There is no second authorization check immediately before that provider call.
+A STOP, unsubscribe, complaint, hard bounce, privacy operation or emergency
+pause that lands after claim can therefore race with the claimed delivery.
+
+The provider correctly treats a Postmark timeout or ambiguous 5xx result as
+`POSTMARK_DELIVERY_UNKNOWN` and does not retry that row. However, the database
+delivery control remains active, so another scheduled cycle could continue with
+different recipients. The in-memory three-failure circuit similarly skips the
+rest of the claimed batch without persistently pausing the database gate.
+
+### Production-safe completion
+
+Add a service-role-only `authorize_outreach_dispatch(uuid)` RPC called after a
+row is claimed and immediately before any private-contact read, invitation
+preparation or provider call. It will serialize authorization reservations,
+recheck the release/pause/expiry/suppression and purpose-specific consent or
+reply authority, and reserve one slot in a fixed India-calendar daily delivery
+ceiling. Every decision is written to an immutable redacted ledger containing
+only outbox/prospect identifiers, purpose, channel, attempt, decision code and
+timestamp—never contact values or message bodies.
+
+The database will defer a row to the next India day when the hard daily ceiling
+is exhausted, cancel a row whose authority has ended, and return a stable
+actionable code to the processor. A separate service-only automatic-pause RPC
+will pause delivery and release other claimed rows after missing runtime/provider
+readiness, an unknown provider result, or a three-failure circuit break. Its
+immutable system event records the bounded reason code without requiring a
+fictional human actor. Human pause/resume remains available as an emergency and
+recovery control, not a per-message approval.
+
+### Configuration readiness
+
+The provider's `configured` flag already verifies the FarmerBook sender domain,
+Postmark token, inbound address, transactional stream, physical postal footer,
+HTTPS origin, action-token secret and authenticated webhook credentials. The
+autonomous delivery entry points also need to fail before claim when the
+service-role key, processor bearer, consent and invitation signing secrets,
+Turnstile settings and Broadcast stream are absent. A pure readiness evaluator
+will expose one bounded remediation code and will be used by both the dedicated
+processor route and the scheduled Growth & Outreach Agent.
+
+### Research checkpoint
+
+The minimal safe change is a forward-only outreach authorization/reservation
+and system-stop migration plus a shared TypeScript readiness/dispatch wrapper.
+It extends the existing consent-first architecture and leaves discovery CSVs,
+public contact data, cold email, WhatsApp, personal social profiles, groups,
+DMs, paid ads, production accounts and real delivery outside this repository-
+only implementation.
+
+# 2026-08-24 research: customer Farm Visits intake and organic-farm video
+
+## Requested outcome and trust boundary
+
+The requested public surface is a new `/farm-visits` section that shows the
+downloaded “Visiting organic farm” status video, lets a signed-in Customer
+register interest using a private address, tells the Customer that no visit is
+confirmed until FarmerBook checks a suitable farm and obtains the Farmer's
+agreement, and notifies two owner inboxes so the visit can be planned. The
+address, phone and email are private operational data. They must never enter a
+public profile, page markup, analytics event, model prompt, social post or URL.
+
+The supplied video is a 90.059-second H.264/AAC portrait MP4, 478×850 and
+16,833,391 bytes at
+`/Users/ngonapa/Downloads/Nagamani-House-organic-farm-visit.mp4`. Visual review
+shows identifiable adults on an organic-farm visit. A WhatsApp Status is not,
+by itself, a public-republication licence. Production publication therefore
+requires the product owner's explicit confirmation that the video owner and
+identifiable participants authorized public use on FarmerBook. The video can be
+copied into a local release candidate only after that confirmation; it must not
+be put on the live site before it.
+
+## Existing authentication and role model
+
+`features/auth/require-user.ts:25-78` already resolves the authenticated
+Supabase user, requires an active completed profile and returns the account
+role, profile name and authentication email. `features/auth/capabilities.ts:26-50`
+defines `customer` as an existing first-class role with the `buy` capability.
+The Farm Visits action should reuse this identity and accept only the exact
+`customer` role, rather than trusting a submitted name, email or role field.
+Visitors and non-Customer members can still see the explanatory page and video,
+but the request area should show sign-in/join guidance instead of the form.
+
+The current marketplace enquiry is the nearest UI/action pattern:
+`features/marketplace/inquiry-form.tsx:22-45` converts bounded form data into a
+server action and renders an in-place success state; `features/marketplace/actions.ts:115-188`
+validates input, requires an active account and delegates the write to a narrow
+database RPC. Farm Visits should follow this pattern, but it must not reuse the
+market enquiry table because visit addresses and operational status have a
+different purpose, access policy and retention boundary.
+
+## Private persistence and database policy
+
+Supabase is the production system of record. Existing migrations use Row Level
+Security and purpose-limited `security definer` RPCs. For example,
+`supabase/migrations/20260731120000_roles_connections_reviews.sql:316-330`
+starts the authenticated marketplace connection RPC with an empty search path,
+and its policies bind reads to the current user or administrator
+(`:279-289`). The new table should be private by default, have RLS enabled, and
+have no anonymous or browser table grants. A single authenticated RPC should:
+
+1. bind `requester_id` to `auth.uid()`;
+2. verify an active, completed `customer` profile;
+3. copy the profile name and server-authenticated email, not client assertions;
+4. validate bounded India address/phone/party/preference fields again in SQL;
+5. allow only one open request per Customer and make replays idempotent; and
+6. return only the request identifier and notification state.
+
+The private row needs a small auditable lifecycle (`new`, `reviewing`,
+`checking_farmer`, `offered`, `scheduled`, `closed`, `cancelled`) and a separate
+notification outcome (`pending`, `sent`, `failed`, `unknown`). Address fields
+remain private; the initial implementation does not expose an admin table or
+send them to a Farmer. Account deletion can rely on a foreign-key cascade, and
+the consent text must say the two FarmerBook operators receive the details by
+email for this planning purpose.
+
+## Transactional notification path
+
+Production already has the encrypted `POSTMARK_SERVER_TOKEN` plus plain
+`POSTMARK_FROM_EMAIL` and `POSTMARK_TRANSACTIONAL_MESSAGE_STREAM` bindings.
+The existing provider proves the supported Workers-compatible fetch contract
+at `features/outreach/postmark-provider.ts:171-210`: POST JSON to Postmark with
+the server token, bounded timeout, explicit Message Stream, no open tracking
+and no link tracking. Its outreach-specific wrapper also adds unsubscribe and
+postal-marketing text, so Farm Visits should use a separate transactional
+notification adapter rather than misclassifying an owner operational alert as
+marketing outreach.
+
+The adapter should have a code-reviewed recipient allowlist, never take a
+recipient from the browser, use the request/idempotency key as the Message-ID,
+and record the sanitized provider receipt or bounded failure code back through
+a service-only RPC. A timeout is ambiguous and must be recorded as `unknown`
+without a blind retry. The Customer-facing success message should be based on
+the durable database insert: “We received your interest. We will check a
+suitable farm and the Farmer's availability, then contact you. This is not a
+confirmed visit.” If notification fails, the request must remain available for
+operator recovery instead of being lost.
+
+There is a material recipient ambiguity. The product owner wrote
+`ceo@farmbook.in`, while every repository contact, authenticated sender and
+production domain uses `ceo@farmerbook.in` (`lib/contact.ts:1` and
+`.env.example:77`). Sending private Customer addresses to the different
+`farmbook.in` domain could disclose them to an unintended mailbox. The release
+plan therefore proposes `gnm444@gmail.com` and `ceo@farmerbook.in`; the product
+owner must explicitly confirm this correction before implementation and any
+real notification.
+
+## Public route, localization and media delivery
+
+`components/public-header.tsx:7-41` and
+`components/public-footer.tsx:14-49` are the stable public navigation surfaces;
+`app/sitemap.ts:8-43` enumerates public discoverable pages. The new link should
+be controlled by `ENABLE_FARM_VISITS`, default false in `.env.example`, and
+enabled only in the approved release. `proxy.ts:5-29` uses an explicit public
+prefix list, so `/farm-visits` must be added there. Video extensions should also
+be excluded from session middleware or served under the same public prefix so
+unauthenticated playback never redirects to login.
+
+The 23-language catalog derives its exact shape from `en-IN`; Telugu currently
+overrides a small set of keys and otherwise reuses English
+(`lib/i18n/messages/te-IN.ts:1-24`). The Farm Visits namespace can provide
+reviewed Indian English and Telugu copy, with the other 21 catalogs explicitly
+inheriting Indian English and displaying a fallback disclosure. That avoids
+claiming unreviewed translations while keeping the form usable in AP and
+Telangana.
+
+The MP4 is below Cloudflare's current generated static-asset ceiling in this
+application build, but it is still large enough to deserve `preload="metadata"`,
+native controls, a poster frame, a descriptive caption and a transcript/summary.
+The UI must state that one visit is contextual learning, not certification or a
+guarantee that every crop, plot or batch is organic.
+
+## Production topology and release isolation
+
+The current Worker version at 100% traffic is
+`36b29fcd-4fe9-4fad-a5ac-ee926f92703e` (2026-08-23), which is the application
+rollback target. Its bindings already contain the Postmark transactional
+configuration and Supabase service credential names. The linked production
+migration ledger has intentional historical gaps, but its latest remote
+migration is `20260822120000`. A new Farm Visits migration must therefore be
+forward-only and later than that version. Do not use `--include-all`: it would
+try to release many intentionally absent older ecosystem migrations. Preflight
+must show that the normal push contains only the new Farm Visits migration.
+
+The shared worktree is heavily dirty with earlier owner-approved work. The
+Farm Visits tranche must touch only its new feature files, one new migration
+and pgTAP suite, the public route/navigation/proxy/sitemap/flag/catalog/CSS
+integration points, focused tests, and structured documentation. Deployment
+must be from an inspected production build that preserves all current bindings
+and secrets. The migration goes first; the Worker flag remains false until the
+new database objects and notification configuration pass smoke checks.
+
+## Test and verification implications
+
+Required local evidence is: schema edge cases; Customer-only server action;
+idempotent duplicate handling; one-open-request limit; Postmark request shape
+and `sent`/`failed`/`unknown` receipts; redaction/no-client-recipient tests;
+React success/gate/copy tests; static video signature, dimensions and duration;
+public route/proxy/sitemap tests; migration structure tests; clean local
+migration apply; pgTAP proving RLS/RPC/admin/service boundaries; repository
+ESLint, TypeScript, Vitest and production build; and strict Wrangler dry run.
+
+Production evidence must include a protected pre-migration backup, a migration
+dry run showing only the new migration, exact binding-name preservation, the
+new flag enabled, 200 responses for the page and MP4, unauthenticated sign-in
+gate, an authenticated Customer test request using owner-controlled synthetic
+contact/address data, receipt verification in both owner inboxes, database
+status confirmation, and cleanup/cancellation of that synthetic request.
+
+## Research checkpoint
+
+The feature fits the current architecture without adding an AI Agent or a new
+provider. Implementation is blocked only on two owner decisions that cannot be
+safely inferred: confirm the intended second mailbox is
+`ceo@farmerbook.in` (not `ceo@farmbook.in`) and confirm public-republication
+permission for the identifiable organic-farm video. No application code,
+database, email, video publication or production state was changed during this
+research phase.
+
+## Sandeep Dasari / Avani Van editorial profile, evidence policy and requested store — 2026-08-25
+
+### Confirmed identity and source boundary
+
+The product owner corrected the subject's full name to **Sandeep Dasari**, gave
+the location as Bommalaramaram, Telangana, and directly confirmed that
+`https://www.youtube.com/@AvanivanFarms` is Sandeep's farm-owned channel. The
+official YouTube oEmbed response for `PaJk_KSsD5I` identifies the video as “A
+Tour of Avani Van Farms - Part 1,” published by Avanivan, and resolves its
+author URL to that channel. The official oEmbed response for `nzB61ZhIc1Q`
+identifies the supplied Telugu interview title and publisher as Mi Andhra
+Adapaduchu, resolving to `https://www.youtube.com/@Mi_AndhraAdapaduchu`.
+
+The operator-supplied timestamp summary supports only attributed statements:
+Sandeep's former software work; his personal reason for changing direction;
+Gir and Ongole cattle; his stated animal-care practices and dairy-cost
+estimate; minimal tillage and retained surface biomass; a six-year aspiration
+for fewer external inputs; and the reservoir, filtration, Black Soldier Fly
+and composting practices shown or discussed. The cancer narrative cannot be
+turned into a causal health claim. The ₹140–₹150 figure is a dated interview
+estimate, not a current market price or health-quality guarantee. “Organic” is
+self-described: without approved certification evidence the exact public label
+must remain `Non-certified organic farmer (paperwork not yet completed to prove
+certification).`
+
+Searches using the corrected name, farm name and location found no reliable
+non-social source that could safely be associated with this Sandeep Dasari.
+Results referred to unrelated namesakes and must not be used. The supplied
+videos and owned channel are the complete current evidence set. A private
+content and claim draft exists at
+`artifacts/featured-farmers/sandeep-reddy-avani-van-draft.md`; implementation
+can rename it without rewriting its content history.
+
+### Existing editorial publication architecture
+
+FarmerBook already distinguishes editorial stories from member profiles. The
+public route renders `FeaturedFarmerPublication` snapshots as Article-about-
+Person pages, not `ProfilePage` records (`app/featured-farmers/[slug]/page.tsx`;
+`tests/featured-farmer-metadata.test.ts:13-28`). The presentation includes
+claim citations, owned social links, third-party coverage, limitations,
+correction/removal, editorial disclosure and either rights-cleared media or a
+provider-hosted YouTube preview (`features/featured-farmers/public-profile.tsx`;
+`tests/featured-farmer-public-profile.test.tsx:115-193`). This is the correct
+surface for Sandeep; a member profile would imply that he registered or
+authorized an account.
+
+The L. Narayana Reddy pilot is a typed, version-controlled publication snapshot
+(`features/featured-farmers/narayana-reddy.ts:1-end`). It remains visible while
+the database newsroom is disabled. `loadFeaturedFarmerPublications` injects
+that snapshot before database rows and `loadFeaturedFarmerPublication` resolves
+its slug directly (`features/featured-farmers/queries.ts:422-455`). The sitemap
+derives story URLs from the same loader (`app/sitemap.ts:21-57`). A second
+curated snapshot therefore reaches the collection, detail route, metadata and
+sitemap without enabling the dormant database newsroom.
+
+### Current evidence gate and temporary relaxation
+
+The application readiness function counts selected `website` sources from two
+publisher hosts, requires an official/institutional/independent source, then
+separately requires two fully cited claims, one valid farmer-owned social
+account, three story sections and approved media if media exists
+(`features/featured-farmers/source-policy.ts:55-111`). The client newsroom
+repeats this assessment and disables publication unless it passes
+(`features/featured-farmers/editorial-workspace.tsx:434-494`). The database is
+authoritative: `refresh_featured_farmer_readiness` repeats the professional-
+domain and authoritative-source checks before the publish RPC creates an
+immutable snapshot
+(`supabase/migrations/20260812150000_featured_farmer_profiles.sql:381-499,
+1364-1517`).
+
+The owner's request is to make only the non-social professional-source checks
+optional for now. Identity-safe controls should remain: every claim needs
+selected evidence, at least two reviewed claims remain necessary, the owned
+channel must be confirmed, the story still needs three sections, media rights
+remain enforced, fact checking must be current, and the public page must say it
+is editorial, non-member, non-certified and not verified.
+
+A single private database control is preferable to an environment-only flag:
+`featured_farmer_professional_sources_required`, default false. The server can
+read it while loading the private workspace, pass the value to the client
+assessment, and the database readiness function can read the same value
+atomically. This prevents application/database drift. A later operator can
+restore the stronger gate by changing one private control to true; no schema
+rollback or data rewrite is needed. It must be introduced in a forward-only
+migration because the original migration is historical.
+
+### Store authorization and product-data boundary
+
+The requested products are Desi cow milk, buffalo milk, Desi chicken, Desi
+eggs, paneer, ghee, cold-pressed oils (types unspecified), jaggery and mulberry.
+The taxonomy already has compatible selectable entries for cow milk, buffalo
+milk, paneer, ghee, backyard/native poultry, chicken eggs, chicken meat,
+jaggery, mulberry and oilseeds (`lib/agriculture/categories.ts:72-82,
+135,250-272,282-295,355`). The catalog can display the owner's wording, while
+avoiding certification or availability guarantees.
+
+A real FarmerBook store cannot be attached to an editorial publication.
+`produce_listings.farmer_id` is a foreign key to a real profile
+(`supabase/migrations/20260730120000_marketplace_growth.sql:6-33`). RLS requires
+the inserted `farmer_id` to equal the authenticated user and requires an
+active, onboarding-complete Farmer or Wholesaler
+(`supabase/migrations/20260731120000_roles_connections_reviews.sql:147-185`).
+The server action also always writes `farmer_id: user.id`
+(`features/marketplace/actions.ts:18-79`). Public storefronts resolve a real
+profile handle and its live listings (`features/marketplace/queries.ts:225-259`).
+Creating a store without Sandeep's account would bypass ownership and route
+buyer enquiries to an identity he does not control.
+
+The listing schema also requires current title, specific product/variety,
+description, quantity and unit, minimum order, price and price unit,
+availability window, grade and delivery options
+(`features/marketplace/schemas.ts:3-22`). None of those transactional facts have
+been supplied. The safe interim UI is a non-orderable **Reported farm products**
+section inside the editorial story. It must say that availability, price,
+quantity, delivery, food-business registration and certification have not been
+verified and direct buyers to the farm-owned channel rather than collecting a
+FarmerBook enquiry.
+
+This caution is also proportionate to current official food-business guidance.
+FSSAI states that food business operators require registration/licensing and
+its current FoSCoS eligibility material specifically covers dairy processing,
+milk products, vegetable-oil processing and direct sellers. FSSAI's dairy
+guidance includes liquid milk, ghee and paneer and points to hygiene controls.
+Sources reviewed on 2026-08-25:
+
+- `https://fssai.gov.in/business/registration`
+- `https://foscos.fssai.gov.in/search-eligibility/CL`
+- `https://www.fssai.gov.in/upload/uploadfiles/files/Guidance_Document_Milk_14_03_2019.pdf`
+- `https://fssai.gov.in/inspection/hygiene-requirements`
+
+FarmerBook need not determine the exact licence class in this feature, but a
+live store should require Sandeep to supply the applicable registration or
+licence status for review, especially for processed dairy, oil and meat.
+
+### Planned publication and product-catalog shape
+
+The curated snapshot should use slug `sandeep-dasari-avani-van-farms`, location
+Bommalaramaram/Telangana, and cited story categories covering dairy cattle,
+cattle rearing and composting. It should cite the Mi Andhra interview for the
+timestamped claims, cite the Avanivan video for first-party farm context, link
+the confirmed owned channel, and use only a source-hosted YouTube preview with
+visible credit. No thumbnail will be copied into FarmerBook.
+
+An optional typed `reportedProducts` snapshot field can render the nine
+operator-supplied product groups with a uniform `reported` status and no price,
+stock, order or enquiry action. The public UI must call this a reported catalog,
+not a store. It can later be replaced or linked to `/store/[handle]` only after
+Sandeep owns an active FarmerBook Farmer account, completes onboarding, reviews
+the profile, provides current listing details and satisfies applicable product
+and food-safety evidence.
+
+### Verification and release implications
+
+Focused coverage must prove both evidence-policy modes: optional mode passes
+with cited YouTube evidence and a confirmed owned channel, while required mode
+retains the two-domain and authoritative-source blockers. Migration tests must
+prove the new control defaults false and guards only those two checks. Public
+tests must parse and render the Sandeep snapshot, links, limitations, reported
+products and source-hosted preview while proving there is no store/order/enquiry
+UI. Loader tests must prove both curated stories appear once and resolve by
+slug. Existing marketplace tests must remain unchanged, demonstrating that the
+editorial exception did not weaken seller ownership.
+
+The shared worktree contains extensive owner changes unrelated to this profile.
+Implementation must stay within new Sandeep files, Featured Farmer policy,
+schema, loader and UI integration, one forward migration, focused tests and
+documentation. No production deployment should occur from an unreviewed dirty
+tree. First produce a local rendered preview and obtain pre-publication content
+approval; only then deploy an inspected artifact that preserves all bindings
+and unrelated work.
+
+## Sandeep profile contact, private questions, customer recommendations and profile views — 2026-08-25
+
+### Requested outcome and consent boundary
+
+The product owner supplied `avanivanfarms@gmail.com` after being asked to
+confirm that it may be displayed publicly and used as the fixed recipient for
+Sandeep Dasari / Avani Van Farms questions. The profile may therefore show a
+direct `mailto:` contact. The recipient must still be selected by trusted
+server code from the publication slug; a browser must never choose an arbitrary
+recipient or use the displayed address as an action parameter.
+
+The two requested writing surfaces have different audiences and must remain
+separate:
+
+- **Ask Avani Van Farms** is a private question/comment form. It sends the
+  visitor's name, reply email, message and FarmerBook request ID to the supplied
+  farm email. Nothing from this form is posted on the profile.
+- **Customer recommendations** are public, LinkedIn-style testimonials. They
+  require a signed-in, active, onboarding-complete Customer account, explicit
+  public-display consent and administrator moderation. They are not star
+  ratings and must not claim a verified FarmerBook purchase.
+
+No implementation, database migration, email, recommendation, visit increment,
+feature-flag change or deployment was performed during this research phase.
+
+### Existing page and publication shape
+
+The public detail route resolves an immutable curated publication and renders a
+single `FeaturedFarmerStory`
+(`app/featured-farmers/[slug]/page.tsx:62-83,178-193`). The snapshot validator
+already supports optional editorial fields and source-hosted media, while the
+curated list makes Sandeep available independently of the absent production
+newsroom schema (`features/featured-farmers/queries.ts:202-319,493-520`). The
+new contact email can therefore be an optional snapshot field for display, but
+mutable engagement data must come from a separate standalone domain.
+
+`FeaturedFarmerStory` currently renders editorial content, source thumbnails,
+social accounts, limitations and the FarmerBook correction address
+(`features/featured-farmers/public-profile.tsx:300-532`). It has no mutable
+forms or counters. The engagement UI should be a focused client component
+rendered after the story body and receive only the publication slug, display
+name, public email, initial aggregate count, approved recommendations and
+whether the current account may recommend. Private recipient routing and
+reviewer email must stay server-side.
+
+The route currently memoizes only the publication loader with React `cache`
+(`app/featured-farmers/[slug]/page.tsx:11-20`). A changing counter must not be
+embedded in that curated snapshot or treated as editorial metadata. Load the
+current aggregate separately and let a client visit marker atomically update it
+after render.
+
+### Why marketplace reviews cannot be reused
+
+The existing review domain is transaction reputation. `market_reviews` requires
+one unique `market_enquiries` row, a listing, reviewer and seller UUID, a 1–5
+rating, and different reviewer/seller identities
+(`supabase/migrations/20260731120000_roles_connections_reviews.sql:404-424`).
+`can_review_enquiry` proves the enquiry is `won`, the reviewer is the exact
+Customer buyer, and the seller owns the listing
+(`supabase/migrations/20260731120000_roles_connections_reviews.sql:430-465`).
+Its anonymous policy exposes only active reviews for a real marketplace seller,
+and Customer inserts must pass that completed-purchase predicate
+(`supabase/migrations/20260731120000_roles_connections_reviews.sql:469-509`).
+
+Sandeep's editorial subject has no FarmerBook auth user, seller profile,
+listing, enquiry or completed transaction. Reusing `market_reviews`, inventing
+an enquiry or presenting a “verified purchase” badge would contradict the live
+profile's non-member disclosure. The safe model is a separate recommendation
+table with the exact visible label:
+
+> Customer recommendation · relationship self-declared · reviewed for
+> publication · not a verified FarmerBook transaction.
+
+One active or pending recommendation per Customer and Featured Farmer is
+sufficient. A Customer may edit or withdraw their own text; an edit returns it
+to `pending`. Public reads return approved display fields only. The submitter's
+email and UUID are never exposed, and account deletion cascades the
+recommendation.
+
+### Authentication and moderation primitives
+
+`requireUser` already derives the authenticated email and profile server-side,
+redirects unsigned visitors, rejects inactive accounts, and by default requires
+completed onboarding (`features/auth/require-user.ts:24-77`). The new
+recommendation action should additionally require `accountRole === "customer"`.
+It must never trust a client-supplied reviewer name, email, role or moderation
+state.
+
+`requireAdmin` checks `app_metadata.role === "admin"` before private server
+operations (`features/auth/require-admin.ts:5-24`). The existing Featured Farmer
+newsroom route cannot host the queue because production does not contain that
+newsroom's base schema and its loader can return unavailable
+(`features/featured-farmers/queries.ts:321-349`). A small independent
+`/admin/featured-farmer-engagement` queue should use `requireAdmin`, a service
+client and purpose-specific approve/reject/restore RPCs. An append-only
+recommendation moderation-event table should record administrator, prior/new
+state, reason and timestamp without weakening the marketplace report/action
+constraints.
+
+The baseline production schema provides `profiles`, `set_updated_at()` and
+`is_admin()` (`supabase/migrations/20260729160000_initial_farmerbook.sql:7-39,
+193-240`), and the remotely applied three-role migration provides
+`profiles.account_role` (`supabase/migrations/20260731120000_roles_connections_reviews.sql:5-29`).
+A standalone migration can depend on these primitives without depending on the
+unapplied Featured Farmer newsroom migration.
+
+### Private question delivery and abuse controls
+
+The Farm Visits notification path is the correct provider precedent, not the
+autonomous outreach campaign path. It validates Postmark acceptance, requires
+the verified `ceo@farmerbook.in` sender, disables open/link tracking, uses a
+deterministic message ID, returns `unknown` for an ambiguous provider outcome
+and never retries that ambiguity
+(`features/farm-visits/notification.ts:64-128`). Its action first creates a
+durable idempotent row and then records `sent`, `failed` or `unknown`
+(`features/farm-visits/actions.ts:52-122`).
+
+Unlike Farm Visits, a profile question should remain usable without a
+FarmerBook account. It therefore needs all of the following before any write or
+provider call:
+
+- a strict Zod schema with bounded, trimmed, control-character-safe name,
+  reply email, kind (`question` or `comment`), 20–1,500 character message,
+  explicit consent, UUID idempotency key and invisible honeypot;
+- the existing Cloudflare Turnstile verifier with exact request hostname and a
+  dedicated exact action; the verifier already fails closed on missing secret,
+  provider error, hostname mismatch or action mismatch
+  (`features/outreach/turnstile.ts:9-40`);
+- a code-owned registry mapping only
+  `sandeep-dasari-avani-van-farms` to `avanivanfarms@gmail.com`;
+- service-only creation with at most three submissions per normalized-email
+  HMAC per profile in 24 hours and a profile-wide ceiling of 100 per day;
+- a new server-only HMAC secret so the database stores neither visitor email,
+  name nor message; and
+- one Postmark transactional email with the visitor email as `ReplyTo`, no
+  tracking and no automatic retry after an unknown outcome.
+
+The database needs only a private delivery ledger: subject slug, keyed sender
+hash, idempotency UUID, message kind, provider state/receipt/failure and
+timestamps. The visitor's raw name, email and message exist only in memory for
+the one provider request and in Sandeep's recipient mailbox. They must not be
+written to analytics, logs, metadata, an administrator queue or the public
+page. This follows the product rule that analytics metadata must not contain
+message bodies or email addresses (`docs/MVP_PRODUCT_DESIGN.md:381-385`).
+
+The existing Turnstile public site/secret bindings and Postmark transactional
+bindings are present in the application configuration
+(`.env.example:67-91`). A dedicated configuration check should fail closed
+unless the new engagement flag, Supabase, service role, HMAC secret,
+Turnstile and Postmark transactional values are all available.
+
+### Standalone engagement schema and data flow
+
+A forward-only migration should create a production-independent engagement
+domain:
+
+```text
+featured_farmer_engagement_subjects
+  slug PK, display_name, public_email, views_enabled,
+  questions_enabled, recommendations_enabled, profile_view_count
+       │
+       ├── featured_farmer_question_deliveries (private metadata only)
+       └── featured_farmer_recommendations ── profiles(reviewer_id)
+                                              │
+                                              └── moderation events
+```
+
+The subject seed contains Sandeep's slug, display name and public email. All
+tables use forced RLS and revoke browser table access. Purpose-specific
+security-definer RPCs expose only:
+
+- public subject display fields and aggregate `profile_view_count`;
+- approved recommendation display rows for active profiles;
+- a service-only atomic visit increment;
+- a service-only idempotent/rate-limited question-delivery reservation and
+  receipt update;
+- authenticated Customer submit/edit/withdraw operations; and
+- administrator-only moderation and private queue reads.
+
+Every function must set `search_path=''`, schema-qualify objects, revoke
+`public`/`anon`/`authenticated` by default, and grant only the minimum explicit
+role. Raw tables never receive anonymous or authenticated grants.
+
+Question flow:
+
+```text
+browser form → Zod + honeypot → exact-host/action Turnstile
+             → server HMAC + fixed slug registry
+             → service-only idempotent reservation
+             → one Postmark transactional send to fixed farm email
+             → service-only sent/failed/unknown receipt
+```
+
+Recommendation flow:
+
+```text
+signed-in Customer → server-derived identity → Customer-only RPC → pending
+                   → admin queue + audited decision → approved public RPC
+                   → public recommendation card (no email/UUID/verified badge)
+```
+
+### Counting visits without pretending to identify people
+
+The existing `product_events` system is not appropriate. Its type union covers
+named authenticated product events only and its writer accepts a user ID
+(`features/analytics/events.ts:6-31`). It does not provide an atomic public
+per-profile count, and adding emails, IPs or messages to its metadata is
+explicitly prohibited.
+
+An exact count of distinct people is impossible without identity or invasive
+fingerprinting. The UI should say **Profile views**, with help text explaining
+that it is approximate. A client marker calls the same-origin server action
+after the real page renders. The server action validates the known slug,
+rejects obvious bot user agents, checks/sets a first-party HttpOnly SameSite
+cookie containing only the last counted UTC date for this profile, and calls a
+service-only atomic increment when the browser has not been counted that day.
+No IP address, user agent, random visitor ID, fingerprint or per-visitor row is
+stored. Repeat refreshes from the same browser on the same UTC day do not
+increase the count; different browsers/devices and cleared cookies may do so.
+The aggregate remains useful while being honestly labelled and privacy-minimal.
+
+### Production migration and release boundary
+
+The linked migration ledger intentionally omits many local migrations,
+including the Featured Farmer newsroom base. The latest remotely applied
+migration is `20260824120000`; the optional newsroom migration
+`20260825120000` is local-only. The new migration must therefore be a standalone
+`20260825130000_featured_farmer_engagement.sql` that uses only confirmed
+baseline/three-role objects. An unrestricted `supabase db push` or
+`--include-all` would attempt unrelated historical work and is prohibited.
+Rehearse the migration on a clean database and a production-shaped baseline,
+then apply only the reviewed SQL in one transaction after a protected backup
+and verify its migration-ledger entry.
+
+The application surface should sit behind
+`ENABLE_FEATURED_FARMER_ENGAGEMENT=false` by default. Production order is:
+backup, exact isolated migration, database grant/RLS smoke tests, inspected
+build, strict pinned Wrangler dry run, binding-name comparison, Worker deploy
+with the flag enabled, then apex/`www` functional checks. The current healthy
+rollback Worker is `bd06a4c2-2692-4a32-b60c-4ad2ff28aceb` from deployment
+`28f0e572-8060-485b-9ccc-aaf07092b385`. The Wrangler skill requires the
+project-pinned `npx wrangler@4.120.0` and preservation of every existing
+Durable Object, AI, Images, service, workflow, variable and secret binding.
+
+A live smoke test must not send a synthetic message to Sandeep or publish a
+testimonial under another person's identity. Verify provider request shape
+with a mocked adapter and validate the production UI/configuration without a
+send. The first genuine visitor submission will be the first real farm-email
+delivery unless the product owner separately authorizes a test message. A
+synthetic recommendation may use an owner-controlled Customer only if it is
+immediately removed and clearly never presented as a real customer statement.
+
+### Verification implications and checkpoint
+
+Focused tests must cover schema boundaries, recipient allowlisting, HMAC
+redaction, honeypot, Turnstile hostname/action, rate limits, idempotency,
+Postmark request/receipt/unknown behavior, Customer-only recommendations,
+self-edit/withdraw, admin-only moderation, public approved-only projection,
+account-deletion cascade, atomic counting, daily cookie de-duplication, bot
+rejection, disabled configuration, public email rendering and exact trust copy.
+Migration tests and pgTAP must prove forced RLS, zero table grants and exact RPC
+role boundaries. Responsive browser tests must cover desktop/mobile form,
+recommendations, empty state, sign-in prompt, profile count, keyboard/focus,
+success/error states and no layout regression around the existing video cards.
+
+Repository completion requires focused and full Vitest, ESLint, TypeScript,
+production build, `git diff --check`, clean migration rehearsal when Docker is
+available, pgTAP, strict Wrangler dry run and a changed-path/binding audit.
+Implementation is now blocked only on the structured-development approval
+checkpoint; the product owner must explicitly approve the plan before code,
+database or deployment work begins.
+## Raitu Nestham founder-only research snapshot — 2026-08-25
+
+### Request and researched source set
+
+The product owner requested that the natural/organic Farmer details collected
+from `https://www.youtube.com/@Raitunestham` be available only to the website
+administrator. The completed local research export contains 41 profiles and 37
+publicly advertised professional phone numbers:
+
+- `outputs/raitunestham-natural-organic-farmers-2026-08-25.md`
+- `outputs/raitunestham-natural-organic-farmers-2026-08-25.csv`
+
+The export is currently protected from accidental source control by the
+repository's `/outputs/` ignore at `.gitignore:53`. It labels every number
+`public/unverified`, preserves the exact source-video URL, and distinguishes
+channel/farmer claims from independently verified facts. It is not currently
+available through the application.
+
+### Existing access boundary
+
+The nearest existing surface is the founder-only sourced-Farmer workspace at
+`app/(product)/admin/sourced-farmers/page.tsx:16-51`. It is already dynamic,
+uncached and noindex. The page calls
+`requireSourcedFarmerResearchOwner()` before loading or rendering the dashboard
+and returns `notFound()` for every failed access state.
+
+`features/sourced-farmers/access.ts:6-25` layers four gates:
+
+```ts
+if (!isFeatureEnabled("ENABLE_SOURCED_FARMER_RESEARCH")) {
+  return { ok: false as const, code: "FEATURE_DISABLED" as const };
+}
+const administrator = await requireAdmin();
+// Reject demo/unconfigured installations and every administrator except the
+// configured FARMER_CONTACT_OWNER_ID.
+```
+
+`features/auth/require-admin.ts:5-22` validates the current Supabase user on the
+server and redirects a missing/non-admin user. The sourced access helper then
+checks the exact configured owner UUID at `features/sourced-farmers/access.ts:18-19`.
+This is stronger than a generic admin-only check: only the configured founder
+administrator can enter.
+
+The browser denial contract is already tested at
+`tests/e2e/sourced-farmers.spec.ts:3-44`. In the demo/anonymous environment the
+route returns 404, private copy is absent, and the response carries noindex
+metadata. Unit coverage at `tests/sourced-farmer-access.test.ts:16-59` proves
+disabled-before-auth behavior, exact-owner admission and other-admin denial.
+
+### Existing data boundary and policy conflict
+
+The current system intentionally does not retain this requested dataset:
+
+- `README.md:301-310` says titles/descriptions are contact-redacted and never
+  stored; durable named profiles need subject consent or independent non-YouTube
+  evidence.
+- `docs/REQUIREMENTS.md:37-38` separates consented encrypted contacts
+  (`FB-REQ-018`) from anonymous/transient YouTube discovery (`FB-REQ-019`).
+- `docs/PRODUCTION_RUNBOOK.md:1399-1431` expressly forbids stored YouTube names,
+  locations, contacts, transcripts and financial claims in the existing
+  sourced-research database.
+- `features/farmer-database/types.ts:3-8` accepts only direct interest, existing
+  member, partner-consent campaign and consent-evidenced manual import as
+  contact acquisition sources. A YouTube-public number is not a valid consent
+  source and must not be inserted there.
+
+The new request therefore needs a deliberately separate read-only research
+snapshot. Treating the numbers as consented Farmer contacts would break the
+current schema, UI copy, release evidence and outreach authorization rules.
+
+### Evaluated implementation options
+
+1. **Import into the private Farmer contact database — rejected.** That database
+   represents consented relationships and encrypts contact values. Public
+   YouTube metadata does not satisfy its acquisition/consent model.
+2. **Add a new database domain — deferred.** A separately encrypted,
+   owner-scoped lead-research table would be viable for editable retention,
+   refresh and deletion, but it requires a migration, import path, retention
+   job, RLS/RPC suite and production data mutation. None is necessary for a
+   fixed 41-row read-only snapshot.
+3. **Store the reviewed snapshot in a server-only application module —
+   recommended.** It requires no migration and cannot contaminate contacts,
+   consent, members, outreach or public publication. The module is imported
+   dynamically only after the existing founder-owner check. A server component
+   filters and renders the records; no `"use client"` module imports the data.
+
+The recommended flow is:
+
+```text
+GET /admin/sourced-farmers/raitunestham
+        |
+        v
+requireSourcedFarmerResearchOwner()
+        | failed                         | exact founder owner
+        v                                v
+      404                     dynamic import of server-only snapshot
+                                             |
+                                             v
+                               server-side query/category filtering
+                                             |
+                                             v
+                              private HTML with source links and
+                              public/unverified phone labels
+```
+
+The server module still creates an intentional durable copy of public
+professional data inside the private application bundle. That is the narrow
+product-policy change requiring explicit plan approval. It must not be imported
+by a client component, exposed through an unauthenticated route, returned from a
+public API, or described as consent.
+
+### Proposed UI and data contract
+
+Add `features/sourced-farmers/raitunestham-research.server.ts` with a readonly
+typed dataset. Every row contains only:
+
+```ts
+type RaituNesthamResearchRecord = {
+  id: string;
+  videoDate: string;
+  farmerOrGroup: string;
+  location: string;
+  state: string | null;
+  scale: string | null;
+  farmingFocus: string;
+  methodsOrCrops: string;
+  channelReportedClaim: string | null;
+  publicUnverifiedPhone: string | null;
+  youtubeSource: `https://www.youtube.com/watch?v=${string}`;
+  priority: "recent" | "method" | "allied";
+};
+```
+
+The new dynamic/noindex page should render a server-side search form, summary
+counts, exact evidence warning and a responsive table/card surface. A telephone
+link is acceptable as a browser affordance, but its adjacent label must say
+`Public/unverified · not outreach consent`. The page provides no send, invite,
+import, publish, verification or membership action.
+
+Add a navigation link from the existing sourced research header; do not add the
+route to public navigation or the sitemap. Reuse `.private-contact-table`,
+`.table-scroll`, `.tag-row` and sourced-research card styles from
+`app/globals.css:10743-10968`, adding only snapshot-specific responsive rules.
+
+### Verification and release implications
+
+Focused tests must prove:
+
+- all 41 records have unique stable IDs and exact YouTube watch URLs;
+- phone values are null or ten digits and remain labeled public/unverified;
+- no record represents consent, a member, a verification result or a public
+  profile;
+- the pure renderer supports name/location/crop search and priority filtering;
+- links use `target="_blank" rel="noreferrer"`, telephone links do not create a
+  send action, and claims retain the channel-reported disclaimer;
+- the anonymous/demo route returns 404, leaks no names/phones and emits noindex;
+- source checks prevent a client component or public route from importing the
+  server snapshot.
+
+Run focused Vitest, ESLint, TypeScript, the production build, `git diff --check`,
+and desktop/mobile Playwright. Deployment is a separate implementation step
+after plan approval; live verification must prove anonymous denial and an
+authenticated founder render without calling or messaging any farmer.
