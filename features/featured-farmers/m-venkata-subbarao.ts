@@ -12,6 +12,18 @@ const suppliedBiographySource = {
   association: "professional_reference",
 };
 
+const teluguMagazineSource = {
+  id: "45000000-0000-4000-8000-000000000002",
+  url: "https://rythunestham.in/november-2025-magazine/",
+  publisher: "Rythunestham",
+  title:
+    "Telugu magazine feature on Surabhi Gosala — pages 53–55, shared with FarmerBook by the farmer",
+  publishedAt: null,
+  sourceType: "operator-supplied Telugu magazine pages",
+  quality: "third_party_coverage",
+  association: "third_party_coverage",
+};
+
 const reportedProducts = [
   { name: "Coconut", categorySlug: "coconut" },
   { name: "Mango", categorySlug: "mango" },
@@ -69,7 +81,7 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
     },
     media: null,
     socialLinks: [],
-    sources: [suppliedBiographySource],
+    sources: [suppliedBiographySource, teluguMagazineSource],
     claims: [
       {
         id: "46000000-0000-4000-8000-000000000001",
@@ -115,6 +127,17 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
         displayContext: "Self-reported practice",
         sources: [suppliedBiographySource],
       },
+      {
+        id: "46000000-0000-4000-8000-000000000005",
+        key: "telugu_magazine_feature",
+        type: "knowledge_sharing",
+        statement:
+          "A Telugu Rythunestham magazine feature shared by Subbarao presents Surabhi Gosala, mixed crops and farm-made inputs as connected parts of his natural-farming approach. FarmerBook has summarised the supplied pages and has not independently verified the reported practices.",
+        displayLabel: "Telugu feature",
+        displayValue: "Pages 53–55",
+        displayContext: "Magazine pages supplied by the farmer",
+        sources: [teluguMagazineSource],
+      },
     ],
     sections: [
       {
@@ -138,20 +161,27 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
           "Subbarao says he follows a five-layer model wherever possible. His supplied crop list spans fruit trees, field crops, spices and fodder—an approach intended to keep several kinds of plants and farm activity together. FarmerBook presents this as a reported farm design, not as a guarantee of performance or suitability elsewhere.",
         claimKeys: ["five_layer_model"],
       },
+      {
+        kind: "community",
+        heading: "తెలుగు పత్రికా కథనంలో సురభి గోశాల",
+        body:
+          "రైతు పంచుకున్న రైతునేస్తం తెలుగు పత్రికా పేజీలు (53–55) సురభి గోశాల, మిశ్రమ పంటలు మరియు వ్యవసాయ క్షేత్రంలో తయారయ్యే ఇన్పుట్లను ఆయన సహజ వ్యవసాయ పద్ధతిలో పరస్పరం అనుసంధానమైన భాగాలుగా వివరిస్తున్నాయి. ఈ సారాంశం పంచుకున్న పత్రికా పేజీల ఆధారంగా మాత్రమే రూపొందించబడింది; ఫార్మర్‌బుక్ స్వతంత్రంగా ఈ పద్ధతులను లేదా ఫలితాలను ధృవీకరించలేదు.",
+        claimKeys: ["telugu_magazine_feature"],
+      },
     ],
     reportedProducts,
     coverage: [
       {
-        url: suppliedBiographySource.url,
-        publisher: suppliedBiographySource.publisher,
-        title: suppliedBiographySource.title,
-        sourceType: "Magazine reference shared by the farmer",
+        url: teluguMagazineSource.url,
+        publisher: teluguMagazineSource.publisher,
+        title: teluguMagazineSource.title,
+        sourceType: "Telugu magazine feature shared by the farmer",
       },
     ],
     seo: {
       title: "M. Venkata Subbarao and Surabhi Gosala | FarmerBook",
       description:
-        "An attributed editorial preview of M. Venkata Subbarao's reported natural-farming work and Surabhi Gosala in Eluru, Andhra Pradesh.",
+        "An attributed editorial profile of M. Venkata Subbarao's reported natural-farming work and Surabhi Gosala in Eluru, Andhra Pradesh.",
       keywords: [
         "M. Venkata Subbarao",
         "Surabhi Gosala",

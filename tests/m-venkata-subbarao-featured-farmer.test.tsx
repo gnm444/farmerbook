@@ -50,6 +50,12 @@ describe("M. Venkata Subbarao Featured Farmer profile", () => {
     ).toBeVisible();
     expect(screen.getByText("Eluru · Andhra Pradesh")).toBeVisible();
     expect(screen.getByText("Published 27 Aug 2026")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "తెలుగు పత్రికా కథనంలో సురభి గోశాల",
+      }),
+    ).toBeVisible();
+    expect(screen.getByText("Pages 53–55")).toBeVisible();
 
     const products = screen
       .getByRole("heading", { name: "Reported farm products" })
