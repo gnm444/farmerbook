@@ -5,7 +5,7 @@ const suppliedBiographySource = {
   url: "https://rythunestham.in/november-2025-magazine/",
   publisher: "Rythunestham",
   title:
-    "November 2025 magazine — pages 51–55, shared with FarmerBook by the farmer",
+    "November 2025 magazine — pages 50–55, shared with FarmerBook by the farmer",
   publishedAt: null,
   sourceType: "operator-supplied biography and magazine extract",
   quality: "first_party",
@@ -17,7 +17,7 @@ const teluguMagazineSource = {
   url: "https://rythunestham.in/november-2025-magazine/",
   publisher: "Rythunestham",
   title:
-    "Telugu magazine feature on Surabhi Gosala — pages 53–55, shared with FarmerBook by the farmer",
+    "Telugu magazine feature on Surabhi Gosala — pages 50–55, shared with FarmerBook by the farmer",
   publishedAt: null,
   sourceType: "operator-supplied Telugu magazine pages",
   quality: "third_party_coverage",
@@ -141,7 +141,7 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
         statement:
           "A Telugu Rythunestham magazine feature shared by Subbarao presents Surabhi Gosala, mixed crops and farm-made inputs as connected parts of his natural-farming approach. FarmerBook has summarised the supplied pages and has not independently verified the reported practices.",
         displayLabel: "Telugu feature",
-        displayValue: "Pages 53–55",
+        displayValue: "Pages 50–55",
         displayContext: "Magazine pages supplied by the farmer",
         sources: [teluguMagazineSource],
       },
@@ -210,9 +210,9 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
         sourceType: "Telugu magazine feature shared by the farmer",
         thumbnail: {
           assetUrl:
-            "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-55.jpg",
+            "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-55.png",
           altText:
-            "Permitted Telugu Rythunestham magazine clipping featuring Surabhi Gosala",
+            "High-resolution Telugu Rythunestham magazine page featuring Surabhi Gosala",
           provider: "farmerbook_permitted",
         },
       },
@@ -220,29 +220,56 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
     imageGallery: [
       {
         assetUrl:
-          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-pages-50-51.png",
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-50.png",
         altText:
-          "Permitted Telugu Rythunestham magazine pages 50–51 about Surabhi Gosala and the farm's crops",
+          "High-resolution Telugu Rythunestham magazine page 50 about Surabhi Gosala and the farm's crops",
         caption:
-          "Rythunestham, November 2025, pages 50–51 — supplied by the farmer with permission to reuse.",
+          "Rythunestham, November 2025, page 50 — original high-resolution magazine page, reused with permission.",
         sourceUrl: teluguMagazineSource.url,
       },
       {
         assetUrl:
-          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-pages-52-53.png",
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-51.png",
         altText:
-          "Permitted Telugu Rythunestham magazine pages 52–53 showing M. Venkata Subbarao in the farm and crop photographs",
+          "High-resolution Telugu Rythunestham magazine page 51 about Surabhi Gosala",
         caption:
-          "Rythunestham, November 2025, pages 52–53 — supplied by the farmer with permission to reuse.",
+          "Rythunestham, November 2025, page 51 — original high-resolution magazine page, reused with permission.",
         sourceUrl: teluguMagazineSource.url,
       },
       {
         assetUrl:
-          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-pages-54-55.png",
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-52.png",
         altText:
-          "Permitted Telugu Rythunestham magazine pages 54–55 showing Surabhi Gosala, farm inputs and farm entrance",
+          "High-resolution Telugu Rythunestham magazine page 52 showing M. Venkata Subbarao and farm photographs",
         caption:
-          "Rythunestham, November 2025, pages 54–55 — supplied by the farmer with permission to reuse.",
+          "Rythunestham, November 2025, page 52 — original high-resolution magazine page, reused with permission.",
+        sourceUrl: teluguMagazineSource.url,
+      },
+      {
+        assetUrl:
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-53.png",
+        altText:
+          "High-resolution Telugu Rythunestham magazine page 53 showing M. Venkata Subbarao and farm photographs",
+        caption:
+          "Rythunestham, November 2025, page 53 — original high-resolution magazine page, reused with permission.",
+        sourceUrl: teluguMagazineSource.url,
+      },
+      {
+        assetUrl:
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-54.png",
+        altText:
+          "High-resolution Telugu Rythunestham magazine page 54 showing Surabhi Gosala and farm-made inputs",
+        caption:
+          "Rythunestham, November 2025, page 54 — original high-resolution magazine page, reused with permission.",
+        sourceUrl: teluguMagazineSource.url,
+      },
+      {
+        assetUrl:
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-55.png",
+        altText:
+          "High-resolution Telugu Rythunestham magazine page 55 showing Surabhi Gosala and the farm entrance",
+        caption:
+          "Rythunestham, November 2025, page 55 — original high-resolution magazine page, reused with permission.",
         sourceUrl: teluguMagazineSource.url,
       },
     ],

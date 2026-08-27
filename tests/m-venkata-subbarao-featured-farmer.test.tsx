@@ -68,20 +68,20 @@ describe("M. Venkata Subbarao Featured Farmer profile", () => {
         name: "English reading of the Telugu Rythunestham feature",
       }),
     ).toBeVisible();
-    expect(screen.getByText("Pages 53–55")).toBeVisible();
+    expect(screen.getByText("Pages 50–55")).toBeVisible();
     expect(
       screen.getByRole("img", {
-        name: "Permitted Telugu Rythunestham magazine clipping featuring Surabhi Gosala",
+        name: "High-resolution Telugu Rythunestham magazine page featuring Surabhi Gosala",
       }),
     ).toHaveAttribute(
       "src",
-      "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-55.jpg",
+      "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-55.png",
     );
     expect(
       screen.getAllByRole("img", {
-        name: /Permitted Telugu Rythunestham magazine pages/i,
+        name: /High-resolution Telugu Rythunestham magazine page \d+/i,
       }),
-    ).toHaveLength(3);
+    ).toHaveLength(6);
 
     const products = screen
       .getByRole("heading", { name: "Reported farm products" })
