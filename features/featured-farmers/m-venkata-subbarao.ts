@@ -32,7 +32,7 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
   publication_id: "40000000-0000-4000-8000-000000000003",
   slug: "m-venkata-subbarao-surabhi-gosala",
   publication_revision: 1,
-  publication_status: "preview",
+  publication_status: "published",
   fact_checked_at: "2026-08-27T12:00:00.000Z",
   published_at: "2026-08-27T12:00:00.000Z",
   snapshot: {

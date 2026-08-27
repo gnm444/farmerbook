@@ -9,13 +9,13 @@ import {
 import { mVenkataSubbaraoPublication } from "@/features/featured-farmers/m-venkata-subbarao";
 
 describe("M. Venkata Subbarao Featured Farmer profile", () => {
-  it("is a valid attributed preview that protects private contact details", () => {
+  it("is a valid attributed published profile that protects private contact details", () => {
     expect(() =>
       featuredFarmerSnapshotSchema.parse(mVenkataSubbaraoPublication.snapshot),
     ).not.toThrow();
     expect(mVenkataSubbaraoPublication).toMatchObject({
       slug: "m-venkata-subbarao-surabhi-gosala",
-      publication_status: "preview",
+      publication_status: "published",
       snapshot: {
         fullName: "M. Venkata Subbarao",
         district: "Eluru",
@@ -49,7 +49,7 @@ describe("M. Venkata Subbarao Featured Farmer profile", () => {
       screen.getByRole("heading", { name: "M. Venkata Subbarao" }),
     ).toBeVisible();
     expect(screen.getByText("Eluru · Andhra Pradesh")).toBeVisible();
-    expect(screen.getByText("Editorial preview")).toBeVisible();
+    expect(screen.getByText("Published 27 Aug 2026")).toBeVisible();
 
     const products = screen
       .getByRole("heading", { name: "Reported farm products" })
