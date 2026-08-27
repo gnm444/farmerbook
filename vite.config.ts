@@ -213,10 +213,13 @@ const localBindingConfig = {
       tag: "owned-social-publisher-agent-v1",
       new_sqlite_classes: ["OwnedSocialPublisherAgent"],
     },
-    ...(includeLiveActionScaffold ? [{
+    // Durable Object migrations are permanent production history. Keep this
+    // migration in every generated deployment config even when the optional
+    // live-action binding itself is disabled.
+    {
       tag: "live-action-coordinator-agent-v1",
       new_sqlite_classes: ["LiveActionCoordinatorAgent"],
-    }] : []),
+    },
   ],
   triggers: {
     crons: ["*/15 * * * *"],
