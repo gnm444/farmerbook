@@ -65,7 +65,7 @@ describe("M. Venkata Subbarao Featured Farmer profile", () => {
     ).toBeVisible();
     expect(
       screen.getByRole("heading", {
-        name: "English reading of the Telugu Rythunestham feature",
+        name: "Reading the Telugu feature: a farm designed as relationships",
       }),
     ).toBeVisible();
     expect(screen.getByText("Pages 50–55")).toBeVisible();

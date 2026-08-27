@@ -187,7 +187,7 @@ const sourceHostedImageSchema = z
     altText: z.string(),
     credit: z.string(),
     creditUrl: z.url(),
-    provider: z.literal("youtube_oembed"),
+    provider: z.enum(["youtube_oembed", "farmerbook_permitted"]),
     focalPoint: z.enum(["left", "center", "right"]).optional(),
   })
   .strict();

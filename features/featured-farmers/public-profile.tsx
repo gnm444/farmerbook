@@ -507,7 +507,7 @@ export function FeaturedFarmerStory({
             <p className="eyebrow">{m.sources}</p>
             <ol>
               {snapshot.sources.map((source) => (
-                <li key={source.url}>
+                <li key={source.id}>
                   <a
                     href={source.url}
                     target="_blank"

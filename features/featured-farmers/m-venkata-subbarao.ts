@@ -52,11 +52,11 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
     district: "Eluru",
     state: "Andhra Pradesh",
     locale: "en-IN",
-    headline: "Natural farming centred on Surabhi Gosala in Eluru",
+    headline: "A living natural-farming landscape built around Surabhi Gosala",
     deck:
-      "At a reported 16-acre farm in Eluru, M. Venkata Subbarao combines orchard crops, paddy and fodder with Surabhi Gosala and a five-layer farming model.",
+      "M. Venkata Subbarao’s reported 16-acre farm near Eluru brings together cattle, coconut and fruit trees, banana, paddy, spices and fodder. At its centre is Surabhi Gosala—the place from which he describes building farm-made inputs, observing the soil and growing a diverse landscape over time.",
     whyFeatured:
-      "M. Venkata Subbarao's shared farm biography describes a long-term natural-farming practice built around cattle, crop diversity and on-farm inputs. The profile records his account of the work rather than making a certification, product-quality or availability claim.",
+      "The Rythunestham feature and Subbarao’s shared biography present a farm shaped by patience: cattle care, soil cover, water attention, trees, food crops and fodder are treated as connected work rather than separate activities. This profile makes that story accessible in English while keeping every farm-specific detail attributed to the supplied sources.",
     categorySlugs: ["cattle-rearing", "agroforestry", "rice"],
     limitations: [
       "This profile is based on a biography and magazine extract that M. Venkata Subbarao shared with FarmerBook through WhatsApp. FarmerBook has not independently inspected the farm.",
@@ -86,6 +86,17 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
         "M. Venkata Subbarao walking through the tree-covered farm at Surabhi Gosala",
       credit: "Farmer-supplied photograph, used with permission",
       rightsBasis: "subject_permission",
+    },
+    sourceHostedBackground: {
+      assetUrl:
+        "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-51-background.png",
+      sourceUrl: teluguMagazineSource.url,
+      altText:
+        "M. Venkata Subbarao among banana and coconut plants at Surabhi Gosala, from the permitted Rythunestham feature",
+      credit: "Rythunestham, November 2025, page 51 — reused with permission",
+      creditUrl: teluguMagazineSource.url,
+      provider: "farmerbook_permitted",
+      focalPoint: "center",
     },
     socialLinks: [],
     sources: [suppliedBiographySource, teluguMagazineSource],
@@ -149,23 +160,23 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
     sections: [
       {
         kind: "origin",
-        heading: "A shift to natural farming",
+        heading: "A journey from professional life to a farm classroom",
         body:
-          "M. Venkata Subbarao reports beginning natural farming in 2015. His biography also records an eight-day natural-farming training in Kakinada in January 2016, attributed there to Sri Subhash Palekar.",
+          "M. Venkata Subbarao’s supplied biography describes a transition into natural farming in 2015 after his professional career. It records that he attended an eight-day training in Kakinada in January 2016, attributed there to Sri Subhash Palekar. The Rythunestham pages then portray the years that followed as hands-on learning: observing plants, cattle, water and soil instead of treating farming as a fixed recipe. The feature presents him walking through orchards and mixed plantings, with the farm itself becoming a place for continued practice and learning.\n\nThis profile does not claim that one method suits every farm. Rather, it records the farmer’s stated effort to develop a locally rooted system in Eluru—one where practical decisions are made season by season and where the condition of the field matters as much as a planned crop calendar.",
         claimKeys: ["natural_farming_since_2015"],
       },
       {
         kind: "work",
-        heading: "Crops, fodder and Surabhi Gosala",
+        heading: "Surabhi Gosala: cattle as part of the farming cycle",
         body:
-          "The farm is described as a mixed system: orchard crops, paddy, plantain, spices and green fodder are grown alongside the cattle. The biography says farm inputs used for cultivation come from Surabhi Gosala, which is situated on the farm. These are the farmer's reported practices; FarmerBook has not independently assessed the system or its results.",
+          "In the supplied feature, Surabhi Gosala is not presented as a separate dairy unit placed beside crops. It is described as one part of the farm’s larger working cycle. Subbarao reports that the cattle area is on the farm and that materials from the gosala are used in farm-made preparations for cultivation. The magazine photographs show the cattle shed, cattle, storage vessels and the day-to-day spaces where those preparations are handled.\n\nHis shared biography recorded 17 cows and 9 calves at the time it was prepared, including Ongole, Gir, Sahiwal, desi and Punganur breeds. That is a dated self-reported count, not a current inventory. What the story makes clear is the role he gives cattle: care of animals, fodder, biomass and cultivation are meant to remain connected. FarmerBook records this as the farm’s reported approach and does not certify inputs, methods, products or outcomes.",
         claimKeys: ["mixed_farm_system", "surabhi_gosala"],
       },
       {
         kind: "impact",
-        heading: "Working with layers and diversity",
+        heading: "Sixteen acres of crops, trees, spices and fodder",
         body:
-          "Subbarao says he follows a five-layer model wherever possible. His supplied crop list spans fruit trees, field crops, spices and fodder—an approach intended to keep several kinds of plants and farm activity together. FarmerBook presents this as a reported farm design, not as a guarantee of performance or suitability elsewhere.",
+          "Subbarao describes a reported 16-acre farm with coconut, mango, papaya, sapota, guava, banana, turmeric, ginger, paddy and green fodder. The Rythunestham pages show coconut palms and fruit trees above banana and other crops, as well as field areas, harvests and planted rows. Together they give a clear visual impression of a mixed landscape rather than a single-crop holding.\n\nThe supplied biography says he follows a five-layer design wherever possible. In simple terms, that means making room for plants at different heights and growth cycles: taller trees above shorter fruit crops, with spices, ground-level crops and fodder occupying other spaces. The purpose described in the feature is diversity—different kinds of biomass, food, shade, roots and farm work across the year. It is a reported design principle, not a promise of yield, income or performance elsewhere.",
         claimKeys: ["five_layer_model"],
       },
       {
@@ -177,9 +188,9 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
       },
       {
         kind: "work",
-        heading: "English reading of the Telugu Rythunestham feature",
+        heading: "Reading the Telugu feature: a farm designed as relationships",
         body:
-          "This English rendering is a detailed summary of the Telugu Rythunestham pages supplied by M. Venkata Subbarao, rather than an independent audit of the farm. The feature presents Surabhi Gosala as the centre of an integrated natural-farming system in Eluru. It connects cattle care, crop diversity, on-farm inputs, water management and direct observation of the fields. The recurring idea is that the farm is designed as a working cycle: cattle provide material for farm-made preparations; crops and fodder provide biomass and feed; residues return to the soil; and a diverse orchard and field-crop mix spreads activity across the year.\n\nThe article describes a farm that combines tree crops, annual crops, spices and fodder. Coconut and fruit trees create a longer-lived canopy, while banana, papaya, mango, sapota, guava, turmeric, ginger, paddy and green fodder are presented as complementary elements. Rather than treating each crop as a separate enterprise, the feature frames them as layers and companions in the same landscape. This aligns with the five-layer approach reported in Subbarao's supplied biography: taller trees, shorter fruit crops, herbs or spices, ground-level crops and fodder can occupy different spaces and seasons. The article's photographs show orchards, banana plants, field work and harvests, reinforcing that mixed-crop design.",
+          "The five supplied Telugu pages tell a coherent story: the farm is designed through relationships. Cattle are linked to farm-made inputs; fodder is linked to animal care; crop residue and organic matter are linked to soil cover; trees, banana and field crops are linked through space and season. The photographs move between orchard, crop rows, harvested produce, the gosala, water equipment and the farm entrance, making the system feel like a lived working landscape rather than an abstract model.\n\nThe article repeatedly returns to diversity. Coconut and fruit trees form a longer-lived canopy, while banana, papaya, mango, sapota, guava, turmeric, ginger, paddy and green fodder are described as complementary elements. Different crops do not all mature together, and the feature presents that spread of activity as part of the farm’s resilience. FarmerBook’s English reading is an interpretation of the supplied Telugu pages; it does not independently audit reported area, livestock, costs, yields or agricultural results.",
         claimKeys: [
           "telugu_magazine_feature",
           "mixed_farm_system",
@@ -188,16 +199,16 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
       },
       {
         kind: "work",
-        heading: "Cattle, farm-made inputs and soil care",
+        heading: "Soil cover, farm-made inputs and careful water use",
         body:
-          "Cattle are presented as more than a separate dairy activity. The Rythunestham story shows the gosala, cattle shed and cattle at rest, and describes preparations made on the farm using cattle-derived materials. It reports that these preparations are used as inputs in cultivation and that the farm avoids depending entirely on purchased external inputs. The article also shows equipment and containers used for preparing or handling these materials. FarmerBook does not treat this as proof of a specific product, recipe, efficacy or certification; it records what the supplied feature says about the farm's approach.\n\nSoil care is another major theme. The feature describes organic matter, mulching and farm-made inputs as practical ways the farmer seeks to maintain soil condition. It refers to biomass from the farm and to returning material to the fields instead of seeing it as waste. The images of compost-like material, field rows and planted trees support the article's emphasis on soil cover and on keeping biological activity within the farm system. The story also connects soil work with water: it describes irrigation and field-level attention to water use, but FarmerBook does not publish the article's exact cost or output calculations as current, verified figures. Such numbers can change with season, prices, weather and farm conditions.",
+          "The Rythunestham article describes farm-made preparations, organic matter and mulching as practical parts of Subbarao’s reported soil-care approach. It shows compost-like material, containers and field rows, and describes returning biological material to the farm rather than treating it as waste. The emphasis is on keeping soil covered, feeding plant life with material available within the system and observing the field over time.\n\nWater is another visible part of the story. The supplied pages include irrigation infrastructure and refer to attention to water use at plot level. FarmerBook deliberately does not repeat the article’s precise financial or output calculations as current facts: crop prices, weather, labour, water availability and farm conditions change. The valuable lesson for readers is not a universal formula, but the discipline of connecting water, soil cover, fodder, trees and livestock in everyday farm management.",
         claimKeys: ["telugu_magazine_feature", "surabhi_gosala"],
       },
       {
         kind: "lessons",
-        heading: "What the feature says about farm management",
+        heading: "What a visitor can learn from the farm story",
         body:
-          "The Telugu feature is also a farm-management narrative. It portrays decisions being made through observation: looking at crop condition, using different plots for different crops, tending fodder, maintaining the cattle area and working with trees over several years. Its account of fruit trees and intercrops suggests a preference for staggered harvests instead of one single crop cycle. That can create several kinds of farm work and potential produce at different times, although the article does not constitute a live catalogue or an assurance of availability. The reported crops on this FarmerBook profile should therefore be read as an attributed crop list, not a promise to sell or deliver them.\n\nThe profile pages also show people working in the field, an entrance to the farm, the cattle shed and a small processing or storage area. These photographs give visual context to the written article: a working farm is portrayed as a place of routine maintenance, not merely a demonstration plot. The feature's value lies in making visible the relationships it describes—trees, fodder, cattle, soil, water and labour. It does not supply a controlled comparison with another farm, a third-party inspection report or a guarantee that the same methods will suit every place.\n\nOverall, the supplied Telugu article describes Subbarao's work as a long-term effort to link natural farming with Surabhi Gosala and a diverse, layered farm design. FarmerBook has translated this into plain English to make the source accessible to more readers. Every substantive practice, area, livestock count and outcome on this page remains attributed to the farmer's shared biography or the supplied Rythunestham feature. Readers interested in adopting any farming method should seek locally appropriate professional guidance and evaluate their own soil, water, climate, animals, regulations and market conditions.",
+          "For a visitor, the feature offers a way to look at a farm beyond individual crops. It points to the questions Subbarao appears to work with: What can grow together? What becomes fodder or mulch? How can the cattle area and cultivation support each other? Where does water move? What needs attention today, and what takes years of care? The farm images show routine work—walking rows, tending trees, handling harvests, caring for animals and maintaining the farm entrance and working areas.\n\nThat is why this profile features him. The story is not of a miracle method or a guaranteed outcome; it is of sustained attention to a connected farm. The reported crop list is not a live catalogue, and the profile makes no promise about availability, prices, delivery, certification or product quality. It is an attributed record of one farmer’s experience in Eluru, shared so that others can understand the ideas and ask better questions about their own land, water, climate and animals.",
         claimKeys: ["telugu_magazine_feature", "mixed_farm_system"],
       },
     ],
