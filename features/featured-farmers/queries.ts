@@ -17,6 +17,7 @@ import {
   featuredFarmerStorySectionSchema,
 } from "./schemas";
 import { narayanaReddyPublication } from "./narayana-reddy";
+import { mVenkataSubbaraoPublication } from "./m-venkata-subbarao";
 import { sandeepDasariPublication } from "./sandeep-dasari";
 import { buildFeaturedFarmerResearchQueries } from "./web-research";
 
@@ -312,6 +313,7 @@ const publicationRowSchema = z.object({
 export type FeaturedFarmerPublication = z.infer<typeof publicationRowSchema>;
 
 const curatedPublications: FeaturedFarmerPublication[] = [
+  mVenkataSubbaraoPublication,
   sandeepDasariPublication,
   narayanaReddyPublication,
 ];

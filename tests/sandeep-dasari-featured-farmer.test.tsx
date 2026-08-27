@@ -38,13 +38,14 @@ describe("Sandeep Dasari Featured Farmer profile", () => {
     });
   });
 
-  it("lists and resolves both curated profiles once", async () => {
+  it("lists and resolves each curated profile once", async () => {
     const publications = await loadFeaturedFarmerPublications(24);
     expect(publications.map((item) => item.slug)).toEqual([
+      "m-venkata-subbarao-surabhi-gosala",
       "sandeep-dasari-avani-van-farms",
       "narayana-reddy",
     ]);
-    expect(new Set(publications.map((item) => item.slug)).size).toBe(2);
+    expect(new Set(publications.map((item) => item.slug)).size).toBe(3);
     await expect(
       loadFeaturedFarmerPublication("sandeep-dasari-avani-van-farms"),
     ).resolves.toBe(sandeepDasariPublication);
