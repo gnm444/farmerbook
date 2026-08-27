@@ -79,7 +79,14 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
         "Paddy cultivation",
       ],
     },
-    media: null,
+    media: {
+      assetUrl:
+        "https://farmerbook.in/images/featured-farmers/venkata-subbarao-profile-portrait.png",
+      altText:
+        "M. Venkata Subbarao walking through the tree-covered farm at Surabhi Gosala",
+      credit: "Farmer-supplied photograph, used with permission",
+      rightsBasis: "subject_permission",
+    },
     socialLinks: [],
     sources: [suppliedBiographySource, teluguMagazineSource],
     claims: [

@@ -51,6 +51,14 @@ describe("M. Venkata Subbarao Featured Farmer profile", () => {
     expect(screen.getByText("Eluru · Andhra Pradesh")).toBeVisible();
     expect(screen.getByText("Published 27 Aug 2026")).toBeVisible();
     expect(
+      screen.getByRole("img", {
+        name: "M. Venkata Subbarao walking through the tree-covered farm at Surabhi Gosala",
+      }),
+    ).toHaveAttribute(
+      "src",
+      "https://farmerbook.in/images/featured-farmers/venkata-subbarao-profile-portrait.png",
+    );
+    expect(
       screen.getByRole("heading", {
         name: "తెలుగు పత్రికా కథనంలో సురభి గోశాల",
       }),
