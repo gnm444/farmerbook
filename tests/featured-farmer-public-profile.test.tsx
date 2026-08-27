@@ -140,6 +140,9 @@ describe("Featured Farmer public profile", () => {
         name: /Original photograph pending rights clearance/i,
       }),
     ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Request a connection" }),
+    ).toHaveAttribute("href", expect.stringContaining("mailto:"));
     const citation = screen.getAllByRole("link", {
       name: /Source 1: Water stewardship field record/i,
     })[0];
@@ -152,6 +155,23 @@ describe("Featured Farmer public profile", () => {
       "href",
       "/data-deletion",
     );
+  });
+
+  it("offers the real FarmerBook account only when an administrator has linked it", () => {
+    render(
+      <FeaturedFarmerStory
+        publication={publication}
+        locale="en-IN"
+        linkedAccount={{ full_name: "Anita Patil", handle: "anita_patil" }}
+      />,
+    );
+    expect(screen.getByText(/Official FarmerBook account/i)).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Connect on FarmerBook" }),
+    ).toHaveAttribute("href", "/farmers/anita_patil");
+    expect(
+      screen.queryByRole("link", { name: "Request a connection" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows a credited source-hosted documentary preview without treating it as owned media", () => {

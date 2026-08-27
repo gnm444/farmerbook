@@ -12,6 +12,7 @@ import {
 import type { SupportedLocale } from "@/lib/i18n/locales";
 import { featuredFarmerPublicMessages } from "./public-messages";
 import type { FeaturedFarmerPublication } from "./queries";
+import type { FeaturedFarmerPublicAccount } from "./account-link-schemas";
 
 const socialIcons = {
   youtube: Video,
@@ -140,9 +141,11 @@ export function FeaturedFarmerCard({
 export function FeaturedFarmerStory({
   publication,
   locale,
+  linkedAccount = null,
 }: {
   publication: FeaturedFarmerPublication;
   locale: SupportedLocale;
+  linkedAccount?: FeaturedFarmerPublicAccount | null;
 }) {
   const m = featuredFarmerPublicMessages(locale);
   const { snapshot } = publication;
@@ -471,6 +474,35 @@ export function FeaturedFarmerStory({
             </section>
           ) : null}
 
+          {snapshot.imageGallery?.length ? (
+            <section className="featured-story__gallery" aria-label="Profile image gallery">
+              <p className="eyebrow">Source gallery</p>
+              <p>
+                Permitted pages supplied by the farmer. These magazine images are
+                source material for this editorial profile, not independently
+                verified FarmerBook photography.
+              </p>
+              <div>
+                {snapshot.imageGallery.map((image) => (
+                  <figure key={image.assetUrl}>
+                    <img
+                      src={image.assetUrl}
+                      alt={image.altText}
+                      width={2340}
+                      height={1316}
+                    />
+                    <figcaption>
+                      {image.caption}{" "}
+                      <a href={image.sourceUrl} target="_blank" rel="noreferrer">
+                        View magazine source
+                      </a>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           <section className="featured-story__sources">
             <p className="eyebrow">{m.sources}</p>
             <ol>
@@ -543,6 +575,32 @@ export function FeaturedFarmerStory({
               </div>
             </section>
           ) : null}
+          <section className="featured-story__connect">
+            <p className="eyebrow">Connect</p>
+            {linkedAccount ? (
+              <>
+                <p>
+                  Official FarmerBook account: <strong>{linkedAccount.full_name}</strong>
+                </p>
+                <Link className="button" href={`/farmers/${linkedAccount.handle}`}>
+                  Connect on FarmerBook
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>
+                  This editorial profile is not yet linked to a FarmerBook account.
+                  Request a connection and FarmerBook will review it.
+                </p>
+                <a
+                  className="button button--secondary"
+                  href={`mailto:${supportEmail ?? "support@farmerbook.in"}?subject=${encodeURIComponent(`Connection request: ${snapshot.fullName}`)}`}
+                >
+                  Request a connection
+                </a>
+              </>
+            )}
+          </section>
           {snapshot.contactEmail ? (
             <section>
               <p className="eyebrow">{m.farmContact}</p>

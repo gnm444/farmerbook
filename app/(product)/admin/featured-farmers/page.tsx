@@ -21,6 +21,9 @@ export default async function FeaturedFarmerNewsroomPage() {
             <Link className="button button--secondary" href="/admin/featured-farmer-engagement">
               Review recommendations
             </Link>
+            <Link className="button button--secondary" href="/admin/featured-farmer-links">
+              Link FarmerBook accounts
+            </Link>
             <Link className="button button--secondary" href="/featured-farmers">
               View public collection
             </Link>

@@ -237,6 +237,19 @@ export const featuredFarmerSnapshotSchema = z.object({
       thumbnail: sourceHostedThumbnailSchema.optional(),
     }),
   ),
+  imageGallery: z
+    .array(
+      z
+        .object({
+          assetUrl: z.url(),
+          altText: z.string(),
+          caption: z.string(),
+          sourceUrl: z.url(),
+        })
+        .strict(),
+    )
+    .max(12)
+    .optional(),
   reportedProducts: z
     .array(
       z

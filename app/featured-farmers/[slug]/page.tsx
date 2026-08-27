@@ -6,6 +6,7 @@ import { PublicHeader } from "@/components/public-header";
 import { FeaturedFarmerStory } from "@/features/featured-farmers/public-profile";
 import { FeaturedFarmerEngagementSection } from "@/features/featured-farmers/featured-farmer-engagement";
 import { loadFeaturedFarmerEngagement } from "@/features/featured-farmers/engagement-queries";
+import { loadFeaturedFarmerPublicAccount } from "@/features/featured-farmers/account-link-queries";
 import { loadFeaturedFarmerPublication } from "@/features/featured-farmers/queries";
 import { getSiteUrl } from "@/lib/env";
 import { getServerI18n } from "@/lib/i18n";
@@ -67,10 +68,11 @@ export default async function FeaturedFarmerStoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [publication, { locale }, engagement] = await Promise.all([
+  const [publication, { locale }, engagement, linkedAccount] = await Promise.all([
     getPublication(slug),
     getServerI18n(),
     loadFeaturedFarmerEngagement(slug),
+    loadFeaturedFarmerPublicAccount(slug),
   ]);
   if (!publication) notFound();
   const canonicalUrl = new URL(
@@ -182,7 +184,7 @@ export default async function FeaturedFarmerStoryPage({
     <>
       <PublicHeader />
       <main className="featured-story-page">
-        <FeaturedFarmerStory publication={publication} locale={locale} />
+        <FeaturedFarmerStory publication={publication} locale={locale} linkedAccount={linkedAccount} />
         {engagement && publication.publication_status !== "preview" ? (
           <FeaturedFarmerEngagementSection
             engagement={engagement}

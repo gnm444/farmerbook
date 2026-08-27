@@ -55,6 +55,11 @@ describe("M. Venkata Subbarao Featured Farmer profile", () => {
         name: "తెలుగు పత్రికా కథనంలో సురభి గోశాల",
       }),
     ).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "English reading of the Telugu Rythunestham feature",
+      }),
+    ).toBeVisible();
     expect(screen.getByText("Pages 53–55")).toBeVisible();
     expect(
       screen.getByRole("img", {
@@ -64,6 +69,11 @@ describe("M. Venkata Subbarao Featured Farmer profile", () => {
       "src",
       "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-55.jpg",
     );
+    expect(
+      screen.getAllByRole("img", {
+        name: /Permitted Telugu Rythunestham magazine pages/i,
+      }),
+    ).toHaveLength(3);
 
     const products = screen
       .getByRole("heading", { name: "Reported farm products" })

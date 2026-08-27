@@ -168,6 +168,31 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
           "రైతు పంచుకున్న రైతునేస్తం తెలుగు పత్రికా పేజీలు (53–55) సురభి గోశాల, మిశ్రమ పంటలు మరియు వ్యవసాయ క్షేత్రంలో తయారయ్యే ఇన్పుట్లను ఆయన సహజ వ్యవసాయ పద్ధతిలో పరస్పరం అనుసంధానమైన భాగాలుగా వివరిస్తున్నాయి. ఈ సారాంశం పంచుకున్న పత్రికా పేజీల ఆధారంగా మాత్రమే రూపొందించబడింది; ఫార్మర్‌బుక్ స్వతంత్రంగా ఈ పద్ధతులను లేదా ఫలితాలను ధృవీకరించలేదు.",
         claimKeys: ["telugu_magazine_feature"],
       },
+      {
+        kind: "work",
+        heading: "English reading of the Telugu Rythunestham feature",
+        body:
+          "This English rendering is a detailed summary of the Telugu Rythunestham pages supplied by M. Venkata Subbarao, rather than an independent audit of the farm. The feature presents Surabhi Gosala as the centre of an integrated natural-farming system in Eluru. It connects cattle care, crop diversity, on-farm inputs, water management and direct observation of the fields. The recurring idea is that the farm is designed as a working cycle: cattle provide material for farm-made preparations; crops and fodder provide biomass and feed; residues return to the soil; and a diverse orchard and field-crop mix spreads activity across the year.\n\nThe article describes a farm that combines tree crops, annual crops, spices and fodder. Coconut and fruit trees create a longer-lived canopy, while banana, papaya, mango, sapota, guava, turmeric, ginger, paddy and green fodder are presented as complementary elements. Rather than treating each crop as a separate enterprise, the feature frames them as layers and companions in the same landscape. This aligns with the five-layer approach reported in Subbarao's supplied biography: taller trees, shorter fruit crops, herbs or spices, ground-level crops and fodder can occupy different spaces and seasons. The article's photographs show orchards, banana plants, field work and harvests, reinforcing that mixed-crop design.",
+        claimKeys: [
+          "telugu_magazine_feature",
+          "mixed_farm_system",
+          "five_layer_model",
+        ],
+      },
+      {
+        kind: "work",
+        heading: "Cattle, farm-made inputs and soil care",
+        body:
+          "Cattle are presented as more than a separate dairy activity. The Rythunestham story shows the gosala, cattle shed and cattle at rest, and describes preparations made on the farm using cattle-derived materials. It reports that these preparations are used as inputs in cultivation and that the farm avoids depending entirely on purchased external inputs. The article also shows equipment and containers used for preparing or handling these materials. FarmerBook does not treat this as proof of a specific product, recipe, efficacy or certification; it records what the supplied feature says about the farm's approach.\n\nSoil care is another major theme. The feature describes organic matter, mulching and farm-made inputs as practical ways the farmer seeks to maintain soil condition. It refers to biomass from the farm and to returning material to the fields instead of seeing it as waste. The images of compost-like material, field rows and planted trees support the article's emphasis on soil cover and on keeping biological activity within the farm system. The story also connects soil work with water: it describes irrigation and field-level attention to water use, but FarmerBook does not publish the article's exact cost or output calculations as current, verified figures. Such numbers can change with season, prices, weather and farm conditions.",
+        claimKeys: ["telugu_magazine_feature", "surabhi_gosala"],
+      },
+      {
+        kind: "lessons",
+        heading: "What the feature says about farm management",
+        body:
+          "The Telugu feature is also a farm-management narrative. It portrays decisions being made through observation: looking at crop condition, using different plots for different crops, tending fodder, maintaining the cattle area and working with trees over several years. Its account of fruit trees and intercrops suggests a preference for staggered harvests instead of one single crop cycle. That can create several kinds of farm work and potential produce at different times, although the article does not constitute a live catalogue or an assurance of availability. The reported crops on this FarmerBook profile should therefore be read as an attributed crop list, not a promise to sell or deliver them.\n\nThe profile pages also show people working in the field, an entrance to the farm, the cattle shed and a small processing or storage area. These photographs give visual context to the written article: a working farm is portrayed as a place of routine maintenance, not merely a demonstration plot. The feature's value lies in making visible the relationships it describes—trees, fodder, cattle, soil, water and labour. It does not supply a controlled comparison with another farm, a third-party inspection report or a guarantee that the same methods will suit every place.\n\nOverall, the supplied Telugu article describes Subbarao's work as a long-term effort to link natural farming with Surabhi Gosala and a diverse, layered farm design. FarmerBook has translated this into plain English to make the source accessible to more readers. Every substantive practice, area, livestock count and outcome on this page remains attributed to the farmer's shared biography or the supplied Rythunestham feature. Readers interested in adopting any farming method should seek locally appropriate professional guidance and evaluate their own soil, water, climate, animals, regulations and market conditions.",
+        claimKeys: ["telugu_magazine_feature", "mixed_farm_system"],
+      },
     ],
     reportedProducts,
     coverage: [
@@ -183,6 +208,35 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
             "Permitted Telugu Rythunestham magazine clipping featuring Surabhi Gosala",
           provider: "farmerbook_permitted",
         },
+      },
+    ],
+    imageGallery: [
+      {
+        assetUrl:
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-pages-50-51.png",
+        altText:
+          "Permitted Telugu Rythunestham magazine pages 50–51 about Surabhi Gosala and the farm's crops",
+        caption:
+          "Rythunestham, November 2025, pages 50–51 — supplied by the farmer with permission to reuse.",
+        sourceUrl: teluguMagazineSource.url,
+      },
+      {
+        assetUrl:
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-pages-52-53.png",
+        altText:
+          "Permitted Telugu Rythunestham magazine pages 52–53 showing M. Venkata Subbarao in the farm and crop photographs",
+        caption:
+          "Rythunestham, November 2025, pages 52–53 — supplied by the farmer with permission to reuse.",
+        sourceUrl: teluguMagazineSource.url,
+      },
+      {
+        assetUrl:
+          "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-pages-54-55.png",
+        altText:
+          "Permitted Telugu Rythunestham magazine pages 54–55 showing Surabhi Gosala, farm inputs and farm entrance",
+        caption:
+          "Rythunestham, November 2025, pages 54–55 — supplied by the farmer with permission to reuse.",
+        sourceUrl: teluguMagazineSource.url,
       },
     ],
     seo: {
