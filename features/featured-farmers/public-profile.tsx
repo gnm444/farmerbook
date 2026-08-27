@@ -452,9 +452,11 @@ export function FeaturedFarmerStory({
                           height={720}
                           referrerPolicy="no-referrer"
                         />
-                        <span aria-hidden="true">
-                          <Video size={22} />
-                        </span>
+                        {item.thumbnail.provider === "youtube_oembed" ? (
+                          <span aria-hidden="true">
+                            <Video size={22} />
+                          </span>
+                        ) : null}
                       </span>
                     ) : null}
                     <span className="featured-story__coverage-copy">

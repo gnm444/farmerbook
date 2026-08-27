@@ -196,7 +196,7 @@ const sourceHostedThumbnailSchema = z
   .object({
     assetUrl: z.url(),
     altText: z.string(),
-    provider: z.literal("youtube_oembed"),
+    provider: z.enum(["youtube_oembed", "farmerbook_permitted"]),
   })
   .strict();
 

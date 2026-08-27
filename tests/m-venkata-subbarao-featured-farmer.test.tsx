@@ -56,6 +56,14 @@ describe("M. Venkata Subbarao Featured Farmer profile", () => {
       }),
     ).toBeVisible();
     expect(screen.getByText("Pages 53–55")).toBeVisible();
+    expect(
+      screen.getByRole("img", {
+        name: "Permitted Telugu Rythunestham magazine clipping featuring Surabhi Gosala",
+      }),
+    ).toHaveAttribute(
+      "src",
+      "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-55.jpg",
+    );
 
     const products = screen
       .getByRole("heading", { name: "Reported farm products" })

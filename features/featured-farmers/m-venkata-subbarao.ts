@@ -176,6 +176,13 @@ export const mVenkataSubbaraoPublication: FeaturedFarmerPublication = {
         publisher: teluguMagazineSource.publisher,
         title: teluguMagazineSource.title,
         sourceType: "Telugu magazine feature shared by the farmer",
+        thumbnail: {
+          assetUrl:
+            "https://farmerbook.in/images/featured-farmers/venkata-subbarao-rythunestham-page-55.jpg",
+          altText:
+            "Permitted Telugu Rythunestham magazine clipping featuring Surabhi Gosala",
+          provider: "farmerbook_permitted",
+        },
       },
     ],
     seo: {
