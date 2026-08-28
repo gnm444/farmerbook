@@ -297,6 +297,33 @@ export default async function LandingPage() {
           </div>
         </section>
 
+        <section className="section founder-note" id="who-we-are" aria-labelledby="founder-note-heading">
+          <div className="container founder-note__grid">
+            <div className="founder-note__intro">
+              <p className="eyebrow">Who we are</p>
+              <h2 id="founder-note-heading">We are here to make success more human.</h2>
+              <p>
+                FarmerBook began with a simple belief: farmers, relationships and the work that keeps people fed deserve more respect, visibility and care.
+              </p>
+            </div>
+            <div className="founder-note__letter">
+              <p>
+                When I chose not to drink at parties, spoke about natural farming, or said that relationships mattered more than money, I was sometimes treated as though I did not belong. Yet in difficult moments, people helped me without asking what they would get back. Their kindness felt sacred.
+              </p>
+              <p>
+                I came to see that money can bring security and physical comfort, but it is not the whole measure of a good life. Real success also means dignity in work, honest relationships, health, belonging and the ability to leave something sustainable for the next generation.
+              </p>
+              <p>
+                FarmerBook is my way of returning that help to the world: a professional home where farmers can be recognised for their work, connect with one another, build fair opportunities and help renew the values that hold communities together.
+              </p>
+              <footer>
+                <strong>Narasimha Gonapa</strong>
+                <span>Founder, FarmerBook</span>
+              </footer>
+            </div>
+          </div>
+        </section>
+
         <section className="cta">
           <div className="container cta-card">
             <div>

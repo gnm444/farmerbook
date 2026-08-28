@@ -62,8 +62,11 @@ export function DemoBanner({
 export function Brand({ inverse = false }: { inverse?: boolean }) {
   return (
     <span className={`brand${inverse ? " brand--inverse" : ""}`}>
-      <span className="brand-mark">F</span>
-      FarmerBook
+      <img
+        className="brand-logo"
+        src="/farmerbook-logo-india-v2.png"
+        alt="FarmerBook"
+      />
     </span>
   );
 }
