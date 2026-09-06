@@ -41,6 +41,6 @@ describe("private AI fleet budget Agent configuration", () => {
       );
     }
     expect(readFileSync("features/ai-budget/inference.ts", "utf8"))
-      .toContain("runtime.ai.run");
+      .toMatch(/runtime\.ai!?\.run/);
   });
 });

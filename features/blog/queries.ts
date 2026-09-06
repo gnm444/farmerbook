@@ -30,13 +30,30 @@ async function fingerprint(content: LocalizedBlogContent) {
 }
 
 async function managedPublications() {
+  const now = Date.now();
+  if (managedPublicationCache && managedPublicationCache.expiresAt > now) {
+    return managedPublicationCache.publications;
+  }
   try {
     const agent = await blogWritingAgentStub();
-    return agent ? await agent.listPublished() : [];
+    const publications = agent ? await agent.listPublished() : [];
+    managedPublicationCache = {
+      publications,
+      expiresAt: now + 60_000,
+    };
+    return publications;
   } catch {
     return [];
   }
 }
+
+// Published managed articles are public and identical for every visitor. A
+// short isolate-local cache avoids a Durable Object read on every public blog
+// request, which keeps the Free-plan Worker CPU budget available for SSR.
+let managedPublicationCache: {
+  publications: BlogPublication[];
+  expiresAt: number;
+} | null = null;
 
 export async function loadBlogPublications(): Promise<BlogPublication[]> {
   const managed = await managedPublications();

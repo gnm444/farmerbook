@@ -33,6 +33,7 @@ describe("platform metadata and health routes", () => {
     expect(disallowed).toContain("/admin/");
     expect(disallowed).toContain("/messages/");
     expect(disallowed).toContain("/marketplace/demo");
+    expect(disallowed).toContain("/chat");
   });
 
   it("publishes only stable public pages and an installable manifest", async () => {
@@ -44,8 +45,10 @@ describe("platform metadata and health routes", () => {
     expect(urls).toContain("/blog/calculated-transition-to-natural-farming");
     expect(urls).toContain("/license");
     expect(urls).toContain("/eco-products");
+    expect(urls).not.toContain("/chat");
     expect(urls).not.toContain("/farm-visits");
     expect(urls).toContain("/featured-farmers/narayana-reddy");
+    expect(urls).toContain("/featured-farmers/sukhavasi-hari-babu-natural-farming");
     expect(urls).not.toContain("/marketplace/demo");
     expect(manifest()).toMatchObject({
       name: "FarmerBook",
@@ -90,10 +93,13 @@ describe("platform metadata and health routes", () => {
     expect(isPublicPath("/join")).toBe(true);
     expect(isPublicPath("/partner-interest")).toBe(true);
     expect(isPublicPath("/farm-visits")).toBe(true);
+    expect(isPublicPath("/chat")).toBe(true);
+    expect(isPublicPath("/api/website-greeter")).toBe(true);
   });
 
   it("matches public subtrees without exposing prefix-confusable routes", () => {
     expect(isPublicPath("/api/outreach/provider/events")).toBe(true);
+    expect(isPublicPath("/api/marketplace-match")).toBe(true);
     expect(isPublicPath("/api/outreach-admin")).toBe(false);
     expect(isPublicPath("/profile/farmer-one")).toBe(true);
     expect(isPublicPath("/profile-export")).toBe(false);

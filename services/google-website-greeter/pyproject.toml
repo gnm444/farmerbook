@@ -1,0 +1,15 @@
+[project]
+name = "farmerbook-google-website-greeter"
+version = "0.1.0"
+description = "Purpose-limited FarmerBook website greeter for Vertex AI Agent Engine"
+requires-python = ">=3.11"
+dependencies = [
+  "google-adk==1.39.1",
+  "google-cloud-aiplatform[adk,agent_engines]==1.165.1",
+]
+
+[project.scripts]
+farmerbook-deploy-greeter = "app.deploy:main"
+
+[tool.unittest]
+test-directory = "tests"

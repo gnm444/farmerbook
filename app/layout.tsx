@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { ClientReady } from "@/components/client-ready";
 import { LocaleProvider } from "@/components/locale-provider";
@@ -8,6 +8,13 @@ import "./globals.css";
 
 const description =
   "A farmer-first social and professional network with a direct agriculture marketplace - LinkedIn-style identity and Facebook-style community, purpose-built for farmers.";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#1f6b45",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -56,6 +63,11 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "FarmerBook — Build trust. Reach more customers.",
       description,
       images: [socialImage],
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "FarmerBook",
     },
   };
 }

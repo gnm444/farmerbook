@@ -28,7 +28,7 @@ describe("managed FarmerBook Blog Writing Agent", () => {
   it("runs as its own scheduled Cloudflare managed Agent", () => {
     expect(vite).toContain('name: "BLOG_WRITING_AGENT"');
     expect(vite).toContain('class_name: "BlogWritingAgent"');
-    expect(vite).toContain('tag: "blog-writing-agent-v1"');
+    expect(vite).toContain('BlogWritingAgent: { type: "durable-object", storage: "sqlite" }');
     expect(worker).toContain('export { BlogWritingAgent }');
     expect(agent).toContain("DAILY_EDITORIAL_CRON_UTC");
     expect(agent).toContain("DAILY_EDITORIAL_CALLBACK");
@@ -38,6 +38,14 @@ describe("managed FarmerBook Blog Writing Agent", () => {
     expect(dailyEditorial).toContain('category: "food_safety"');
     expect(dailyEditorial).toContain('category: "farm_to_table"');
     expect(agent).toContain("natural-farming and food editor");
+  });
+
+  it("bootstraps the lazy Blog Agent from the existing Worker heartbeat", () => {
+    expect(worker).toContain("BLOG_WRITING_AGENT");
+    expect(worker).toContain('"farmerbook-blog-writing"');
+    expect(worker).toContain("blogAgent.status()");
+    expect(worker).toContain("Promise.allSettled(tasks)");
+    expect(worker).toContain("scanStaticPublications");
   });
 
   it("uses the cheapest allowlisted model within a two-dollar cap", () => {
@@ -57,7 +65,7 @@ describe("managed FarmerBook Blog Writing Agent", () => {
     expect(agent).toContain("BLOG_AUTONOMOUS_PUBLISHING");
     expect(agent).toContain("visibility_status IN ('provisional', 'public')");
     expect(vite).toContain('name: "BLOG_PUBLICATION_VERIFIER_AGENT"');
-    expect(vite).toContain('tag: "blog-publication-verifier-agent-v1"');
+    expect(vite).toContain('BlogPublicationVerifierAgent: { type: "durable-object", storage: "sqlite" }');
     expect(worker).toContain('export { BlogPublicationVerifierAgent }');
     expect(storyPage).toContain("data-publication-sha256");
   });

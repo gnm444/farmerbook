@@ -59,6 +59,7 @@ const AGRICULTURE_COMPANY_SECTOR_DEFINITIONS = [
   { slug: "certification-traceability", name: "Certification and traceability", group: "professional-services", offerExamples: ["Organic certification", "Traceability", "Audit support"] },
   { slug: "agronomy-advisory", name: "Agronomy and farm advisory", group: "professional-services", offerExamples: ["Crop advisory", "Farm visits", "Production planning"] },
   { slug: "training-extension", name: "Training and extension", group: "professional-services", offerExamples: ["Workshops", "Demonstrations", "Farmer training"] },
+  { slug: "agripreneurs-ngos", name: "Agripreneurs / NGOs", group: "professional-services", requiresHumanReview: true, offerExamples: ["Agroecology programmes", "Farmer institution building", "Agriculture policy and research"] },
   { slug: "weather-data-software", name: "Weather, data and farm software", group: "professional-services", offerExamples: ["Weather alerts", "Farm records", "Market intelligence"] },
   { slug: "finance-credit-payments", name: "Finance, credit and payments", group: "professional-services", requiresHumanReview: true, offerExamples: ["Working capital", "Equipment finance", "Payments"] },
   { slug: "insurance-risk-services", name: "Insurance and risk services", group: "professional-services", requiresHumanReview: true, offerExamples: ["Crop insurance", "Livestock cover", "Risk assessment"] },

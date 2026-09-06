@@ -29,6 +29,7 @@ export const featuredFarmerQuestionSchema = z.strictObject({
   kind: z.enum(["question", "comment"]),
   message: multiline(20, 1500),
   consent: z.literal(true, { error: "Consent is required." }),
+  source: z.enum(["profile", "store_order"]).default("profile"),
   idempotencyKey: z.uuid(),
   turnstileToken: z.string().trim().min(1).max(4096),
   website: z.string().trim().max(0).optional().default(""),

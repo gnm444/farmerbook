@@ -18,6 +18,41 @@ const configuredCustomDomains = (
 
 const includeLiveActionScaffold =
   process.env.ENABLE_LIVE_AGENT_EXECUTION?.trim().toLowerCase() === "true";
+const includeMarketplaceMatchingBinding =
+  process.env.ENABLE_MARKETPLACE_MATCHING_AGENT?.trim().toLowerCase() !== "false";
+
+const serviceBindings = [
+  ...(process.env.OWNED_SOCIAL_CONNECTOR_SERVICE
+    ? [{
+        binding: "OWNED_SOCIAL_CONNECTOR",
+        service: process.env.OWNED_SOCIAL_CONNECTOR_SERVICE,
+      }]
+    : []),
+  ...(process.env.GOOGLE_IDENTITY_BROKER_SERVICE
+    ? [{
+        binding: "GOOGLE_IDENTITY_BROKER",
+        service: process.env.GOOGLE_IDENTITY_BROKER_SERVICE,
+      }]
+    : []),
+];
+
+const durableObjectExports = {
+  AiFleetBudgetAgent: { type: "durable-object", storage: "sqlite" },
+  FarmerProfileAgent: { type: "durable-object", storage: "sqlite" },
+  OutreachGrowthAgent: { type: "durable-object", storage: "sqlite" },
+  ProfileDraftingAgent: { type: "durable-object", storage: "sqlite" },
+  VerificationTriageAgent: { type: "durable-object", storage: "sqlite" },
+  OperationsSupervisorAgent: { type: "durable-object", storage: "sqlite" },
+  CustomerSupportAgent: { type: "durable-object", storage: "sqlite" },
+  SocialContentAgent: { type: "durable-object", storage: "sqlite" },
+  WebsiteGreetingAgent: { type: "durable-object", storage: "sqlite" },
+  BlogWritingAgent: { type: "durable-object", storage: "sqlite" },
+  BlogPublicationVerifierAgent: { type: "durable-object", storage: "sqlite" },
+  OwnedSocialPublisherAgent: { type: "durable-object", storage: "sqlite" },
+  CompanyOperationsAgent: { type: "durable-object", storage: "sqlite" },
+  MarketplaceMatchingAgent: { type: "durable-object", storage: "sqlite" },
+  LiveActionCoordinatorAgent: { type: "durable-object", storage: "sqlite" },
+} as const;
 
 const publicWorkerVars: Record<string, string> = {};
 for (const [name, value] of Object.entries({
@@ -56,7 +91,17 @@ for (const [name, value] of Object.entries({
     process.env.BRAVE_SEARCH_STORAGE_RIGHTS_CONFIRMED,
   NEXT_PUBLIC_TURNSTILE_SITE_KEY:
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+  WEBSITE_GREETER_PROVIDER: process.env.WEBSITE_GREETER_PROVIDER,
   WEBSITE_GREETER_MODEL: process.env.WEBSITE_GREETER_MODEL,
+  GOOGLE_CLOUD_PROJECT: process.env.GOOGLE_CLOUD_PROJECT,
+  GOOGLE_CLOUD_LOCATION: process.env.GOOGLE_CLOUD_LOCATION,
+  GOOGLE_CLOUD_AGENT_ENGINE_ID: process.env.GOOGLE_CLOUD_AGENT_ENGINE_ID,
+  GOOGLE_CLOUD_WORKLOAD_IDENTITY_AUDIENCE:
+    process.env.GOOGLE_CLOUD_WORKLOAD_IDENTITY_AUDIENCE,
+  GOOGLE_CLOUD_SERVICE_ACCOUNT_EMAIL:
+    process.env.GOOGLE_CLOUD_SERVICE_ACCOUNT_EMAIL,
+  WEBSITE_GREETER_GOOGLE_CANARY_ENABLED:
+    process.env.WEBSITE_GREETER_GOOGLE_CANARY_ENABLED,
   WEBSITE_GREETER_MONTHLY_REPLY_LIMIT:
     process.env.WEBSITE_GREETER_MONTHLY_REPLY_LIMIT,
   WEBSITE_GREETER_DAILY_AI_REPLY_LIMIT:
@@ -97,14 +142,7 @@ const localBindingConfig = {
   })),
   vars: publicWorkerVars,
   ai: { binding: "AI" },
-  ...(process.env.OWNED_SOCIAL_CONNECTOR_SERVICE
-    ? {
-        services: [{
-          binding: "OWNED_SOCIAL_CONNECTOR",
-          service: process.env.OWNED_SOCIAL_CONNECTOR_SERVICE,
-        }],
-      }
-    : {}),
+  ...(serviceBindings.length ? { services: serviceBindings } : {}),
   ...(process.env.ENABLE_OUTREACH_AGENT?.toLowerCase() === "true"
     ? { images: { binding: "IMAGES" } }
     : {}),
@@ -162,12 +200,20 @@ const localBindingConfig = {
         name: "COMPANY_OPERATIONS_AGENT",
         class_name: "CompanyOperationsAgent",
       },
+      ...(includeMarketplaceMatchingBinding ? [{
+        name: "MARKETPLACE_MATCHING_AGENT",
+        class_name: "MarketplaceMatchingAgent",
+      }] : []),
       ...(includeLiveActionScaffold ? [{
         name: "LIVE_ACTION_COORDINATOR_AGENT",
         class_name: "LiveActionCoordinatorAgent",
       }] : []),
     ],
   },
+  exports: durableObjectExports,
+  // Durable Object migrations are permanent production history. Keep every
+  // prior tag in generated deployment config, even when an optional binding
+  // is disabled for a particular rollout.
   migrations: [
     {
       tag: "farmer-profile-agent-v1",
@@ -184,10 +230,7 @@ const localBindingConfig = {
     },
     {
       tag: "support-social-agents-v1",
-      new_sqlite_classes: [
-        "CustomerSupportAgent",
-        "SocialContentAgent",
-      ],
+      new_sqlite_classes: ["CustomerSupportAgent", "SocialContentAgent"],
     },
     {
       tag: "website-greeting-agent-v1",
@@ -213,12 +256,13 @@ const localBindingConfig = {
       tag: "owned-social-publisher-agent-v1",
       new_sqlite_classes: ["OwnedSocialPublisherAgent"],
     },
-    // Durable Object migrations are permanent production history. Keep this
-    // migration in every generated deployment config even when the optional
-    // live-action binding itself is disabled.
     {
       tag: "live-action-coordinator-agent-v1",
       new_sqlite_classes: ["LiveActionCoordinatorAgent"],
+    },
+    {
+      tag: "marketplace-matching-agent-v1",
+      new_sqlite_classes: ["MarketplaceMatchingAgent"],
     },
   ],
   triggers: {

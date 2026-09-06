@@ -44,8 +44,14 @@ describe("Sandeep Dasari Featured Farmer profile", () => {
       "m-venkata-subbarao-surabhi-gosala",
       "sandeep-dasari-avani-van-farms",
       "narayana-reddy",
+      "sukhavasi-hari-babu-natural-farming",
+      "sravana-lakshmi-sravana-megham",
+      "raman-janeyulu-csa",
+      "kuna-ramam-srikakulam-organic-farming",
+      "venu-v-v-venu-madhav",
+      "aahaara-vanam-shanthi-srinath",
     ]);
-    expect(new Set(publications.map((item) => item.slug)).size).toBe(3);
+    expect(new Set(publications.map((item) => item.slug)).size).toBe(9);
     await expect(
       loadFeaturedFarmerPublication("sandeep-dasari-avani-van-farms"),
     ).resolves.toBe(sandeepDasariPublication);

@@ -37,7 +37,13 @@ export default async function JoinPage({
         turnstileSiteKey={turnstileSiteKey}
         locales={locales}
         engagementType="membership"
-        campaignCode={campaign === "farmer-interest" ? "farmer-interest" : "direct-join"}
+        campaignCode={
+          campaign === "farmer-interest"
+            ? "farmer-interest"
+            : campaign === "greeter"
+              ? "greeter"
+              : "direct-join"
+        }
       />
       <PublicFooter />
     </>

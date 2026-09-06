@@ -4,6 +4,7 @@ import { ArrowRight, Leaf, Store } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { MarketBrowser } from "@/features/marketplace/market-browser";
+import { MarketplaceMatchAgent } from "@/features/marketplace/marketplace-match-agent";
 import { loadPublicListings } from "@/features/marketplace/queries";
 import { formatNumber, getServerTranslations } from "@/lib/i18n";
 
@@ -81,6 +82,7 @@ export default async function MarketplacePage() {
               <h2>{t("availableNetwork")}</h2>
               <p>{t("networkHelp")}</p>
             </div>
+            <MarketplaceMatchAgent />
             <MarketBrowser listings={listings} />
           </div>
         </section>

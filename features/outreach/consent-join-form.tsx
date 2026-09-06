@@ -58,7 +58,7 @@ export function ConsentJoinForm({
   turnstileSiteKey: string;
   locales: readonly SupportedLocale[];
   engagementType: OutreachEngagementType;
-  campaignCode: "direct-join" | "farmer-interest" | "partner-interest";
+  campaignCode: "direct-join" | "farmer-interest" | "partner-interest" | "greeter";
 }) {
   const t = useTranslations("outreach");
   const common = useTranslations("common");

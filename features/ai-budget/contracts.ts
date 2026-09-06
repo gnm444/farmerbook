@@ -5,6 +5,7 @@ export const AI_MODEL_IDS = [
   "@cf/ai4bharat/indictrans2-en-indic-1B",
   "@cf/meta/llama-3.1-8b-instruct-fast",
   "@cf/meta/llama-3.2-11b-vision-instruct",
+  "google/vertex-agent-engine-canary",
 ] as const;
 
 export const aiModelSchema = z.enum(AI_MODEL_IDS);
@@ -36,6 +37,10 @@ export const AI_OPERATIONS = [
 export const aiOperationSchema = z.enum(AI_OPERATIONS);
 export type AiOperation = z.infer<typeof aiOperationSchema>;
 
+// Absolute application-side guardrail across present and future providers.
+// Provider-specific fleet and workstream budgets must remain at or below it.
+export const APPLICATION_MONTHLY_AI_SPEND_CEILING_MICROS = 20_000_000;
+
 export const FLEET_MONTHLY_BUDGET_MICROS = 10_000_000;
 
 export const WORKSTREAM_BUDGET_MICROS = {
@@ -56,7 +61,8 @@ export const UNALLOCATED_MONTHLY_BUDGET_MICROS =
 
 if (
   ALLOCATED_MONTHLY_BUDGET_MICROS < 0 ||
-  ALLOCATED_MONTHLY_BUDGET_MICROS > FLEET_MONTHLY_BUDGET_MICROS
+  ALLOCATED_MONTHLY_BUDGET_MICROS > FLEET_MONTHLY_BUDGET_MICROS ||
+  FLEET_MONTHLY_BUDGET_MICROS > APPLICATION_MONTHLY_AI_SPEND_CEILING_MICROS
 ) {
   throw new Error("AI_WORKSTREAM_ALLOCATIONS_INVALID");
 }

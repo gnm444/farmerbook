@@ -22,6 +22,7 @@ export function contentSecurityPolicy(
     "data:",
     "blob:",
     "https://i.ytimg.com",
+    "https://cdn.shopify.com",
     ...(supabaseOrigin ? [supabaseOrigin] : []),
   ];
 

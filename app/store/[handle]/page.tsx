@@ -7,6 +7,7 @@ import {
   MapPin,
   MessageCircleMore,
   ShieldCheck,
+  ShoppingBasket,
   Sprout,
 } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
@@ -17,6 +18,10 @@ import { loadStorefront } from "@/features/marketplace/queries";
 import { ReviewList } from "@/features/reviews/review-list";
 import { loadReviewsForSeller } from "@/features/reviews/queries";
 import { OrganicCertificationLabel } from "@/features/profiles/organic-certification";
+import { getPublicStorefrontCatalog } from "@/features/marketplace/public-storefront-catalog";
+import { ShareStoreButton } from "@/features/marketplace/share-store-button";
+import { StoreOrderRequestForm } from "@/features/marketplace/store-order-request-form";
+import { featuredFarmerEngagementConfiguration } from "@/features/featured-farmers/engagement-configuration";
 import { formatNumber, getServerTranslations } from "@/lib/i18n";
 import type { AccountRole, FarmingMethod } from "@/lib/types";
 
@@ -67,6 +72,8 @@ export default async function StorefrontPage({
   const approvedSocialLinks = Object.entries(profile.socialLinks).filter(
     (entry): entry is [string, string] => typeof entry[1] === "string",
   );
+  const publicCatalog = getPublicStorefrontCatalog(profile.handle);
+  const orderConfiguration = publicCatalog ? featuredFarmerEngagementConfiguration() : null;
 
   return (
     <>
@@ -147,6 +154,53 @@ export default async function StorefrontPage({
               </ul>
             </section>
           </div>
+
+          {publicCatalog ? (
+            <section className="card storefront-catalog" aria-labelledby="storefront-catalog-title">
+              <div className="storefront-catalog__head">
+                <div>
+                  <p className="eyebrow">{publicCatalog.eyebrow}</p>
+                  <h2 id="storefront-catalog-title">{publicCatalog.title}</h2>
+                  <p>{publicCatalog.intro}</p>
+                  <a className="storefront-catalog__source" href={publicCatalog.sourceUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink size={14} aria-hidden="true" /> View source catalogue
+                  </a>
+                </div>
+                <ShareStoreButton handle={profile.handle} fullName={profile.fullName} />
+              </div>
+              <div className="storefront-catalog__grid">
+                {publicCatalog.products.map((product) => (
+                  <article className="storefront-product" key={product.name}>
+                    <span className="storefront-product__icon" aria-hidden="true"><ShoppingBasket size={19} /></span>
+                    <div>
+                      <span className="badge badge--green">{product.category}</span>
+                      <h3>{product.name}</h3>
+                      <strong className="storefront-product__price">{product.priceLabel ?? "Price on request"}</strong>
+                      <p>{product.description}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <p className="storefront-catalog__note">{publicCatalog.note}</p>
+            </section>
+          ) : null}
+
+          {publicCatalog ? orderConfiguration?.questionDeliveryReady ? (
+            <StoreOrderRequestForm
+              products={publicCatalog.products}
+              slug={publicCatalog.engagementSlug}
+              farmName={profile.fullName}
+              farmEmail={publicCatalog.recipientEmail}
+              turnstileSiteKey={orderConfiguration.turnstileSiteKey}
+            />
+          ) : (
+            <section className="card storefront-order-fallback">
+              <p className="eyebrow">Direct request</p>
+              <h2>Request an order from {profile.fullName}</h2>
+              <p>Online order requests are temporarily unavailable. Email the farm directly and include the product, quantity and delivery location.</p>
+              <a className="button" href={`mailto:${publicCatalog.recipientEmail}?subject=Order request for ${profile.fullName} on FarmerBook`}>Email the farm</a>
+            </section>
+          ) : null}
 
           <section className="storefront-listings">
             <div className="section-heading">

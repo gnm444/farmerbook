@@ -41,6 +41,7 @@ describe("Featured Farmer private question notification", () => {
     const body = JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body));
     expect(body).toMatchObject({
       To: "avanivanfarms@gmail.com",
+      Cc: "ceo@farmerbook.in",
       ReplyTo: "visitor@farmerbook.invalid",
       TrackOpens: false,
       TrackLinks: "None",

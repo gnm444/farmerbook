@@ -10,6 +10,7 @@ import {
 import {
   reportedUsage,
   runBudgetedAi,
+  runBudgetedExternalAi,
 } from "@/features/ai-budget/inference";
 import { evaluateReservation } from "@/features/ai-budget/ledger";
 import {
@@ -58,7 +59,18 @@ describe("central AI fleet budget contracts", () => {
       .toEqual({ inputUsdPerMillion: 0.045, outputUsdPerMillion: 0.384 });
     expect(MODEL_PRICES["@cf/meta/llama-3.2-11b-vision-instruct"])
       .toEqual({ inputUsdPerMillion: 0.049, outputUsdPerMillion: 0.68 });
+    expect(MODEL_PRICES["google/vertex-agent-engine-canary"])
+      .toEqual({
+        inputUsdPerMillion: 10,
+        outputUsdPerMillion: 30,
+        fixedRequestMicros: 20_000,
+      });
     expect(modelCostMicros(granite, 1_000, 160)).toBe(35);
+    expect(modelCostMicros(
+      "google/vertex-agent-engine-canary",
+      1,
+      1,
+    )).toBe(20_040);
   });
 
   it("rejects unknown models and unbounded outputs", () => {
@@ -189,5 +201,54 @@ describe("budgeted Workers AI execution", () => {
     expect(reportedUsage({ usage: { input_tokens: 2 } })).toBeNull();
     expect(reportedUsage({ usage: { prompt_tokens: -1, completion_tokens: 3 } }))
       .toBeNull();
+  });
+});
+
+describe("budgeted external provider execution", () => {
+  const request = {
+    workstream: "website_greeting" as const,
+    operation: "website_reply" as const,
+    model: "google/vertex-agent-engine-canary",
+    input: { message: "Hello", max_tokens: 160 },
+  };
+
+  it("reserves before transport and settles camel-case provider usage", async () => {
+    const budget = allowingBudgetService();
+    budget.reserve = vi.fn(budget.reserve);
+    budget.settle = vi.fn(budget.settle);
+    const generate = vi.fn(async () => ({
+      text: "Namaste",
+      usage: { inputTokens: 50, outputTokens: 8 },
+    }));
+
+    await expect(runBudgetedExternalAi(
+      { budget },
+      request,
+      generate,
+    )).resolves.toMatchObject({ text: "Namaste" });
+    expect(budget.reserve).toHaveBeenCalledOnce();
+    expect(generate).toHaveBeenCalledOnce();
+    expect(budget.settle).toHaveBeenCalledWith(expect.objectContaining({
+      outcome: "succeeded",
+      reportedInputTokens: 50,
+      reportedOutputTokens: 8,
+    }));
+  });
+
+  it("makes zero external calls when the central budget denies", async () => {
+    const budget = allowingBudgetService();
+    budget.reserve = vi.fn(async () => ({
+      code: "WORKSTREAM_BUDGET_REACHED" as const,
+      reservationId: null,
+      monthKey: "2026-09",
+      reservedMicros: 0 as const,
+      fleetReservedMicros: 5_000_000,
+      workstreamReservedMicros: 5_000_000,
+    }));
+    const generate = vi.fn();
+
+    await expect(runBudgetedExternalAi({ budget }, request, generate))
+      .rejects.toMatchObject({ code: "AI_WORKSTREAM_BUDGET_REACHED" });
+    expect(generate).not.toHaveBeenCalled();
   });
 });

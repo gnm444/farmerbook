@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ShoppingBasket, Store } from "lucide-react";
 import { ProductHeader } from "@/components/product-header";
 import { MarketBrowser } from "@/features/marketplace/market-browser";
+import { MarketplaceMatchAgent } from "@/features/marketplace/marketplace-match-agent";
 import { loadPublicListings } from "@/features/marketplace/queries";
 import { loadCurrentProfile } from "@/features/profiles/queries";
 
@@ -32,6 +33,7 @@ export default async function MarketPage() {
           </Link>
         }
       />
+      <MarketplaceMatchAgent />
       <MarketBrowser listings={listings} embedded />
     </div>
   );

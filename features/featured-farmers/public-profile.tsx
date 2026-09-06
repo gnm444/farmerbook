@@ -6,10 +6,14 @@ import {
   Camera,
   ExternalLink,
   Mail,
+  MessageCircle,
+  Phone,
   Users,
   Video,
 } from "lucide-react";
 import type { SupportedLocale } from "@/lib/i18n/locales";
+import { agricultureCategoryBySlug } from "@/lib/agriculture/categories";
+import { agricultureCompanySectorBySlug } from "@/lib/agriculture/company-sectors";
 import { featuredFarmerPublicMessages } from "./public-messages";
 import type { FeaturedFarmerPublication } from "./queries";
 import type { FeaturedFarmerPublicAccount } from "./account-link-schemas";
@@ -27,6 +31,14 @@ function formatDate(value: string, locale: SupportedLocale) {
     month: "short",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function categoryLabel(slug: string) {
+  return (
+    agricultureCompanySectorBySlug(slug)?.name ??
+    agricultureCategoryBySlug(slug)?.name ??
+    slug.replaceAll("-", " ")
+  );
 }
 
 function SourceCitations({
@@ -104,7 +116,9 @@ export function FeaturedFarmerCard({
           </span>
         )}
         <span className="featured-public-card__category">
-          {snapshot.categorySlugs[0]?.replaceAll("-", " ") ?? "farming"}
+          {snapshot.categorySlugs[0]
+            ? categoryLabel(snapshot.categorySlugs[0])
+            : "farming"}
         </span>
       </Link>
       <div className="featured-public-card__body">
@@ -154,6 +168,10 @@ export function FeaturedFarmerStory({
   );
   const claims = new Map(snapshot.claims.map((claim) => [claim.key, claim]));
   const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
+  const sourcePreviewIsVideo = Boolean(
+    snapshot.sourceHostedPreview?.sourceUrl.includes("/watch?") ||
+      snapshot.sourceHostedPreview?.sourceUrl.includes("/shorts/"),
+  );
 
   return (
     <article className="featured-story">
@@ -228,7 +246,11 @@ export function FeaturedFarmerStory({
               href={snapshot.sourceHostedPreview.sourceUrl}
               target="_blank"
               rel="noreferrer"
-              aria-label={`Watch the source video featuring ${snapshot.fullName}`}
+              aria-label={
+                sourcePreviewIsVideo
+                  ? `Watch the source video featuring ${snapshot.fullName}`
+                  : `Open the source profile image for ${snapshot.fullName}`
+              }
             >
               <img
                 src={snapshot.sourceHostedPreview.assetUrl}
@@ -295,10 +317,31 @@ export function FeaturedFarmerStory({
         <p>{m.disclosure}</p>
       </div>
 
+      {snapshot.video ? (
+        <section className="featured-story__supplied-video" aria-labelledby="supplied-video-title">
+          <p className="eyebrow">Profile video</p>
+          <h2 id="supplied-video-title">{snapshot.video.title}</h2>
+          <p>{snapshot.video.description}</p>
+          <figure>
+            <video
+              controls
+              playsInline
+              preload="metadata"
+              poster={snapshot.video.posterUrl}
+              aria-label={snapshot.video.title}
+            >
+              <source src={snapshot.video.assetUrl} type="video/mp4" />
+              Your browser does not support the video player.
+            </video>
+            <figcaption>{snapshot.video.credit}</figcaption>
+          </figure>
+        </section>
+      ) : null}
+
       <nav className="featured-story__contents" aria-label="In this article">
         <strong>In this article</strong>
         <div>
-          <a href="#why-featured">Why he matters</a>
+          <a href="#why-featured">{m.whyFeatured}</a>
           {snapshot.sections.map((section, index) => (
             <a href={`#story-${index + 1}`} key={`${section.kind}:${index}`}>
               {section.heading}
@@ -416,8 +459,22 @@ export function FeaturedFarmerStory({
                 {snapshot.reportedProducts.map((product) => (
                   <li key={`${product.categorySlug}:${product.name}`}>
                     <span aria-hidden="true">Reported</span>
-                    <strong>{product.name}</strong>
+                    {product.productUrl ? (
+                      <a
+                        href={product.productUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {product.name}
+                      </a>
+                    ) : (
+                      <strong>{product.name}</strong>
+                    )}
                     <small>{product.categorySlug.replaceAll("-", " ")}</small>
+                    {product.price ? <small>{product.price}</small> : null}
+                    {product.packSizes?.length ? (
+                      <small>Pack sizes: {product.packSizes.join(", ")}</small>
+                    ) : null}
                     <SourceCitations
                       sourceUrls={product.sourceUrls}
                       sources={snapshot.sources}
@@ -478,9 +535,9 @@ export function FeaturedFarmerStory({
             <section className="featured-story__gallery" aria-label="Profile image gallery">
               <p className="eyebrow">Source gallery</p>
               <p>
-                Permitted pages supplied by the farmer. These magazine images are
-                source material for this editorial profile, not independently
-                verified FarmerBook photography.
+                Permitted images supplied for this editorial profile. These images
+                are source material, not independently verified FarmerBook
+                photography.
               </p>
               <div>
                 {snapshot.imageGallery.map((image) => (
@@ -494,7 +551,7 @@ export function FeaturedFarmerStory({
                     <figcaption>
                       {image.caption}{" "}
                       <a href={image.sourceUrl} target="_blank" rel="noreferrer">
-                        View magazine source
+                        View source image
                       </a>
                     </figcaption>
                   </figure>
@@ -532,7 +589,7 @@ export function FeaturedFarmerStory({
             <div className="tag-row">
               {snapshot.categorySlugs.map((slug) => (
                 <span className="tag" key={slug}>
-                  {slug.replaceAll("-", " ")}
+                  {categoryLabel(slug)}
                 </span>
               ))}
             </div>
@@ -601,17 +658,41 @@ export function FeaturedFarmerStory({
               </>
             )}
           </section>
-          {snapshot.contactEmail ? (
+          {snapshot.contactEmail || snapshot.contactPhone || snapshot.whatsappUrl ? (
             <section>
               <p className="eyebrow">{m.farmContact}</p>
-              <a
-                className="featured-story__email"
-                href={`mailto:${snapshot.contactEmail}`}
-              >
-                <Mail size={18} aria-hidden="true" />
-                <span>{snapshot.contactEmail}</span>
-              </a>
-              <small>{m.emailFarm}</small>
+              {snapshot.contactEmail ? (
+                <>
+                  <a
+                    className="featured-story__email"
+                    href={`mailto:${snapshot.contactEmail}`}
+                  >
+                    <Mail size={18} aria-hidden="true" />
+                    <span>{snapshot.contactEmail}</span>
+                  </a>
+                  <small>Email {snapshot.fullName}</small>
+                </>
+              ) : null}
+              {snapshot.contactPhone ? (
+                <a
+                  className="featured-story__email"
+                  href={`tel:${snapshot.contactPhone.replace(/[^+\d]/g, "")}`}
+                >
+                  <Phone size={18} aria-hidden="true" />
+                  <span>{snapshot.contactPhone}</span>
+                </a>
+              ) : null}
+              {snapshot.whatsappUrl ? (
+                <a
+                  className="button button--secondary featured-story__whatsapp"
+                  href={snapshot.whatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MessageCircle size={18} aria-hidden="true" />
+                  <span>{m.contactOnWhatsApp}</span>
+                </a>
+              ) : null}
             </section>
           ) : null}
           <section className="featured-story__limitations">

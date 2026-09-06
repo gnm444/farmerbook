@@ -19,6 +19,12 @@ import {
 import { narayanaReddyPublication } from "./narayana-reddy";
 import { mVenkataSubbaraoPublication } from "./m-venkata-subbarao";
 import { sandeepDasariPublication } from "./sandeep-dasari";
+import { sukhavasiHariBabuPublication } from "./sukhavasi-hari-babu";
+import { sravanaLakshmiPublication } from "./sravana-lakshmi";
+import { ramanjaneyuluCsaPublication } from "./raman-janeyulu-csa";
+import { kunaRamamPublication } from "./kuna-ramam";
+import { venuVenuMadhavPublication } from "./venu-v-v-venu-madhav";
+import { aahaaraVanamPublication } from "./aahaara-vanam";
 import { buildFeaturedFarmerResearchQueries } from "./web-research";
 
 const researchPurposes = [
@@ -187,7 +193,7 @@ const sourceHostedImageSchema = z
     altText: z.string(),
     credit: z.string(),
     creditUrl: z.url(),
-    provider: z.enum(["youtube_oembed", "farmerbook_permitted"]),
+    provider: z.enum(["youtube_oembed", "farmerbook_permitted", "public_source"]),
     focalPoint: z.enum(["left", "center", "right"]).optional(),
   })
   .strict();
@@ -203,6 +209,8 @@ const sourceHostedThumbnailSchema = z
 export const featuredFarmerSnapshotSchema = z.object({
   fullName: z.string(),
   contactEmail: z.email().optional(),
+  contactPhone: z.string().trim().max(40).optional(),
+  whatsappUrl: z.url().optional(),
   district: z.string().nullable(),
   state: z.string().nullable(),
   locale: z.string(),
@@ -241,7 +249,12 @@ export const featuredFarmerSnapshotSchema = z.object({
     .array(
       z
         .object({
-          assetUrl: z.url(),
+          assetUrl: z
+            .string()
+            .refine(
+              (value) => value.startsWith("/") || /^https:\/\//i.test(value),
+              "Use a FarmerBook asset path or HTTPS image URL.",
+            ),
           altText: z.string(),
           caption: z.string(),
           sourceUrl: z.url(),
@@ -254,14 +267,17 @@ export const featuredFarmerSnapshotSchema = z.object({
     .array(
       z
         .object({
-          name: z.string().trim().min(2).max(100),
-          categorySlug: z.string().trim().min(2).max(100),
-          status: z.literal("reported"),
-          sourceUrls: z.array(z.url()).min(1).max(4),
-        })
+        name: z.string().trim().min(2).max(100),
+        categorySlug: z.string().trim().min(2).max(100),
+        status: z.literal("reported"),
+        sourceUrls: z.array(z.url()).min(1).max(4),
+        productUrl: z.url().optional(),
+        price: z.string().trim().max(80).optional(),
+        packSizes: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+      })
         .strict(),
     )
-    .max(20)
+    .max(50)
     .optional(),
   milestones: z
     .array(
@@ -310,6 +326,17 @@ export const featuredFarmerSnapshotSchema = z.object({
       rightsBasis: z.enum(featuredFarmerMediaRightsBases),
     })
     .nullable(),
+  video: z
+    .object({
+      assetUrl: z.string(),
+      posterUrl: z.string().optional(),
+      title: z.string(),
+      description: z.string(),
+      credit: z.string(),
+      rightsBasis: z.enum(featuredFarmerMediaRightsBases),
+    })
+    .nullable()
+    .optional(),
   editorialDisclosure: z.string(),
 });
 
@@ -329,6 +356,12 @@ const curatedPublications: FeaturedFarmerPublication[] = [
   mVenkataSubbaraoPublication,
   sandeepDasariPublication,
   narayanaReddyPublication,
+  sukhavasiHariBabuPublication,
+  sravanaLakshmiPublication,
+  ramanjaneyuluCsaPublication,
+  kunaRamamPublication,
+  venuVenuMadhavPublication,
+  aahaaraVanamPublication,
 ];
 const curatedPublicationBySlug = new Map(
   curatedPublications.map((publication) => [publication.slug, publication]),

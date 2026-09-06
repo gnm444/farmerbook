@@ -17,7 +17,7 @@ const english = {
   coverage: "Watch and read more",
   reportedProducts: "Reported farm products",
   reportedProductsDisclosure:
-    "These products were supplied by the FarmerBook operator and have not been confirmed for current stock, price, delivery, certification or food-business registration. This editorial catalog is not an order page.",
+    "These items are mentioned, shown or listed in public sources. FarmerBook has not independently confirmed current stock, price, delivery, certification or food-business registration. Follow the external source link for the seller; this editorial catalog is not an order page.",
   sources: "Sources and fact-check record",
   limitations: "What this profile does not claim",
   disclosure:
@@ -32,6 +32,8 @@ const english = {
   photoPending: "Original photograph pending rights clearance",
   source: "Source",
   farmContact: "Farm contact",
+  whatsapp: "WhatsApp",
+  contactOnWhatsApp: "Contact on WhatsApp",
   emailFarm: "Email Avani Van Farms",
   profileViews: "Profile views",
   approximateViews:
@@ -91,7 +93,7 @@ const hindi = {
   coverage: "और देखें व पढ़ें",
   reportedProducts: "रिपोर्ट किए गए कृषि उत्पाद",
   reportedProductsDisclosure:
-    "इन उत्पादों की जानकारी फार्मरबुक ऑपरेटर ने दी है। मौजूदा स्टॉक, कीमत, डिलीवरी, प्रमाणन या खाद्य-व्यवसाय पंजीकरण की पुष्टि नहीं हुई है। यह संपादकीय सूची ऑर्डर पेज नहीं है।",
+    "ये वस्तुएँ सार्वजनिक स्रोतों में दिखाई या उल्लिखित हैं। मौजूदा स्टॉक, कीमत, डिलीवरी, प्रमाणन या खाद्य-व्यवसाय पंजीकरण की पुष्टि नहीं हुई है। यह संपादकीय सूची ऑर्डर पेज नहीं है।",
   sources: "स्रोत और तथ्य-जाँच रिकॉर्ड",
   limitations: "यह प्रोफ़ाइल क्या दावा नहीं करती",
   disclosure:
@@ -106,6 +108,8 @@ const hindi = {
   photoPending: "मूल तस्वीर के पुनर्प्रकाशन अधिकार की पुष्टि लंबित है",
   source: "स्रोत",
   farmContact: "फार्म संपर्क",
+  whatsapp: "व्हाट्सऐप",
+  contactOnWhatsApp: "व्हाट्सऐप पर संपर्क करें",
   emailFarm: "अवनि वन फार्म्स को ईमेल करें",
   profileViews: "प्रोफ़ाइल व्यू",
   approximateViews:
@@ -164,7 +168,7 @@ const marathi = {
   coverage: "आणखी पाहा आणि वाचा",
   reportedProducts: "नोंदवलेली शेतमाल उत्पादने",
   reportedProductsDisclosure:
-    "ही उत्पादने फार्मरबुक ऑपरेटरने सांगितली आहेत. सध्याचा साठा, किंमत, वितरण, प्रमाणपत्र किंवा अन्न-व्यवसाय नोंदणी यांची पुष्टी झालेली नाही. ही संपादकीय सूची ऑर्डर पृष्ठ नाही.",
+    "ही उत्पादने सार्वजनिक स्रोतांमध्ये नमूद किंवा दाखवली आहेत. सध्याचा साठा, किंमत, वितरण, प्रमाणपत्र किंवा अन्न-व्यवसाय नोंदणी यांची पुष्टी झालेली नाही. ही संपादकीय सूची ऑर्डर पृष्ठ नाही.",
   sources: "स्रोत आणि तथ्यतपासणी नोंद",
   limitations: "हे प्रोफाइल कोणता दावा करत नाही",
   disclosure:
@@ -179,6 +183,8 @@ const marathi = {
   photoPending: "मूळ छायाचित्राच्या पुनर्प्रकाशन हक्कांची पुष्टी बाकी आहे",
   source: "स्रोत",
   farmContact: "फार्म संपर्क",
+  whatsapp: "व्हॉट्सअॅप",
+  contactOnWhatsApp: "व्हॉट्सअॅपवर संपर्क करा",
   emailFarm: "अवनी वन फार्म्सला ईमेल करा",
   profileViews: "प्रोफाइल दृश्ये",
   approximateViews:

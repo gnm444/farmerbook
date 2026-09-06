@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { WebsiteGreetingAgent } from "@/components/website-greeting-agent";
+import { VisitCounter } from "@/components/visit-counter";
 import { Brand } from "@/components/ui";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { getServerTranslations } from "@/lib/i18n";
@@ -53,6 +54,7 @@ export async function PublicFooter() {
       </div>
       <div className="container footer-bottom">
         <span>© 2026 FarmerBook. All rights reserved.</span>
+        <VisitCounter />
         <span>
           Open source under AGPL-3.0 strong copyleft. Copying or redistribution is allowed only under its licence terms.
         </span>

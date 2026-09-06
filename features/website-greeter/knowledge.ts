@@ -4,6 +4,14 @@ import {
   FARMERBOOK_CONTACT_PHONE_DISPLAY,
 } from "@/lib/contact";
 import type { WebsiteGreeterAction } from "./contracts";
+import {
+  localizedApprovedGreeterAnswer,
+  localizedSafeHandoffAnswer,
+} from "./localized-knowledge";
+import {
+  DEFAULT_WEBSITE_GREETER_LOCALE,
+  type WebsiteGreeterReleaseLocale,
+} from "./locales";
 
 export type ApprovedGreeterAnswer = {
   text: string;
@@ -19,7 +27,13 @@ function includesAny(value: string, expressions: RegExp[]) {
   return expressions.some((expression) => expression.test(value));
 }
 
-export function approvedGreeterAnswer(message: string): ApprovedGreeterAnswer | null {
+export function approvedGreeterAnswer(
+  message: string,
+  locale: WebsiteGreeterReleaseLocale = DEFAULT_WEBSITE_GREETER_LOCALE,
+): ApprovedGreeterAnswer | null {
+  if (locale === "te-IN" || locale === "hi-IN") {
+    return localizedApprovedGreeterAnswer(message, locale);
+  }
   const value = message.trim().toLowerCase();
 
   if (includesAny(value, [
@@ -60,7 +74,7 @@ export function approvedGreeterAnswer(message: string): ApprovedGreeterAnswer | 
   }
 
   if (includesAny(value, [
-    /\b(sell|seller|harvest|produce|list|listing|farmer profile)\b/,
+    /\b(sell|seller|harvest|list|listing|farmer profile)\b/,
   ])) {
     return {
       text: "Farmers can create a professional profile, publish current harvest lots and receive direct buyer enquiries. Start by creating a Farmer account.",
@@ -129,7 +143,13 @@ export function approvedGreeterAnswer(message: string): ApprovedGreeterAnswer | 
   return null;
 }
 
-export function safeHandoffAnswer(reason?: "budget" | "session"): ApprovedGreeterAnswer {
+export function safeHandoffAnswer(
+  reason?: "budget" | "session",
+  locale: WebsiteGreeterReleaseLocale = DEFAULT_WEBSITE_GREETER_LOCALE,
+): ApprovedGreeterAnswer {
+  if (locale === "te-IN" || locale === "hi-IN") {
+    return localizedSafeHandoffAnswer(reason, locale);
+  }
   const prefix = reason === "budget"
     ? "The greeting agent has reached its protected usage limit for now."
     : reason === "session"

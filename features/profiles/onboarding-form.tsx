@@ -73,6 +73,17 @@ const methodDescriptionKeys = {
   mixed: "methodMixedDescription",
 } as const;
 
+const LEGACY_PREFERRED_LANGUAGES = ["en", "hi", "mr"] as const;
+
+function legacyPreferredLanguage(locale: string) {
+  const language = locale.slice(0, 2);
+  return LEGACY_PREFERRED_LANGUAGES.includes(
+    language as (typeof LEGACY_PREFERRED_LANGUAGES)[number],
+  )
+    ? (language as (typeof LEGACY_PREFERRED_LANGUAGES)[number])
+    : undefined;
+}
+
 function legacyParticipantType(role: AccountRole): ParticipantType {
   if (role === "wholesaler") return "fpo";
   if (role === "customer") return "buyer";
@@ -110,7 +121,7 @@ export function OnboardingForm({
     state: initialProfile.state,
     bio: initialProfile.bio,
     experienceYears: initialProfile.experienceYears ?? 0,
-    preferredLanguage: locale.slice(0, 2) as "en" | "hi" | "mr",
+    preferredLanguage: legacyPreferredLanguage(locale),
     preferredLocale: locale,
     farmingMethod: initialProfile.farmingMethod as FarmingMethod | undefined,
     socialLinks: initialProfile.socialLinks,
@@ -158,7 +169,6 @@ export function OnboardingForm({
         return;
       }
       router.push("/feed");
-      router.refresh();
     });
   }
 

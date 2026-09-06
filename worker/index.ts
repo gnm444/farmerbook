@@ -3,11 +3,16 @@ import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } fr
 import handler from "vinext/server/app-router-entry";
 import { getAgentByName } from "agents";
 import { withSecurityHeaders } from "../lib/security-headers";
-import { websiteGreeterRequestSchema } from "../features/website-greeter/contracts";
+import {
+  websiteGreeterClearRequestSchema,
+  websiteGreeterRequestSchema,
+  websiteVisitRequestSchema,
+} from "../features/website-greeter/contracts";
 import type { WebsiteGreetingAgent } from "../features/website-greeter/agent";
 import type { LiveActionCoordinatorAgent } from "../features/action-control/coordinator-agent";
 import type { LiveActionWorkflowInput } from "../features/action-control/contracts";
 import type { OwnedSocialPublisherAgent } from "../features/social-publisher/agent";
+import type { BlogWritingAgent } from "../features/blog/agent";
 
 export { FarmerProfileAgent } from "../features/profile-agent/managed-agent";
 export { AiFleetBudgetAgent } from "../features/ai-budget/agent";
@@ -16,6 +21,7 @@ export { BlogWritingAgent } from "../features/blog/agent";
 export { BlogPublicationVerifierAgent } from "../features/blog/publication-verifier-agent";
 export { OwnedSocialPublisherAgent } from "../features/social-publisher/agent";
 export { CompanyOperationsAgent } from "../features/company-agents/agent";
+export { MarketplaceMatchingAgent } from "../features/marketplace/matching-agent";
 export { LiveActionCoordinatorAgent } from "../features/action-control/coordinator-agent";
 export { LiveActionExecutionWorkflow } from "../features/action-control/execution-workflow";
 export { FarmerProfileApprovalWorkflow } from "../features/profile-agent/approval-workflow";
@@ -44,6 +50,7 @@ interface Env {
   ENABLE_LIVE_AGENT_EXECUTION?: string;
   LIVE_ACTION_COORDINATOR_AGENT?: DurableObjectNamespace<LiveActionCoordinatorAgent>;
   LIVE_ACTION_EXECUTION_WORKFLOW?: Workflow<LiveActionWorkflowInput>;
+  BLOG_WRITING_AGENT?: DurableObjectNamespace<BlogWritingAgent>;
   OWNED_SOCIAL_PUBLISHER_AGENT?: DurableObjectNamespace<OwnedSocialPublisherAgent>;
 }
 
@@ -62,7 +69,10 @@ const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname === "/api/website-greeter") {
+    if (
+      url.pathname === "/api/website-greeter"
+      || url.pathname === "/api/website-greeter/canary"
+    ) {
       const respond = (body: unknown, status = 200) => withSecurityHeaders(
         request,
         Response.json(body, {
@@ -71,7 +81,9 @@ const worker = {
         }),
         env.NEXT_PUBLIC_SUPABASE_URL,
       );
-      if (request.method !== "POST") return respond({ code: "METHOD_NOT_ALLOWED" }, 405);
+      if (request.method !== "POST" && request.method !== "DELETE") {
+        return respond({ code: "METHOD_NOT_ALLOWED" }, 405);
+      }
       if (request.headers.get("sec-fetch-site") === "cross-site") {
         return respond({ code: "FORBIDDEN" }, 403);
       }
@@ -79,16 +91,60 @@ const worker = {
       if (origin && origin !== url.origin) return respond({ code: "FORBIDDEN" }, 403);
       const contentLength = Number(request.headers.get("content-length") ?? 0);
       if (contentLength > 2_048) return respond({ code: "PAYLOAD_TOO_LARGE" }, 413);
-      const parsed = websiteGreeterRequestSchema.safeParse(await request.json().catch(() => null));
+      const payload = await request.json().catch(() => null);
+      const parsed = request.method === "DELETE"
+        ? websiteGreeterClearRequestSchema.safeParse(payload)
+        : websiteGreeterRequestSchema.safeParse(payload);
       if (!parsed.success) return respond({ code: "INVALID_INPUT" }, 400);
       try {
         const agent = await getAgentByName(
           env.WEBSITE_GREETING_AGENT,
           "farmerbook-website-greeting",
         );
-        return respond(await agent.reply(parsed.data));
+        return request.method === "DELETE"
+          ? respond(await agent.clearConversation(parsed.data))
+          : respond(await agent.reply(
+              parsed.data,
+              url.pathname === "/api/website-greeter/canary"
+                ? "chat_canary"
+                : "site_launcher",
+            ));
       } catch {
         return respond({ code: "GREETER_UNAVAILABLE" }, 503);
+      }
+    }
+
+    if (url.pathname === "/api/visit" || url.pathname === "/api/visit-count") {
+      const respond = (body: unknown, status = 200) => withSecurityHeaders(
+        request,
+        Response.json(body, {
+          status,
+          headers: { "cache-control": "no-store" },
+        }),
+        env.NEXT_PUBLIC_SUPABASE_URL,
+      );
+      if (request.headers.get("sec-fetch-site") === "cross-site") {
+        return respond({ code: "FORBIDDEN" }, 403);
+      }
+      const origin = request.headers.get("origin");
+      if (origin && origin !== url.origin) return respond({ code: "FORBIDDEN" }, 403);
+      try {
+        const agent = await getAgentByName(
+          env.WEBSITE_GREETING_AGENT,
+          "farmerbook-website-greeting",
+        );
+        if (url.pathname === "/api/visit-count") {
+          if (request.method !== "GET") return respond({ code: "METHOD_NOT_ALLOWED" }, 405);
+          return respond(await agent.visitCount());
+        }
+        if (request.method !== "POST") return respond({ code: "METHOD_NOT_ALLOWED" }, 405);
+        const contentLength = Number(request.headers.get("content-length") ?? 0);
+        if (contentLength > 1_024) return respond({ code: "PAYLOAD_TOO_LARGE" }, 413);
+        const parsed = websiteVisitRequestSchema.safeParse(await request.json().catch(() => null));
+        if (!parsed.success) return respond({ code: "INVALID_INPUT" }, 400);
+        return respond({ ok: true, ...(await agent.recordVisit(parsed.data)) });
+      } catch {
+        return respond({ code: "VISIT_COUNTER_UNAVAILABLE" }, 503);
       }
     }
 
@@ -120,14 +176,37 @@ const worker = {
     env: Env,
     ctx: ExecutionContext,
   ) {
-    if (!env.OWNED_SOCIAL_PUBLISHER_AGENT) return;
-    ctx.waitUntil((async () => {
-      const socialPublisher = await getAgentByName(
-        env.OWNED_SOCIAL_PUBLISHER_AGENT!,
-        "farmerbook-owned-social-publisher",
-      ) as DurableObjectStub<OwnedSocialPublisherAgent>;
-      await socialPublisher.scanStaticPublications();
-    })());
+    const tasks: Promise<unknown>[] = [
+      (async () => {
+        const websiteGreeter = await getAgentByName(
+          env.WEBSITE_GREETING_AGENT,
+          "farmerbook-website-greeting",
+        ) as DurableObjectStub<WebsiteGreetingAgent>;
+        await websiteGreeter.pruneExpiredConversations();
+      })(),
+    ];
+    if (env.OWNED_SOCIAL_PUBLISHER_AGENT) {
+      tasks.push((async () => {
+        const socialPublisher = await getAgentByName(
+          env.OWNED_SOCIAL_PUBLISHER_AGENT!,
+          "farmerbook-owned-social-publisher",
+        ) as DurableObjectStub<OwnedSocialPublisherAgent>;
+        await socialPublisher.scanStaticPublications();
+      })());
+    }
+    if (env.BLOG_WRITING_AGENT) {
+      tasks.push((async () => {
+        const blogAgent = await getAgentByName(
+          env.BLOG_WRITING_AGENT!,
+          "farmerbook-blog-writing",
+        ) as DurableObjectStub<BlogWritingAgent>;
+        // The Blog Agent owns the daily 09:00 IST schedule. This heartbeat
+        // only initializes the named Durable Object so onStart() can create
+        // that schedule even when the site has had no traffic.
+        await blogAgent.status();
+      })());
+    }
+    if (tasks.length) ctx.waitUntil(Promise.allSettled(tasks));
   },
 };
 

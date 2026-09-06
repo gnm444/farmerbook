@@ -31,6 +31,7 @@ export default function robots(): MetadataRoute.Robots {
         "/purchases/",
         "/settings/",
         "/marketplace/demo",
+        "/chat",
       ],
     },
     sitemap: new URL("/sitemap.xml", origin).toString(),

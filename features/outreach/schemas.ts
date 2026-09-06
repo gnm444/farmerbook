@@ -126,7 +126,7 @@ const consentLeadShape = {
   followupConsent: z.boolean().default(false),
   consentPolicyVersion: z.literal(OUTREACH_CONSENT_POLICY_VERSION),
   campaignCode: z
-    .enum(["direct-join", "farmer-interest", "partner-interest", "google-lead-form"])
+    .enum(["direct-join", "farmer-interest", "partner-interest", "greeter", "google-lead-form"])
     .optional(),
 } as const;
 

@@ -13,8 +13,10 @@ import type { BlogWritingAgent } from "@/features/blog/agent";
 import type { BlogPublicationVerifierAgent } from "@/features/blog/publication-verifier-agent";
 import type { OwnedSocialPublisherAgent } from "@/features/social-publisher/agent";
 import type { CompanyOperationsAgent } from "@/features/company-agents/agent";
+import type { MarketplaceMatchingAgent } from "@/features/marketplace/matching-agent";
 import type { LiveActionCoordinatorAgent } from "@/features/action-control/coordinator-agent";
 import type { LiveActionWorkflowInput } from "@/features/action-control/contracts";
+import type { GoogleIdentityBrokerBinding } from "@/features/website-greeter/google-provider.server";
 
 export interface WorkersAiBinding {
   run(model: string, input: Record<string, unknown>): Promise<unknown>;
@@ -45,6 +47,7 @@ export type FarmerBookBindings = {
   SOCIAL_CONTENT_AGENT?: DurableObjectNamespace<SocialContentAgent>;
   OPERATIONS_SUPERVISOR_AGENT?: DurableObjectNamespace<OperationsSupervisorAgent>;
   WEBSITE_GREETING_AGENT?: DurableObjectNamespace<WebsiteGreetingAgent>;
+  GOOGLE_IDENTITY_BROKER?: GoogleIdentityBrokerBinding;
   BLOG_WRITING_AGENT?: DurableObjectNamespace<BlogWritingAgent>;
   BLOG_PUBLICATION_VERIFIER_AGENT?: DurableObjectNamespace<BlogPublicationVerifierAgent>;
   BLOG_AUTONOMOUS_PUBLISHING?: string;
@@ -55,6 +58,7 @@ export type FarmerBookBindings = {
   OWNED_SOCIAL_INSTAGRAM_MEDIA_READY?: string;
   OWNED_SOCIAL_CONNECTOR?: Fetcher;
   COMPANY_OPERATIONS_AGENT?: DurableObjectNamespace<CompanyOperationsAgent>;
+  MARKETPLACE_MATCHING_AGENT?: DurableObjectNamespace<MarketplaceMatchingAgent>;
   LIVE_ACTION_COORDINATOR_AGENT?: DurableObjectNamespace<LiveActionCoordinatorAgent>;
   LIVE_ACTION_EXECUTION_WORKFLOW?: Workflow<LiveActionWorkflowInput>;
 };

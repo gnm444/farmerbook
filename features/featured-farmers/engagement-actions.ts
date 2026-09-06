@@ -72,7 +72,10 @@ export async function submitFeaturedFarmerQuestionAction(
     remoteIp: requestHeaders.get("cf-connecting-ip") ?? undefined,
     expectedHostname:
       hostname && !hostname.includes("localhost") ? hostname : undefined,
-    expectedAction: "farmer_profile_question",
+      expectedAction:
+        parsed.data.source === "store_order"
+          ? "store_order_request"
+          : "farmer_profile_question",
   });
   if (!turnstileValid) {
     return { ok: false, message: "Complete the spam-protection check and try again." };
@@ -131,6 +134,7 @@ export async function submitFeaturedFarmerQuestionAction(
     email: normalizedEmail,
     kind: parsed.data.kind,
     message: parsed.data.message,
+    source: parsed.data.source,
   });
 
   try {

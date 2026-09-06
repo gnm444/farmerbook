@@ -70,6 +70,10 @@ type EnquiryRow = {
 const listingColumns =
   "id, farmer_id, title, crop, variety, description, quantity, unit, min_order, price, price_unit, harvest_start, harvest_end, available_until, grade, delivery_options, delivery_radius_km, certifications, status, view_count, save_count, enquiry_count, created_at";
 
+function isMissingReviewsSchema(error: { code?: string } | null) {
+  return error?.code === "PGRST205" || error?.code === "42P01";
+}
+
 function imageVariantFor(crop: string): ProduceListing["imageVariant"] {
   const normalized = crop.toLowerCase();
   if (normalized.includes("grape")) return "grape-vines";
@@ -125,7 +129,7 @@ async function hydrateListings(rows: ListingRow[]) {
       .eq("status", "active")
       .in("seller_id", sellerIds),
   ]);
-  if (reviewResult.error) {
+  if (reviewResult.error && !isMissingReviewsSchema(reviewResult.error)) {
     throwDataUnavailable("marketplace.review-summary");
   }
   const byId = new Map(profiles.map((profile) => [profile.id, profile]));

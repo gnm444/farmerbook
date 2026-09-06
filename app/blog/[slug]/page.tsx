@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cache } from "react";
+import { cache, Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, ArrowLeft, BookOpenCheck, Clock3, ExternalLink } from "lucide-react";
@@ -161,17 +161,47 @@ export default async function BlogStoryPage({
 
           <div className="blog-story__layout">
             <div className="blog-story__body">
+              {publication.infographic ? (
+                <figure className="blog-story__infographic">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={publication.infographic.src}
+                    alt={publication.infographic.alt}
+                    width={publication.infographic.width}
+                    height={publication.infographic.height}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption>{publication.infographic.caption}</figcaption>
+                </figure>
+              ) : null}
               {publication.content.sections.map((section, index) => (
-                <section key={section.heading} id={`section-${index + 1}`}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <div>
-                    <h2>{section.heading}</h2>
-                    {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-                    {section.bullets.length ? (
-                      <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-                    ) : null}
-                  </div>
-                </section>
+                <Fragment key={section.heading}>
+                  <section id={`section-${index + 1}`}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <div>
+                      <h2>{section.heading}</h2>
+                      {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                      {section.bullets.length ? (
+                        <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
+                      ) : null}
+                    </div>
+                  </section>
+                  {index === 1 && publication.supportingImage ? (
+                    <figure className="blog-story__supporting-image">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={publication.supportingImage.src}
+                        alt={publication.supportingImage.alt}
+                        width={publication.supportingImage.width}
+                        height={publication.supportingImage.height}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <figcaption>{publication.supportingImage.caption}</figcaption>
+                    </figure>
+                  ) : null}
+                </Fragment>
               ))}
               <section className="blog-story__conclusion">
                 <span>✓</span>

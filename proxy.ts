@@ -11,9 +11,14 @@ const publicPrefixes = [
   "/invite",
   "/join",
   "/partner-interest",
+  "/chat",
   "/confirm-email",
   "/unsubscribe",
   "/api/health",
+  "/api/marketplace-match",
+  "/api/website-greeter",
+  "/api/visit",
+  "/api/visit-count",
   "/api/outreach",
   "/manifest.webmanifest",
   "/marketplace",
@@ -99,6 +104,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4)$).*)",
   ],
 };

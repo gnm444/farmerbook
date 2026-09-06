@@ -50,10 +50,10 @@ export function reportedUsage(result: unknown) {
   if (!usage || typeof usage !== "object") return null;
   const record = usage as Record<string, unknown>;
   const inputTokens = nonnegativeInteger(
-    record.prompt_tokens ?? record.input_tokens,
+    record.prompt_tokens ?? record.input_tokens ?? record.inputTokens,
   );
   const outputTokens = nonnegativeInteger(
-    record.completion_tokens ?? record.output_tokens,
+    record.completion_tokens ?? record.output_tokens ?? record.outputTokens,
   );
   return inputTokens === null || outputTokens === null
     ? null
@@ -76,6 +76,23 @@ export async function runBudgetedAi(
   rawRequest: BudgetedInferenceRequest,
 ) {
   if (!runtime.ai) throw new AiBudgetError("AI_BINDING_UNAVAILABLE");
+  return runBudgetedExternalAi(
+    runtime,
+    rawRequest,
+    () => runtime.ai!.run(rawRequest.model, rawRequest.input),
+  );
+}
+
+/**
+ * Reserve and settle a provider call that is not exposed through Workers AI.
+ * The caller owns transport/authentication; the central fleet ledger remains
+ * the authority that can deny the request before any provider I/O occurs.
+ */
+export async function runBudgetedExternalAi(
+  runtime: BudgetedAiRuntime,
+  rawRequest: BudgetedInferenceRequest,
+  generate: () => Promise<unknown>,
+) {
   if (!runtime.budget) throw new AiBudgetError("AI_BUDGET_UNAVAILABLE");
   const workstream = aiWorkstreamSchema.parse(rawRequest.workstream);
   const operation = aiOperationSchema.parse(rawRequest.operation);
@@ -101,7 +118,7 @@ export async function runBudgetedAi(
     throw new AiBudgetError(`AI_${reservation.code}`);
   }
   try {
-    const result = await runtime.ai.run(priced.model, rawRequest.input);
+    const result = await generate();
     const usage = reportedUsage(result);
     await settleSafely(runtime.budget, {
       reservationId,

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { FeaturedFarmerQuestionInput } from "./engagement-schemas";
+import { FARMERBOOK_CONTACT_EMAIL } from "@/lib/contact";
 
 const postmarkAcceptanceSchema = z.object({
   ErrorCode: z.literal(0),
@@ -19,9 +20,12 @@ export function buildFeaturedFarmerQuestionText(input: {
   email: string;
   kind: FeaturedFarmerQuestionInput["kind"];
   message: string;
+  source?: "profile" | "store_order";
 }) {
   return [
-    `A visitor sent a private ${input.kind} from the FarmerBook profile for ${input.subjectName}.`,
+    input.source === "store_order"
+      ? `A visitor submitted a private store order request for ${input.subjectName}.`
+      : `A visitor sent a private ${input.kind} from the FarmerBook profile for ${input.subjectName}.`,
     "This message is private and is not a public customer recommendation.",
     "",
     `Request ID: ${input.deliveryId}`,
@@ -46,6 +50,7 @@ export async function sendFeaturedFarmerQuestionNotification(
     email: string;
     kind: FeaturedFarmerQuestionInput["kind"];
     message: string;
+    source?: "profile" | "store_order";
   },
   options: {
     serverToken?: string;
@@ -79,18 +84,21 @@ export async function sendFeaturedFarmerQuestionNotification(
       body: JSON.stringify({
         From: `FarmerBook profile questions <${fromEmail}>`,
         To: input.recipientEmail,
+        Cc: FARMERBOOK_CONTACT_EMAIL,
         ReplyTo: input.email,
-        Subject: `Private FarmerBook ${input.kind} for ${input.subjectName}`,
+        Subject: input.source === "store_order"
+          ? `New FarmerBook store order request for ${input.subjectName}`
+          : `Private FarmerBook ${input.kind} for ${input.subjectName}`,
         TextBody: buildFeaturedFarmerQuestionText(input),
         MessageStream: messageStream,
-        Tag: "featured-farmer-question",
+        Tag: input.source === "store_order" ? "store-order-request" : "featured-farmer-question",
         TrackOpens: false,
         TrackLinks: "None",
         Metadata: { deliveryId: input.deliveryId },
         Headers: [
           {
             Name: "Message-ID",
-            Value: `<featured-farmer-question-${input.deliveryId}@farmerbook.in>`,
+            Value: `<${input.source === "store_order" ? "store-order-request" : "featured-farmer-question"}-${input.deliveryId}@farmerbook.in>`,
           },
         ],
       }),

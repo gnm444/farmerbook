@@ -12,9 +12,11 @@
 The runtime is a named Cloudflare Agents SDK Durable Object,
 `BlogWritingAgent`, backed by SQLite state and a durable cron schedule. It wakes
 every day at 03:30 UTC (09:00 IST), prepares at most one source-bounded draft,
-and then returns to idle. “24/7 managed” means Cloudflare retains its state and
-schedule and wakes it when required; it does not pay for a permanently running
-server.
+and then returns to idle. The existing Worker heartbeat touches the named
+Agent every 15 minutes so `onStart()` can establish that schedule after a quiet
+deployment; the heartbeat itself does not invoke inference. “24/7 managed”
+means Cloudflare retains its state and schedule and wakes it when required; it
+does not pay for a permanently running server.
 
 ## Publication boundary
 

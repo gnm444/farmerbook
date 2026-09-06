@@ -6,9 +6,10 @@ import {
 type ModelPrice = {
   inputUsdPerMillion: number;
   outputUsdPerMillion: number;
+  fixedRequestMicros?: number;
 };
 
-export const MODEL_PRICES = {
+export const MODEL_PRICES: Record<AiModel, ModelPrice> = {
   "@cf/ibm-granite/granite-4.0-h-micro": {
     inputUsdPerMillion: 0.017,
     outputUsdPerMillion: 0.112,
@@ -25,7 +26,16 @@ export const MODEL_PRICES = {
     inputUsdPerMillion: 0.049,
     outputUsdPerMillion: 0.68,
   },
-} as const satisfies Record<AiModel, ModelPrice>;
+  // Deliberately conservative control-plane reservation for the canary. It is
+  // not a claim about the provider bill: the fixed charge covers Agent Engine
+  // runtime uncertainty and forces the $5 workstream cap after at most 250
+  // calls even when provider usage metadata is absent.
+  "google/vertex-agent-engine-canary": {
+    inputUsdPerMillion: 10,
+    outputUsdPerMillion: 30,
+    fixedRequestMicros: 20_000,
+  },
+};
 
 export function modelCostMicros(
   model: AiModel,
@@ -37,7 +47,8 @@ export function modelCostMicros(
     1,
     Math.ceil(
       inputTokens * price.inputUsdPerMillion +
-        outputTokens * price.outputUsdPerMillion,
+        outputTokens * price.outputUsdPerMillion +
+        (price.fixedRequestMicros ?? 0),
     ),
   );
 }

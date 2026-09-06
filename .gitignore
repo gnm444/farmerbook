@@ -54,3 +54,11 @@ next-env.d.ts
 /output/
 /tmp/
 /work/
+
+# Python service environments and bytecode
+**/.venv/
+**/__pycache__/
+*.py[cod]
+
+# Local validation evidence and generated working artifacts
+/artifacts/

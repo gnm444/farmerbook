@@ -31,6 +31,14 @@ export const blogHeroImageSchema = z.object({
   provenance: z.enum(["ai_generated", "rights_approved_original"]),
 });
 
+export const blogInfographicSchema = z.object({
+  src: z.string().trim().regex(/^\/images\/[a-z0-9/_-]+\.svg$/),
+  alt: z.string().trim().min(20).max(320),
+  width: z.number().int().min(320).max(4_096),
+  height: z.number().int().min(180).max(4_096),
+  caption: z.string().trim().min(20).max(500),
+});
+
 export const blogPublicationSchema = z.object({
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
   category: z.enum([
@@ -48,6 +56,8 @@ export const blogPublicationSchema = z.object({
   editorialNote: z.string().trim().min(20).max(1_000),
   sources: z.array(blogSourceSchema).min(1).max(12),
   heroImage: blogHeroImageSchema.optional(),
+  supportingImage: blogHeroImageSchema.optional(),
+  infographic: blogInfographicSchema.optional(),
   english: localizedBlogContentSchema,
   telugu: localizedBlogContentSchema.optional(),
 });

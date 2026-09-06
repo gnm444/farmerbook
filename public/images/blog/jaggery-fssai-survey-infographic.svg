@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">What the FSSAI jaggery survey found</title>
+  <desc id="desc">FSSAI's 2022 survey covered 3,060 jaggery samples. 34.5 percent were substandard, 5.5 percent were misbranded, and 1.8 percent fell into both categories. No tested sample was non-compliant for heavy metals.</desc>
+  <rect width="1200" height="760" rx="32" fill="#fffaf0"/>
+  <rect x="38" y="38" width="1124" height="684" rx="24" fill="#f4ead5" stroke="#c9a85e" stroke-width="2"/>
+  <text x="84" y="112" fill="#214b2c" font-family="Georgia, serif" font-size="44" font-weight="700">What the survey actually found</text>
+  <text x="84" y="154" fill="#5e624f" font-family="Arial, sans-serif" font-size="22">FSSAI jaggery survey · 2022 · 3,060 samples from 35 States/UTs</text>
+
+  <rect x="84" y="202" width="324" height="190" rx="20" fill="#214b2c"/>
+  <text x="116" y="266" fill="#f7e5b2" font-family="Arial, sans-serif" font-size="24" font-weight="700">SAMPLE SIZE</text>
+  <text x="116" y="342" fill="#ffffff" font-family="Georgia, serif" font-size="66" font-weight="700">3,060</text>
+  <text x="116" y="374" fill="#d7e5c8" font-family="Arial, sans-serif" font-size="19">samples tested</text>
+
+  <rect x="438" y="202" width="324" height="190" rx="20" fill="#fff" stroke="#c9a85e" stroke-width="2"/>
+  <text x="470" y="266" fill="#8a4f16" font-family="Arial, sans-serif" font-size="24" font-weight="700">SUBSTANDARD</text>
+  <text x="470" y="342" fill="#8a4f16" font-family="Georgia, serif" font-size="66" font-weight="700">34.5%</text>
+  <text x="470" y="374" fill="#5e624f" font-family="Arial, sans-serif" font-size="19">for specified quality parameters</text>
+
+  <rect x="792" y="202" width="324" height="190" rx="20" fill="#fff" stroke="#c9a85e" stroke-width="2"/>
+  <text x="824" y="266" fill="#8a4f16" font-family="Arial, sans-serif" font-size="24" font-weight="700">MISBRANDED</text>
+  <text x="824" y="342" fill="#8a4f16" font-family="Georgia, serif" font-size="66" font-weight="700">5.5%</text>
+  <text x="824" y="374" fill="#5e624f" font-family="Arial, sans-serif" font-size="19">including 1.8% in both groups</text>
+
+  <rect x="84" y="432" width="1032" height="156" rx="20" fill="#e2f0df" stroke="#9bb88e" stroke-width="2"/>
+  <circle cx="144" cy="510" r="36" fill="#4f7d42"/>
+  <path d="M126 510l12 12 25-28" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="206" y="492" fill="#214b2c" font-family="Arial, sans-serif" font-size="25" font-weight="700">HEAVY-METAL RESULT</text>
+  <text x="206" y="532" fill="#3f5c3b" font-family="Arial, sans-serif" font-size="23">No tested sample was non-compliant for heavy metals.</text>
+
+  <text x="84" y="642" fill="#8a4f16" font-family="Arial, sans-serif" font-size="22" font-weight="700">READ THIS CORRECTLY</text>
+  <text x="84" y="680" fill="#5e624f" font-family="Arial, sans-serif" font-size="21">The categories overlap. These results do not support a claim that 90% of jaggery is chemical-contaminated.</text>
+  <text x="84" y="706" fill="#5e624f" font-family="Arial, sans-serif" font-size="18">Source: Food Safety and Standards Authority of India, Jaggery Survey 2022.</text>
+</svg>

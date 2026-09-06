@@ -8,19 +8,34 @@ import {
   gheeTrustPublication,
 } from "./publications/ghee-trust";
 import {
+  JAGGERY_PURITY_EVIDENCE_SLUG,
+  jaggeryPurityEvidencePublication,
+} from "./publications/jaggery-purity-evidence";
+import {
   MONEY_CHARACTER_SLUG,
   moneyCharacterPublication,
 } from "./publications/money-character";
 import {
+  SACRED_JOURNEY_FIVE_ELEMENTS_SLUG,
+  sacredJourneyFiveElementsPublication,
+} from "./publications/sacred-journey-five-elements";
+import {
   WEALTH_HEALTH_PARADOX_SLUG,
   wealthHealthParadoxPublication,
 } from "./publications/wealth-health-paradox";
+import {
+  AWARENESS_FARMING_SUPERPOWER_SLUG,
+  awarenessFarmingSuperpowerPublication,
+} from "./publications/awareness-farming-superpower";
 
 export {
   FOOD_TRACEABILITY_SLUG,
   GHEE_TRUST_SLUG,
+  JAGGERY_PURITY_EVIDENCE_SLUG,
   MONEY_CHARACTER_SLUG,
+  SACRED_JOURNEY_FIVE_ELEMENTS_SLUG,
   WEALTH_HEALTH_PARADOX_SLUG,
+  AWARENESS_FARMING_SUPERPOWER_SLUG,
 };
 
 export const CALCULATED_TRANSITION_SLUG =
@@ -202,11 +217,14 @@ export const foundingBlogPublication: BlogPublication = {
 };
 
 export const STATIC_BLOG_PUBLICATIONS = [
+  awarenessFarmingSuperpowerPublication,
   wealthHealthParadoxPublication,
   moneyCharacterPublication,
   foodTraceabilityPublication,
   gheeTrustPublication,
+  jaggeryPurityEvidencePublication,
   foundingBlogPublication,
+  sacredJourneyFiveElementsPublication,
 ] as const;
 
 export function staticBlogPublication(slug: string) {
