@@ -1,24 +1,27 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
+from types import ModuleType, SimpleNamespace
 import unittest
 from uuid import uuid4
 
-from app.contract_adapter import build_adk_invocation, response_from_events
-from app.contracts import (
+from farmerbook_greeter.contract_adapter import build_adk_invocation, response_from_events
+from farmerbook_greeter.contracts import (
     CONTRACT_VERSION,
     CONTEXT_CONSENT_VERSION,
     ContractError,
     sanitize_context_text,
     validate_request,
 )
-from app.settings import SettingsError, load_settings
-from app.deployment import (
+from farmerbook_greeter.settings import SettingsError, load_settings
+from farmerbook_greeter.deployment import (
     DeploymentConfigurationError,
     build_deployment_plan,
     deployment_requirements,
     validate_resource_name,
 )
+from farmerbook_greeter.deploy import main as deploy_main
 
 
 def valid_payload() -> dict[str, object]:
@@ -97,7 +100,9 @@ class GreeterContractTests(unittest.TestCase):
         self.assertEqual(response["providerSessionId"], "sessions/123456")
 
     def test_agent_source_is_tool_free_and_model_configuration_is_required(self) -> None:
-        source = (Path(__file__).parents[1] / "app" / "agent.py").read_text()
+        source = (
+            Path(__file__).parents[1] / "farmerbook_greeter" / "agent.py"
+        ).read_text()
         with self.assertRaisesRegex(SettingsError, "GOOGLE_VERTEX_MODE_REQUIRED"):
             load_settings({})
         with self.assertRaisesRegex(SettingsError, "GOOGLE_CLOUD_PROJECT_REQUIRED"):
@@ -131,8 +136,8 @@ class GreeterContractTests(unittest.TestCase):
             "GOOGLE_CLOUD_LOCATION": "us-central1",
             "FARMERBOOK_GOOGLE_MODEL": "gemini-2.5-flash-lite",
         }):
-            sys.modules.pop("app.agent", None)
-            agent_module = importlib.import_module("app.agent")
+            sys.modules.pop("farmerbook_greeter.agent", None)
+            agent_module = importlib.import_module("farmerbook_greeter.agent")
             restored = cloudpickle.loads(cloudpickle.dumps(agent_module.root_agent))
             resolved_model = restored.canonical_model
             self.assertEqual(resolved_model.model, "gemini-2.5-flash-lite")
@@ -150,13 +155,70 @@ class GreeterContractTests(unittest.TestCase):
         self.assertEqual(plan.max_instances, 1)
         self.assertEqual(plan.identity_type, "AGENT_IDENTITY")
         self.assertEqual(deployment_requirements(service_root).name, "requirements.lock")
-        deploy_source = (service_root / "app" / "deploy.py").read_text()
+        deploy_source = (
+            service_root / "farmerbook_greeter" / "deploy.py"
+        ).read_text()
         self.assertNotIn("service-account-key", deploy_source)
         self.assertNotIn("credentials=", deploy_source)
         runtime_env = deploy_source.split('"env_vars": {', 1)[1].split("},", 1)[0]
         self.assertNotIn('"GOOGLE_CLOUD_PROJECT"', runtime_env)
         self.assertNotIn('"GOOGLE_CLOUD_LOCATION"', runtime_env)
         self.assertIn("client.agent_engines.update(", deploy_source)
+
+    def test_deployment_archives_unique_package_at_importable_root(self) -> None:
+        from unittest.mock import patch
+
+        service_root = Path(__file__).parents[1].resolve()
+        original_cwd = Path.cwd()
+        captured: dict[str, object] = {}
+
+        class FakeAgentEngines:
+            def update(self, *, name: str, agent: object, config: dict) -> object:
+                captured["cwd"] = Path.cwd()
+                captured["name"] = name
+                captured["agent"] = agent
+                captured["config"] = config
+                return SimpleNamespace(name=name)
+
+        class FakeClient:
+            def __init__(self, *, project: str, location: str) -> None:
+                captured["project"] = project
+                captured["location"] = location
+                self.agent_engines = FakeAgentEngines()
+
+        fake_vertexai = ModuleType("vertexai")
+        fake_vertexai.Client = FakeClient  # type: ignore[attr-defined]
+        fake_vertexai.types = SimpleNamespace(  # type: ignore[attr-defined]
+            IdentityType=SimpleNamespace(AGENT_IDENTITY="AGENT_IDENTITY")
+        )
+        fake_agent_engine = ModuleType("farmerbook_greeter.agent_engine")
+        fake_agent_engine.adk_app = object()  # type: ignore[attr-defined]
+
+        resource_name = (
+            "projects/core-song-507701-f6/locations/us-central1/"
+            "reasoningEngines/2785816668377448448"
+        )
+        with patch.dict(sys.modules, {
+            "vertexai": fake_vertexai,
+            "farmerbook_greeter.agent_engine": fake_agent_engine,
+        }):
+            self.assertEqual(
+                deploy_main([
+                    "--project", "core-song-507701-f6",
+                    "--location", "us-central1",
+                    "--staging-bucket", "gs://farmerbook-agent-staging",
+                    "--model", "gemini-2.5-flash-lite",
+                    "--resource-name", resource_name,
+                ]),
+                0,
+            )
+
+        self.assertEqual(captured["cwd"], service_root)
+        self.assertEqual(captured["name"], resource_name)
+        self.assertEqual(
+            captured["config"]["extra_packages"], ["farmerbook_greeter"]
+        )
+        self.assertEqual(Path.cwd(), original_cwd)
 
     def test_update_resource_name_is_bound_to_project_and_location(self) -> None:
         resource_name = (

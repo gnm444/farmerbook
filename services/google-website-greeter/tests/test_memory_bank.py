@@ -5,7 +5,7 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
-from app.memory_bank import (
+from farmerbook_greeter.memory_bank import (
     API_VERSION,
     APPROVED_RESOURCE_NAME,
     GENERATION_MODEL_ID,
@@ -149,7 +149,7 @@ class MemoryBankConfigurationTests(unittest.TestCase):
     def test_default_cli_is_network_free(self) -> None:
         output = io.StringIO()
         with patch(
-            "app.memory_bank.apply_approved_memory_bank_config",
+            "farmerbook_greeter.memory_bank.apply_approved_memory_bank_config",
             side_effect=AssertionError("live apply must not run"),
         ):
             with redirect_stdout(output):
@@ -285,7 +285,7 @@ class MemoryBankConfigurationTests(unittest.TestCase):
             ]
         )
 
-        with patch("app.memory_bank.MAX_OPERATION_POLLS", 1):
+        with patch("farmerbook_greeter.memory_bank.MAX_OPERATION_POLLS", 1):
             result = apply_approved_memory_bank_config(
                 session=session,
                 sleep_fn=lambda _seconds: None,

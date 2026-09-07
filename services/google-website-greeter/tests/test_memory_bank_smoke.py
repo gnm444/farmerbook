@@ -4,8 +4,12 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
-from app.memory_bank import APPROVED_RESOURCE_NAME, api_url, approved_memory_bank_config
-from app.memory_bank_smoke import (
+from farmerbook_greeter.memory_bank import (
+    APPROVED_RESOURCE_NAME,
+    api_url,
+    approved_memory_bank_config,
+)
+from farmerbook_greeter.memory_bank_smoke import (
     SCOPE_PREFIX,
     _all_memory_names,
     _cleanup_memories,
@@ -90,7 +94,7 @@ class MemoryBankSmokeTests(unittest.TestCase):
     def test_default_cli_is_network_free(self) -> None:
         output = io.StringIO()
         with patch(
-            "app.memory_bank_smoke.run_live_smoke",
+            "farmerbook_greeter.memory_bank_smoke.run_live_smoke",
             side_effect=AssertionError("live smoke must not run"),
         ):
             with redirect_stdout(output):
@@ -219,7 +223,7 @@ class MemoryBankSmokeTests(unittest.TestCase):
             ]
         )
 
-        with patch("app.memory_bank_smoke.MAX_RETRIEVAL_POLLS", 1):
+        with patch("farmerbook_greeter.memory_bank_smoke.MAX_RETRIEVAL_POLLS", 1):
             with self.assertRaisesRegex(RuntimeError, "not retrievable"):
                 run_live_smoke(
                     session=session,
@@ -243,7 +247,7 @@ class MemoryBankSmokeTests(unittest.TestCase):
             ]
         )
 
-        with patch("app.memory_bank_smoke.MAX_RETRIEVAL_POLLS", 1):
+        with patch("farmerbook_greeter.memory_bank_smoke.MAX_RETRIEVAL_POLLS", 1):
             with self.assertRaisesRegex(RuntimeError, "not retrievable"):
                 run_live_smoke(
                     session=session,
@@ -358,7 +362,7 @@ class MemoryBankSmokeTests(unittest.TestCase):
             ]
         )
 
-        with patch("app.memory_bank_smoke.MAX_OPERATION_POLLS", 1):
+        with patch("farmerbook_greeter.memory_bank_smoke.MAX_OPERATION_POLLS", 1):
             with self.assertRaisesRegex(RuntimeError, "cleanup is unconfirmed"):
                 run_live_smoke(
                     session=session,
@@ -430,7 +434,7 @@ class MemoryBankSmokeTests(unittest.TestCase):
             ]
         )
 
-        with patch("app.memory_bank_smoke.MAX_CLEANUP_ROUNDS", 2):
+        with patch("farmerbook_greeter.memory_bank_smoke.MAX_CLEANUP_ROUNDS", 2):
             with self.assertRaisesRegex(RuntimeError, "cleanup is unconfirmed"):
                 run_live_smoke(
                     session=session,

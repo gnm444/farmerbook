@@ -86,7 +86,10 @@ describe("Google ADK website greeter skeleton", () => {
     const serviceRoot = "services/google-website-greeter";
     const manifest = readFileSync(`${serviceRoot}/agents-cli-manifest.yaml`, "utf8");
     const environment = readFileSync(`${serviceRoot}/.env.example`, "utf8");
-    const agent = readFileSync(`${serviceRoot}/app/agent.py`, "utf8");
+    const agent = readFileSync(
+      `${serviceRoot}/farmerbook_greeter/agent.py`,
+      "utf8",
+    );
     const provider = readFileSync("features/website-greeter/provider.server.ts", "utf8");
 
     expect(manifest).toContain("deployment_target: none");

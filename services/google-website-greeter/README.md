@@ -83,26 +83,26 @@ From an authenticated owner environment, first inspect the dry run:
 
 ```sh
 cd services/google-website-greeter
-python -m app.memory_bank
+python -m farmerbook_greeter.memory_bank
 ```
 
 The explicit mutation is:
 
 ```sh
-python -m app.memory_bank --apply
+python -m farmerbook_greeter.memory_bank --apply
 ```
 
 After a successful configuration read-back, inspect the cleanup-safe smoke dry
 run:
 
 ```sh
-python -m app.memory_bank_smoke
+python -m farmerbook_greeter.memory_bank_smoke
 ```
 
 The explicit live synthetic proof is:
 
 ```sh
-python -m app.memory_bank_smoke --apply
+python -m farmerbook_greeter.memory_bank_smoke --apply
 ```
 
 Both utilities are bound to the canonical resource

@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-farmerbook-deploy-greeter = "app.deploy:main"
+farmerbook-deploy-greeter = "farmerbook_greeter.deploy:main"
 
 [tool.unittest]
 test-directory = "tests"

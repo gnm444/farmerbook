@@ -7,6 +7,7 @@ Shell. It deliberately accepts no service-account key or credential argument.
 from __future__ import annotations
 
 import argparse
+from contextlib import chdir
 import json
 import os
 from pathlib import Path
@@ -89,7 +90,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     client = vertexai.Client(project=plan.project, location=plan.location)
     config = {
         "requirements": str(requirements),
-        "extra_packages": [str(service_root / "app")],
+        # The SDK preserves the paths given here when it builds its dependency
+        # archive. Supplying an absolute path nests the package under the
+        # operator's workstation path and makes ``farmerbook_greeter.agent``
+        # unavailable in
+        # the runtime. Run the synchronous upload from the service root and
+        # package ``farmerbook_greeter`` at the archive root instead. A unique
+        # package name also avoids Google's reserved runtime ``app`` package.
+        "extra_packages": ["farmerbook_greeter"],
         "staging_bucket": plan.staging_bucket,
         "display_name": plan.display_name,
         "description": (
@@ -109,16 +117,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         "max_instances": plan.max_instances,
         "agent_framework": "google-adk",
     }
-    if resource_name:
-        remote_agent = client.agent_engines.update(
-            name=resource_name,
-            agent=adk_app,
-            config=config,
-        )
-        action = "updated"
-    else:
-        remote_agent = client.agent_engines.create(agent=adk_app, config=config)
-        action = "created"
+    with chdir(service_root):
+        if resource_name:
+            remote_agent = client.agent_engines.update(
+                name=resource_name,
+                agent=adk_app,
+                config=config,
+            )
+            action = "updated"
+        else:
+            remote_agent = client.agent_engines.create(agent=adk_app, config=config)
+            action = "created"
     print(json.dumps({
         "action": action,
         "project": plan.project,
