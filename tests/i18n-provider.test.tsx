@@ -23,4 +23,26 @@ describe("LocaleProvider", () => {
       expect(document.documentElement).toHaveAttribute("dir", "rtl");
     });
   });
+
+  it("synchronizes to a persisted locale supplied by a refreshed server tree", async () => {
+    const urduMessages = await loadMessages("ur-IN");
+    const hindiMessages = await loadMessages("hi-IN");
+    const view = render(
+      <LocaleProvider locale="ur-IN" messages={urduMessages}>
+        <Probe />
+      </LocaleProvider>,
+    );
+
+    view.rerender(
+      <LocaleProvider locale="hi-IN" messages={hindiMessages}>
+        <Probe />
+      </LocaleProvider>,
+    );
+
+    await waitFor(() => {
+      expect(document.documentElement).toHaveAttribute("lang", "hi-IN");
+      expect(document.documentElement).toHaveAttribute("dir", "ltr");
+    });
+    expect(screen.getByText(/चरण.*2.*6/)).toBeVisible();
+  });
 });

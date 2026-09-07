@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { ProductHeader } from "@/components/product-header";
 import { DiscoverClient } from "@/features/network/discover-client";
+import { DiscoverHeader } from "@/features/network/discover-header";
 import { loadDiscoverProfiles } from "@/features/profiles/queries";
+import { getAuthenticatedMessages } from "@/lib/i18n/authenticated-messages";
+import { getServerI18n } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Discover people" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getServerI18n({ restoreProfile: true });
+  return { title: getAuthenticatedMessages(locale).discover.metadataTitle };
+}
 
 export default async function DiscoverPage({
   searchParams,
@@ -20,11 +25,7 @@ export default async function DiscoverPage({
 
   return (
     <div className="product-page">
-      <ProductHeader
-        eyebrow="Grow your network"
-        title="Discover people"
-        description="Find farmers and agriculture participants by crop, role and location."
-      />
+      <DiscoverHeader />
       <DiscoverClient
         initialSearch={filters.q}
         initialCrop={filters.crop}

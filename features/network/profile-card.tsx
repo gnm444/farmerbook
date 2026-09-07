@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { MapPin, MessageCircle } from "lucide-react";
+import {
+  useAuthenticatedMessages,
+  useTranslations,
+} from "@/components/locale-provider";
 import { Avatar, VerifiedBadge } from "@/components/ui";
 import type { FarmerProfile } from "@/lib/types";
+import { localizedAccountRole } from "./localized-profile";
 
 export function ProfileCard({
   profile,
@@ -16,11 +21,16 @@ export function ProfileCard({
   pending?: boolean;
   onToggleFollow: (profileId: string) => void;
 }) {
+  const { network } = useAuthenticatedMessages();
+  const common = useTranslations("common");
+
   return (
     <article className="card profile-card">
       <div className="profile-card__top">
         <Avatar initials={profile.initials} imageUrl={profile.avatarUrl} role={profile.accountRole} />
-        <span className="badge badge--green">{profile.roleLabel}</span>
+        <span className="badge badge--green">
+          {localizedAccountRole(profile.accountRole, network)}
+        </span>
       </div>
       <h2>
         <Link
@@ -53,14 +63,14 @@ export function ProfileCard({
           aria-pressed={following}
           onClick={() => onToggleFollow(profile.id)}
         >
-          {pending ? "Saving…" : following ? "Following" : "Follow"}
+          {pending ? common("saving") : following ? network.following : network.follow}
         </button>
         <Link
           className="button button--ghost button--small"
           href={`/messages?with=${profile.id}`}
         >
           <MessageCircle size={15} aria-hidden="true" />
-          Message
+          {network.message}
         </Link>
       </div>
     </article>

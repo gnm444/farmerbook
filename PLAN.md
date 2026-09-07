@@ -238,3 +238,28 @@ explicitly forbids Google Cloud calls or mutations in this implementation run.
          Evidence: 41 Python tests, 27 focused Vitest tests, TypeScript, and
          scoped ESLint all pass. Repository-wide ESLint still scans the local
          Python `.venv` and reports third-party bundled-JavaScript findings.
+
+## Authenticated locale switching corrective plan (2026-09-07)
+
+1. Make `LocaleProvider` own synchronized client locale/catalog state and expose
+   an atomic replacement API that also updates `<html lang>` and `dir`.
+2. Make `LanguageSelector` validate the requested locale, lazy-load its catalog,
+   update the mounted app immediately, persist the cookie/profile preference,
+   refresh server components, and roll back on persistence failure.
+3. Add a typed, complete authenticated-interface catalog for every locale in
+   `SUPPORTED_LOCALES`; use it for the shared shell, language disclosure,
+   Network, Discover, profile cards, actions, errors, and accessibility labels.
+4. Keep user/profile content verbatim and localize only application-owned copy.
+5. Add registry-completeness, immediate switching, rollback, persistence,
+   navigation, RTL, and unknown-locale fallback tests; then run focused tests,
+   the full suite, typecheck, lint, and a production build.
+
+### Locale switching todo
+
+- [DONE] Implement reactive client locale state and persistence rollback.
+- [DONE] Add complete authenticated-interface translations for all 23 locales.
+- [DONE] Remove authenticated Network/Discover hard-coded English copy.
+- [DONE] Add switching, persistence, navigation, RTL, and fallback coverage.
+- [DONE] Run focused and repository-wide verification: 200 Vitest files / 915
+  tests, TypeScript, ESLint (one pre-existing `<img>` warning), production
+  build, and `git diff --check` pass.

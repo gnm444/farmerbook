@@ -408,3 +408,24 @@ scope is empty. If it creates a disposable Agent Engine session, it must delete
 the session, wait for any deletion operation, and confirm absence. This audit
 authorizes local code, tests, and documentation only; it does not authorize a
 Google Cloud request or mutation.
+
+## Authenticated locale switching audit (2026-09-07)
+
+- The root `LocaleProvider` treated the server-supplied locale and messages as
+  immutable props. `LanguageSelector` changed only its own optimistic `<select>`
+  value, saved the cookie/profile preference, and waited for `router.refresh()`;
+  mounted client components therefore kept rendering the previous catalog.
+- The selector exposes all 23 entries in `SUPPORTED_LOCALES` when extended
+  locales are enabled, so switching behavior and authenticated-interface copy
+  must cover that same registry rather than a hand-maintained subset.
+- `AppShell` reads `navigation`, but most extended catalogs intentionally point
+  that namespace at English. The Network and Discover routes additionally own
+  hard-coded English headings, filters, status text, and follow actions.
+- Safe persistence already exists in `saveLocalePreferenceAction`: it validates
+  against the locale registry, writes a one-year cookie, and attempts profile
+  synchronization. The client must update immediately, retain `router.refresh()`
+  for server components, and roll back if cookie persistence fails.
+- Names, handles, bios, crop names, districts, and states are profile-supplied
+  data and should remain verbatim. Shell labels, headings, tabs, role labels,
+  actions, errors, and accessibility labels are application copy and must come
+  from the selected locale.

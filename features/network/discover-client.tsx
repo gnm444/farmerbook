@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Search } from "lucide-react";
+import { useAuthenticatedMessages } from "@/components/locale-provider";
+import { formatAuthenticatedMessage } from "@/lib/i18n/authenticated-messages";
 import type { FarmerProfile } from "@/lib/types";
 import { setFollowAction } from "./actions";
 import { ProfileCard } from "./profile-card";
@@ -19,6 +21,7 @@ export function DiscoverClient({
   initialDistrict?: string;
   profiles: FarmerProfile[];
 }) {
+  const { discover, network } = useAuthenticatedMessages();
   const [search, setSearch] = useState(initialSearch);
   const [crop, setCrop] = useState(initialCrop);
   const [type, setType] = useState(initialType);
@@ -73,7 +76,7 @@ export function DiscoverClient({
       const result = await setFollowAction({ profileId, active });
       setPendingProfileId("");
       if (!result.ok) {
-        setError(result.message ?? "Follow could not be updated.");
+        setError(network.updateError);
         return;
       }
       setFollowing((current) => {
@@ -87,23 +90,23 @@ export function DiscoverClient({
 
   return (
     <>
-      <section className="card filters" aria-label="Discover filters">
+      <section className="card filters" aria-label={discover.filters}>
         <div className="filter-search">
           <Search size={18} aria-hidden="true" />
           <label className="sr-only" htmlFor="farmer-search">
-            Search by name or handle
+            {discover.searchLabel}
           </label>
           <input
             className="input"
             id="farmer-search"
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search name or handle"
+            placeholder={discover.searchPlaceholder}
             value={search}
           />
         </div>
         <div className="field">
           <label className="sr-only" htmlFor="crop-filter">
-            Crop
+            {discover.crop}
           </label>
           <select
             className="select"
@@ -111,16 +114,16 @@ export function DiscoverClient({
             value={crop}
             onChange={(event) => setCrop(event.target.value)}
           >
-            <option value="">All crops</option>
-            <option value="Tomato">Tomato</option>
-            <option value="Onion">Onion</option>
-            <option value="Grapes">Grapes</option>
-            <option value="Pomegranate">Pomegranate</option>
+            <option value="">{discover.allCrops}</option>
+            <option value="Tomato">{discover.tomato}</option>
+            <option value="Onion">{discover.onion}</option>
+            <option value="Grapes">{discover.grapes}</option>
+            <option value="Pomegranate">{discover.pomegranate}</option>
           </select>
         </div>
         <div className="field">
           <label className="sr-only" htmlFor="type-filter">
-            Participant type
+            {discover.role}
           </label>
           <select
             className="select"
@@ -128,16 +131,16 @@ export function DiscoverClient({
             value={type}
             onChange={(event) => setType(event.target.value)}
           >
-            <option value="">All roles</option>
-            <option value="farmer">Farmers</option>
-            <option value="agronomist">Agronomists</option>
-            <option value="fpo">FPO representatives</option>
-            <option value="trainer">Trainers</option>
+            <option value="">{discover.allRoles}</option>
+            <option value="farmer">{discover.farmers}</option>
+            <option value="agronomist">{discover.agronomists}</option>
+            <option value="fpo">{discover.fpoRepresentatives}</option>
+            <option value="trainer">{discover.trainers}</option>
           </select>
         </div>
         <div className="field">
           <label className="sr-only" htmlFor="district-filter">
-            District
+            {discover.district}
           </label>
           <select
             className="select"
@@ -145,7 +148,7 @@ export function DiscoverClient({
             value={district}
             onChange={(event) => setDistrict(event.target.value)}
           >
-            <option value="">All districts</option>
+            <option value="">{discover.allDistricts}</option>
             <option value="Nashik">Nashik</option>
             <option value="Pune">Pune</option>
             <option value="Ahmednagar">Ahmednagar</option>
@@ -153,11 +156,15 @@ export function DiscoverClient({
         </div>
       </section>
       <p className="muted" style={{ margin: "0 0 16px", fontSize: ".84rem" }}>
-        {results.length} {results.length === 1 ? "person" : "people"} found
+        {results.length === 1
+          ? discover.onePersonFound
+          : formatAuthenticatedMessage(discover.peopleFound, {
+              count: results.length,
+            })}
       </p>
       {error ? <p className="form-error">{error}</p> : null}
       {results.length ? (
-        <section className="people-grid" aria-label="People">
+        <section className="people-grid" aria-label={discover.people}>
           {results.map((profile) => (
             <ProfileCard
               key={profile.id}
@@ -174,11 +181,8 @@ export function DiscoverClient({
             <div className="empty-state__icon">
               <Search size={26} aria-hidden="true" />
             </div>
-            <h2>No people match these filters</h2>
-            <p>
-              Try removing one filter or searching a broader name, crop or
-              district.
-            </p>
+            <h2>{discover.emptyTitle}</h2>
+            <p>{discover.emptyDescription}</p>
             <button
               className="button button--secondary"
               type="button"
@@ -189,7 +193,7 @@ export function DiscoverClient({
                 setDistrict("");
               }}
             >
-              Clear filters
+              {discover.clearFilters}
             </button>
           </div>
         </section>

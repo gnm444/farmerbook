@@ -2,8 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { Avatar, VerifiedBadge } from "@/components/ui";
+import {
+  useAuthenticatedMessages,
+  useLocale,
+  useTranslations,
+} from "@/components/locale-provider";
+import { formatList } from "@/lib/i18n/format";
 import type { FarmerProfile } from "@/lib/types";
 import { setFollowAction } from "./actions";
+import { localizedAccountRole } from "./localized-profile";
 
 type NetworkTab = "following" | "followers";
 
@@ -14,6 +21,9 @@ export function NetworkClient({
   initialFollowing: FarmerProfile[];
   followers: FarmerProfile[];
 }) {
+  const { network } = useAuthenticatedMessages();
+  const locale = useLocale();
+  const common = useTranslations("common");
   const [tab, setTab] = useState<NetworkTab>("following");
   const [following, setFollowing] = useState(
     () => new Set(initialFollowing.map((profile) => profile.id)),
@@ -38,7 +48,7 @@ export function NetworkClient({
       const result = await setFollowAction({ profileId, active });
       setPendingId("");
       if (!result.ok) {
-        setError(result.message ?? "Follow could not be updated.");
+        setError(network.updateError);
         return;
       }
       setFollowing((current) => {
@@ -52,7 +62,7 @@ export function NetworkClient({
 
   return (
     <>
-      <div className="tabs" role="tablist" aria-label="Network lists">
+      <div className="tabs" role="tablist" aria-label={network.lists}>
         <button
           className="tab"
           role="tab"
@@ -60,7 +70,7 @@ export function NetworkClient({
           aria-selected={tab === "following"}
           onClick={() => setTab("following")}
         >
-          Following ({following.size})
+          {network.following} ({following.size})
         </button>
         <button
           className="tab"
@@ -69,7 +79,7 @@ export function NetworkClient({
           aria-selected={tab === "followers"}
           onClick={() => setTab("followers")}
         >
-          Followers ({followers.length})
+          {network.followers} ({followers.length})
         </button>
       </div>
       {error ? <p className="form-error">{error}</p> : null}
@@ -87,8 +97,8 @@ export function NetworkClient({
                 {profile.verified ? <VerifiedBadge /> : null}
               </strong>
               <span>
-                {profile.roleLabel} · {profile.district}, {profile.state} ·{" "}
-                {profile.crops.join(", ")}
+                {localizedAccountRole(profile.accountRole, network)} · {profile.district},{" "}
+                {profile.state} · {formatList(profile.crops, locale)}
               </span>
             </div>
             <button
@@ -101,10 +111,10 @@ export function NetworkClient({
               onClick={() => toggleFollow(profile.id)}
             >
               {pendingId === profile.id
-                ? "Saving…"
+                ? common("saving")
                 : following.has(profile.id)
-                  ? "Following"
-                  : "Follow"}
+                  ? network.following
+                  : network.follow}
             </button>
           </div>
         ))}

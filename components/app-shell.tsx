@@ -19,7 +19,10 @@ import {
 import { Avatar, Brand, DemoBanner } from "@/components/ui";
 import { LanguageSelector } from "@/components/language-selector";
 import type { FarmerProfile } from "@/lib/types";
-import { useTranslations } from "@/components/locale-provider";
+import {
+  useAuthenticatedMessages,
+  useTranslations,
+} from "@/components/locale-provider";
 
 function activeFor(pathname: string, href: string, profileHref: string) {
   if (href === profileHref) {
@@ -45,48 +48,48 @@ export function AppShell({
   incSourcingEnabled: boolean;
 }) {
   const pathname = usePathname();
-  const t = useTranslations("navigation");
+  const { navigation } = useAuthenticatedMessages();
   const common = useTranslations("common");
   const profileHref = `/farmers/${currentUser.handle}`;
   const commerceItem =
     currentUser.accountRole === "customer"
       ? {
           href: "/purchases",
-          label: t("myPurchases"),
+          label: navigation.myPurchases,
           icon: ShoppingBasket,
         }
       : currentUser.accountRole === "agri_business"
         ? {
             href: "/company",
-            label: t("myCompany"),
+            label: navigation.myCompany,
             icon: Building2,
           }
         : {
             href: "/business",
-            label: t("growBusiness"),
+            label: navigation.growBusiness,
             icon: BriefcaseBusiness,
           };
   const desktopNavItems = [
-    { href: "/feed", label: t("feed"), icon: Home },
-    { href: "/market", label: t("produceMarket"), icon: Store },
-    ...(incSourcingEnabled ? [{ href: "/sourcing", label: t("sourcingNeeds"), icon: Factory }] : []),
-    { href: "/discover", label: t("discover"), icon: Search },
-    { href: "/network", label: t("network"), icon: UsersRound },
-    { href: "/messages", label: t("messages"), icon: MessageCircle },
-    { href: "/support", label: t("support"), icon: HelpCircle },
+    { href: "/feed", label: navigation.feed, icon: Home },
+    { href: "/market", label: navigation.produceMarket, icon: Store },
+    ...(incSourcingEnabled ? [{ href: "/sourcing", label: navigation.sourcingNeeds, icon: Factory }] : []),
+    { href: "/discover", label: navigation.discover, icon: Search },
+    { href: "/network", label: navigation.network, icon: UsersRound },
+    { href: "/messages", label: navigation.messages, icon: MessageCircle },
+    { href: "/support", label: navigation.support, icon: HelpCircle },
     commerceItem,
-    { href: profileHref, label: t("myProfile"), icon: UserRound },
+    { href: profileHref, label: navigation.myProfile, icon: UserRound },
   ];
   const mobileNavItems = [
-    { href: "/feed", label: t("feed"), icon: Home },
-    { href: "/market", label: t("market"), icon: Store },
+    { href: "/feed", label: navigation.feed, icon: Home },
+    { href: "/market", label: navigation.market, icon: Store },
     currentUser.accountRole === "customer"
-      ? { href: "/purchases", label: t("purchases"), icon: ShoppingBasket }
+      ? { href: "/purchases", label: navigation.purchases, icon: ShoppingBasket }
       : currentUser.accountRole === "agri_business"
-        ? { href: "/company", label: t("company"), icon: Building2 }
-        : { href: "/network", label: t("network"), icon: UsersRound },
-    { href: "/messages", label: t("messages"), icon: MessageCircle },
-    { href: profileHref, label: t("profile"), icon: UserRound },
+        ? { href: "/company", label: navigation.company, icon: Building2 }
+        : { href: "/network", label: navigation.network, icon: UsersRound },
+    { href: "/messages", label: navigation.messages, icon: MessageCircle },
+    { href: profileHref, label: navigation.profile, icon: UserRound },
   ];
 
   return (
@@ -97,11 +100,11 @@ export function AppShell({
           <Link
             href="/feed"
             className="app-rail__brand brand"
-            aria-label={t("farmerbookFeed")}
+            aria-label={navigation.farmerbookFeed}
           >
             <Brand inverse />
           </Link>
-          <nav className="app-nav" aria-label={t("primary")}>
+          <nav className="app-nav" aria-label={navigation.primary}>
             {desktopNavItems.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
@@ -134,13 +137,13 @@ export function AppShell({
         </aside>
 
         <header className="mobile-topbar">
-          <Link href="/feed" className="brand" aria-label={t("farmerbookFeed")}>
+          <Link href="/feed" className="brand" aria-label={navigation.farmerbookFeed}>
             <Brand />
           </Link>
           <Link
             className="icon-button"
             href="/discover"
-            aria-label={t("searchFarmerbook")}
+            aria-label={navigation.searchFarmerbook}
           >
             <Compass size={20} aria-hidden="true" />
           </Link>
@@ -148,7 +151,7 @@ export function AppShell({
 
         <main className="app-main">{children}</main>
 
-        <nav className="mobile-nav" aria-label={t("mobileNavigation")}>
+        <nav className="mobile-nav" aria-label={navigation.mobileNavigation}>
           {mobileNavItems.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}

@@ -86,7 +86,7 @@ export default async function RootLayout({
     <html lang={locale} dir={directionForLocale(locale)}>
       <body>
         <ClientReady />
-        <LocaleProvider locale={locale} messages={messages}>
+        <LocaleProvider key={locale} locale={locale} messages={messages}>
           {children}
         </LocaleProvider>
       </body>

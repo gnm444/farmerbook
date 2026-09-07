@@ -1,16 +1,24 @@
 "use client";
 
-import { useId, useOptimistic, useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveLocalePreferenceAction } from "@/features/profiles/locale-actions";
 import {
   CORE_LOCALES,
   localeRegistry,
+  normalizeLocale,
   SUPPORTED_LOCALES,
   type SupportedLocale,
 } from "@/lib/i18n/locales";
+import { loadMessages } from "@/lib/i18n/loader";
 import { localeReviewLabel } from "@/lib/i18n/review-status";
-import { useLocale, useTranslations } from "./locale-provider";
+import {
+  useAuthenticatedMessages,
+  useLocale,
+  useLocaleMessages,
+  useReplaceLocale,
+  useTranslations,
+} from "./locale-provider";
 
 export function LanguageSelector({
   className = "language-selector field",
@@ -24,25 +32,52 @@ export function LanguageSelector({
   const id = useId();
   const router = useRouter();
   const locale = useLocale();
+  const localeMessages = useLocaleMessages();
+  const replaceLocale = useReplaceLocale();
+  const authenticated = useAuthenticatedMessages();
   const common = useTranslations("common");
   const errors = useTranslations("errors");
-  const [selected, setSelected] = useOptimistic(locale);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
-  const visibleLocales = extendedLocalesEnabled
+  const visibleLocales: readonly SupportedLocale[] = extendedLocalesEnabled
     ? SUPPORTED_LOCALES
     : CORE_LOCALES.some((coreLocale) => coreLocale === locale)
       ? CORE_LOCALES
       : [locale, ...CORE_LOCALES];
 
-  function chooseLocale(nextLocale: SupportedLocale) {
+  function chooseLocale(input: unknown) {
     setMessage("");
     setError("");
+    const nextLocale = normalizeLocale(input);
+    if (!nextLocale || !visibleLocales.includes(nextLocale)) {
+      setError(errors("invalidLocale"));
+      return;
+    }
+    if (nextLocale === locale) return;
+
+    const previousLocale = locale;
+    const previousMessages = localeMessages;
     startTransition(async () => {
-      setSelected(nextLocale);
-      const result = await saveLocalePreferenceAction(nextLocale);
+      let nextMessages;
+      try {
+        nextMessages = await loadMessages(nextLocale);
+      } catch {
+        setError(errors("generic"));
+        return;
+      }
+
+      replaceLocale(nextLocale, nextMessages);
+      let result;
+      try {
+        result = await saveLocalePreferenceAction(nextLocale);
+      } catch {
+        replaceLocale(previousLocale, previousMessages);
+        setError(errors("generic"));
+        return;
+      }
       if (!result.ok) {
+        replaceLocale(previousLocale, previousMessages);
         setError(
           result.code === "invalid_locale"
             ? errors("invalidLocale")
@@ -61,10 +96,10 @@ export function LanguageSelector({
       <select
         className="select"
         id={id}
-        value={selected}
+        value={locale}
         disabled={isPending}
         aria-describedby={message || error ? `${id}-status` : undefined}
-        onChange={(event) => chooseLocale(event.target.value as SupportedLocale)}
+        onChange={(event) => chooseLocale(event.target.value)}
       >
         {visibleLocales.map((supportedLocale) => {
           const details = localeRegistry[supportedLocale];
@@ -98,10 +133,9 @@ export function LanguageSelector({
           {error}
         </span>
       ) : null}
-      {localeReviewLabel(selected) === "beta" ? (
-        <span className="form-helper" lang="en-IN" dir="ltr">
-          Beta language support: text awaiting native-speaker review falls back
-          to Indian English.
+      {localeReviewLabel(locale) === "beta" ? (
+        <span className="form-helper">
+          {authenticated.betaDisclosure}
         </span>
       ) : null}
     </div>

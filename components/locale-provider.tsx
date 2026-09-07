@@ -1,12 +1,18 @@
 "use client";
 
 import {
+  useCallback,
   createContext,
   useContext,
   useEffect,
   useMemo,
+  useState,
   type ReactNode,
 } from "react";
+import {
+  getAuthenticatedMessages,
+  type AuthenticatedMessages,
+} from "@/lib/i18n/authenticated-messages";
 import {
   createTranslator,
   type InterpolationValues,
@@ -24,6 +30,7 @@ type LocaleContextValue = {
   locale: SupportedLocale;
   messages: Messages;
   translate: (key: MessageKey, values?: InterpolationValues) => string;
+  replaceLocale: (locale: SupportedLocale, messages: Messages) => void;
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -37,15 +44,39 @@ export function LocaleProvider({
   messages: Messages;
   children: ReactNode;
 }) {
+  const [clientOverride, setClientOverride] = useState<{
+    locale: SupportedLocale;
+    messages: Messages;
+  } | null>(null);
+  const active = useMemo(
+    () =>
+      clientOverride && clientOverride.locale !== locale
+        ? clientOverride
+        : { locale, messages },
+    [clientOverride, locale, messages],
+  );
+
+  const replaceLocale = useCallback(
+    (nextLocale: SupportedLocale, nextMessages: Messages) => {
+      setClientOverride({ locale: nextLocale, messages: nextMessages });
+    },
+    [],
+  );
+
   const value = useMemo<LocaleContextValue>(
-    () => ({ locale, messages, translate: createTranslator(messages) }),
-    [locale, messages],
+    () => ({
+      locale: active.locale,
+      messages: active.messages,
+      translate: createTranslator(active.messages),
+      replaceLocale,
+    }),
+    [active, replaceLocale],
   );
 
   useEffect(() => {
-    document.documentElement.lang = locale;
-    document.documentElement.dir = directionForLocale(locale);
-  }, [locale]);
+    document.documentElement.lang = active.locale;
+    document.documentElement.dir = directionForLocale(active.locale);
+  }, [active.locale]);
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }
@@ -56,6 +87,15 @@ export function useLocale() {
 
 export function useLocaleMessages() {
   return useLocaleContext().messages;
+}
+
+export function useReplaceLocale() {
+  return useLocaleContext().replaceLocale;
+}
+
+export function useAuthenticatedMessages(): AuthenticatedMessages {
+  const locale = useLocale();
+  return useMemo(() => getAuthenticatedMessages(locale), [locale]);
 }
 
 export function useTranslator() {
