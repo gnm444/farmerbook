@@ -37,16 +37,16 @@ export default async function LandingPage() {
             <div className="hero-copy">
               <span className="badge hero-badge">
                 <Sprout size={15} aria-hidden="true" />
-                {t("home.heroBadge")}
+                {t("home.buyerHeroBadge")}
               </span>
-              <h1>{t("home.heroTitle")}</h1>
-              <p>{t("home.heroBody")}</p>
+              <h1>{t("home.buyerHeroTitle")}</h1>
+              <p>{t("home.buyerHeroBody")}</p>
               <div className="hero-actions">
-                <Link className="button" href="/signup">
-                  {t("home.joinNetwork")}
+                <Link className="button" href="/marketplace">
+                  {t("home.shopDirectly")}
                 </Link>
-                <Link className="button button--secondary" href="/marketplace">
-                  {t("home.exploreMarketplace")}
+                <Link className="button button--secondary" href="/featured-farmers">
+                  {t("home.meetFarmers")}
                 </Link>
               </div>
               <div className="hero-note">
@@ -65,29 +65,70 @@ export default async function LandingPage() {
             <div className="farm-hero-visual">
               <img
                 className="farm-hero-image"
-                src="/images/deccan/farmer-and-poultry.webp"
-                alt={t("home.heroImageAlt")}
-                width={1804}
-                height={872}
+                src="/images/home/farmer-customer-field-hero.png"
+                alt={t("home.buyerHeroImageAlt")}
+                width={1672}
+                height={941}
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
               />
               <div className="farm-hero-caption">
-                <span>{t("home.oneNetwork")}</span>
-                <strong>{t("home.builtAroundIndia")}</strong>
-                <small>{t("home.editorialDisclosure")}</small>
+                <span>{t("home.buyerHeroCaptionEyebrow")}</span>
+                <strong>{t("home.buyerHeroCaptionTitle")}</strong>
+                <small>{t("home.buyerHeroCaptionBody")}</small>
               </div>
               <div className="farm-hero-seal" aria-hidden="true">
                 <Sprout size={20} />
                 <span>{t("home.farmToMarket")}</span>
               </div>
-              <div className="farm-hero-tags" aria-label={t("home.supportedAreas")}>
-                <span>{t("home.poultry")}</span>
-                <span>{t("home.produce")}</span>
-                <span>{t("home.dairy")}</span>
-                <span>{t("home.services")}</span>
+              <div className="farm-hero-tags" aria-label={t("home.buyerProductTags")}>
+                <span>{t("home.milk")}</span>
+                <span>{t("home.vegetables")}</span>
+                <span>{t("home.fruits")}</span>
+                <span>{t("home.staplesAndOils")}</span>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="section buyer-paths" aria-labelledby="buyer-paths-heading">
+          <div className="container">
+            <div className="section-heading buyer-paths__heading">
+              <div>
+                <p className="eyebrow">{t("home.buyerPathsEyebrow")}</p>
+                <h2 id="buyer-paths-heading">{t("home.buyerPathsTitle")}</h2>
+              </div>
+              <p>{t("home.buyerPathsBody")}</p>
+            </div>
+            <div className="buyer-paths__grid">
+              <article className="buyer-path-card">
+                <img src="/images/marketplace/produce-market-hero.webp" alt="Farmers and customers selecting fresh produce together" width={1586} height={992} loading="lazy" decoding="async" />
+                <div>
+                  <ShoppingBasket size={22} aria-hidden="true" />
+                  <h3>{t("home.buyDirectTitle")}</h3>
+                  <p>{t("home.buyDirectBody")}</p>
+                  <Link href="/marketplace">{t("home.browseNaturalProducts")} →</Link>
+                </div>
+              </article>
+              <article className="buyer-path-card">
+                <img src="/images/home/farmer-network-hero.webp" alt="Farmer standing among vegetable rows and ready produce" width={1586} height={992} loading="lazy" decoding="async" />
+                <div>
+                  <ContactRound size={22} aria-hidden="true" />
+                  <h3>{t("home.meetFarmersTitle")}</h3>
+                  <p>{t("home.meetFarmersBody")}</p>
+                  <Link href="/featured-farmers">{t("home.meetFarmers")} →</Link>
+                </div>
+              </article>
+              <article className="buyer-path-card">
+                <img src="/images/featured-farmers/kuna-ramam-working-field.jpg" alt="Farmer working in a field during a farm visit" width={2976} height={1676} loading="lazy" decoding="async" />
+                <div>
+                  <MapPinned size={22} aria-hidden="true" />
+                  <h3>{t("home.visitFieldsTitle")}</h3>
+                  <p>{t("home.visitFieldsBody")}</p>
+                  <Link href="/farm-visits">{t("home.requestFarmVisit")} →</Link>
+                </div>
+              </article>
             </div>
           </div>
         </section>

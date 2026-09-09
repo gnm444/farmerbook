@@ -50,8 +50,10 @@ describe("Sandeep Dasari Featured Farmer profile", () => {
       "kuna-ramam-srikakulam-organic-farming",
       "venu-v-v-venu-madhav",
       "aahaara-vanam-shanthi-srinath",
+      "sai-butcha-rao-mallampalli",
+      "malyadri-beegala-five-layer-food-forest",
     ]);
-    expect(new Set(publications.map((item) => item.slug)).size).toBe(9);
+    expect(new Set(publications.map((item) => item.slug)).size).toBe(11);
     await expect(
       loadFeaturedFarmerPublication("sandeep-dasari-avani-van-farms"),
     ).resolves.toBe(sandeepDasariPublication);

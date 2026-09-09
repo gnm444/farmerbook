@@ -27,6 +27,10 @@ import {
   AWARENESS_FARMING_SUPERPOWER_SLUG,
   awarenessFarmingSuperpowerPublication,
 } from "./publications/awareness-farming-superpower";
+import {
+  RESTORING_SACREDNESS_GANESH_CHATURTHI_SLUG,
+  restoringSacrednessGaneshChaturthiPublication,
+} from "./publications/restoring-sacredness-ganesh-chaturthi";
 
 export {
   FOOD_TRACEABILITY_SLUG,
@@ -36,6 +40,7 @@ export {
   SACRED_JOURNEY_FIVE_ELEMENTS_SLUG,
   WEALTH_HEALTH_PARADOX_SLUG,
   AWARENESS_FARMING_SUPERPOWER_SLUG,
+  RESTORING_SACREDNESS_GANESH_CHATURTHI_SLUG,
 };
 
 export const CALCULATED_TRANSITION_SLUG =
@@ -225,6 +230,7 @@ export const STATIC_BLOG_PUBLICATIONS = [
   jaggeryPurityEvidencePublication,
   foundingBlogPublication,
   sacredJourneyFiveElementsPublication,
+  restoringSacrednessGaneshChaturthiPublication,
 ] as const;
 
 export function staticBlogPublication(slug: string) {

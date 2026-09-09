@@ -25,6 +25,10 @@ const socialIcons = {
   linkedin: BriefcaseBusiness,
 };
 
+const editorialCategoryLabels: Record<string, string> = {
+  "featured-professionals": "Featured Professionals",
+};
+
 function formatDate(value: string, locale: SupportedLocale) {
   return new Intl.DateTimeFormat(locale, {
     day: "numeric",
@@ -35,6 +39,7 @@ function formatDate(value: string, locale: SupportedLocale) {
 
 function categoryLabel(slug: string) {
   return (
+    editorialCategoryLabels[slug] ??
     agricultureCompanySectorBySlug(slug)?.name ??
     agricultureCategoryBySlug(slug)?.name ??
     slug.replaceAll("-", " ")
