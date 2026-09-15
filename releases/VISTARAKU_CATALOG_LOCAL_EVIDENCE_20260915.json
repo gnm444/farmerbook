@@ -14,6 +14,31 @@
     "commit": "91ba2d2431bf561328eb4e8f85854062f1bff111",
     "description": "clean local recovery base; not an authenticated production baseline"
   },
+  "providerReadOnlyDiscovery": {
+    "observedAt": "2026-09-15T01:00:32Z",
+    "account": "Cloudflare account accessible through the authenticated dashboard",
+    "productionWorker": "farmerbook",
+    "activeVersionPrefix": "4772a2af",
+    "activeVersionObservedTrafficPercent": 100,
+    "activeVersionDescription": "Add Telugu Vinayaka Patri article and move reflection to end",
+    "savedVistarakuVersionPrefix": "910f3cc1",
+    "savedVistarakuVersionDescription": "Stage Vistaraku catalog-first rollout (intake disabled)",
+    "savedVistarakuVersionProvenance": "No immutable mapping from the provider version to this candidate commit or bundle was available.",
+    "isolatedStagingWorker": false,
+    "workerInventory": [
+      "farmerbook",
+      "evryone",
+      "farmerbook-owned-social-connector"
+    ],
+    "productionDependencies": [
+      "Durable Objects",
+      "Workflows",
+      "cron trigger",
+      "live application feature bindings"
+    ],
+    "privateVistarakuRuntimeFlagsObserved": "disabled",
+    "previewSmokeFromThisHost": "blocked by a network-level 403 before the Worker; not a candidate route result"
+  },
   "candidatePaths": [
     "app/companies/vistaraku/page.tsx",
     "app/sitemap.ts",
@@ -45,9 +70,10 @@
     "stagingMutation": false
   },
   "releaseBlockers": [
-    "No protected builder, operation-specific broker, or independently authenticated production baseline is available.",
-    "The recovered release policy requires Worker v142 to remain at 100% traffic; current provider state is not independently verified.",
-    "A distinct human approver and protected staging credentials are unavailable."
+    "The authenticated production Worker is a newer version than origin/main and the exact candidate base. Replacing the full Worker bundle from this candidate could roll back unrelated live content and configuration behavior.",
+    "The saved provider version labelled as the Vistaraku catalog rollout has no immutable source-commit or bundle-hash attestation, so it cannot safely be promoted as this exact candidate.",
+    "No isolated staging Worker exists. Creating one would require an explicit isolated binding and trigger plan because the production Worker owns Durable Objects, Workflows, a cron trigger, and live feature bindings.",
+    "A distinct human approver and protected promotion path remain unavailable."
   ],
   "notReleaseAuthorization": true
 }
