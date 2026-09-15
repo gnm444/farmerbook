@@ -14,6 +14,7 @@ const publicPaths = [
   "/terms",
   "/license",
   "/eco-products",
+  "/companies/vistaraku",
   "/data-deletion",
   "/blog",
 ] as const;
