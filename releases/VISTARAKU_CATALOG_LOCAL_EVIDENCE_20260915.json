@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "kind": "local-immutable-candidate-evidence",
+  "createdAt": "2026-09-15T00:16:10Z",
+  "status": "locally-verified-release-no-go",
+  "candidate": {
+    "tag": "candidate/vistaraku-catalog-20260915",
+    "commit": "57f34107ccc77c6627920162b611cd2f9bbf3b6a",
+    "tree": "bf97bf9c03243a7fa28b836822d9d5ca1e97716d",
+    "sourceArchiveSha256": "5d869fee1c0f1b2b0b54850c0da1bf71d95e9744a9f965822e035df03a3edc35",
+    "workerBundleSha256": "23f764dee4eb6eecae187cfdf839c050c5297d740f48b21e700b455cb050ded3"
+  },
+  "baseline": {
+    "commit": "91ba2d2431bf561328eb4e8f85854062f1bff111",
+    "description": "clean local recovery base; not an authenticated production baseline"
+  },
+  "candidatePaths": [
+    "app/companies/vistaraku/page.tsx",
+    "app/sitemap.ts",
+    "docs/VISTARAKU_PARTNER_CATALOG.md",
+    "features/vistaraku/catalog.ts",
+    "features/vistaraku/vistaraku.module.css",
+    "tests/vistaraku-catalog.test.ts"
+  ],
+  "archiveValidation": {
+    "cleanInstall": "passed: npm ci --ignore-scripts",
+    "focusedTests": "passed: 1 file, 5 tests",
+    "fullTests": "passed: 201 files, 920 tests",
+    "typecheck": "passed",
+    "scopedLint": "passed",
+    "fullLint": "passed with one pre-existing warning in components/ui.tsx",
+    "build": "passed",
+    "candidatePathGitleaks": "passed",
+    "wholeArtifactGitleaks": "not a whole-artifact pass: 3 findings in pre-existing noncandidate bundle content",
+    "vistarakuRouteArtifactGitleaks": "passed",
+    "vistarakuSpecificArtifactSentinel": "passed"
+  },
+  "boundary": {
+    "privateIntake": false,
+    "databaseChange": false,
+    "providerAction": false,
+    "scheduler": false,
+    "hostedProductImages": false,
+    "productionMutation": false,
+    "stagingMutation": false
+  },
+  "releaseBlockers": [
+    "No protected builder, operation-specific broker, or independently authenticated production baseline is available.",
+    "The recovered release policy requires Worker v142 to remain at 100% traffic; current provider state is not independently verified.",
+    "A distinct human approver and protected staging credentials are unavailable."
+  ],
+  "notReleaseAuthorization": true
+}

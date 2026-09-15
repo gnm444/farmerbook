@@ -429,3 +429,115 @@ Google Cloud request or mutation.
   data and should remain verbatim. Shell labels, headings, tabs, role labels,
   actions, errors, and accessibility labels are application copy and must come
   from the selected locale.
+
+## Goal 9 recovery and release audit (2026-09-15)
+
+### Recovery boundary
+
+The authoritative base is clean `main` at
+`91ba2d2431bf561328eb4e8f85854062f1bff111`. The complete recovery object is
+stash commit `60726395b0eeeb9c10f6240653031b96f27db3a8`; its third parent
+`2a90be8457cf9beb83d75e18c3848778c9981aaa` contains the untracked Vistaraku
+files and the governing `AGENTS.md`/`GOALS.md`. The stash itself must not be
+applied or popped. All recovery is file- or hunk-selective.
+
+The Vistaraku-owned source is limited to `app/companies/vistaraku`,
+`features/vistaraku`, `worker/vistaraku-maintenance.ts`, the exact
+`20260914150000_vistaraku_cod_orders.sql` migration and pgTAP, focused tests,
+the readiness script and operator guide. Shared integration is limited to the
+Vistaraku-specific additions in `.env.example`, `app/marketplace/page.tsx`,
+`app/privacy/page.tsx`, `app/sitemap.ts`, `lib/feature-flags.ts`,
+`lib/security-headers.ts`, `next.config.ts`, `vite.config.ts` and
+`worker/index.ts`. Natural Plates, supplier categories, Google agents,
+Featured Farmers and CEO-mailbox implementation are excluded.
+
+### Current application and security findings
+
+- `app/companies/vistaraku/page.tsx` in the recovered tree statically imports
+  `VistarakuForms` and `vistarakuConfiguration`. Even with the intake flag
+  false, this couples the nominal catalog release to action, Supabase, privacy,
+  notification and Turnstile modules. A genuine first candidate must omit
+  those imports and render only the public catalog.
+- `features/vistaraku/actions.ts` previously accepted requests when Origin or
+  Host was missing and derived the Turnstile hostname from request-controlled
+  headers. The corrected boundary must require both values, require exact
+  same-origin host equality, require the normalized hostname in a configured
+  `TURNSTILE_HOSTNAMES` allowlist, and then require Siteverify to return the
+  same hostname and the exact action.
+- The recovered schema permits a 4,096-character token. The canonical
+  Siteverify boundary caps tokens at 2,048 characters and fails closed for an
+  empty hostname allowlist.
+- `recordNotification` caught thrown errors but ignored a resolved Supabase
+  `{ error }` response. Result persistence must treat either case as failure
+  without retrying an ambiguous provider call.
+- Sender hashes were unversioned. Because retained rows may live for 180 days,
+  withdrawal and rate limiting must bind an explicit HMAC version and reject
+  unknown versions instead of silently changing meaning after rotation.
+- The retained pgTAP is sequential. It proves database constraints and RPC
+  behavior but cannot substantiate the prior claim of a separate-session lock
+  test. A reproducible two-connection harness is required.
+
+### Catalog and source refresh
+
+The official manufacturer pages were re-read on 15 September 2026. The 22
+recovered products and their pack/MOQ facts remain consistent with the eight
+catalog sections. The official FAQ now publishes general India delivery and
+dispatch estimates, so the recovered statement that Vistaraku publishes no
+delivery coverage or lead times is stale. FarmerBook must instead say that it
+has not independently confirmed whether manufacturer-published estimates,
+stock, fees, tax or pricing apply to a FarmerBook request. This preserves the
+confirmation-first commerce boundary without contradicting the source.
+
+The production observations at the start of this run were:
+
+```text
+GET https://farmerbook.in/api/health                 -> 200 {"status":"ok"}
+GET https://farmerbook.in/companies/vistaraku        -> 404
+GET https://www.farmerbook.in/companies/vistaraku    -> 404
+GET https://farmerbook.in/companies                  -> 404
+```
+
+The catalog page therefore must not link its back action to the gated
+`/companies` index. The first candidate uses the always-public `/marketplace`
+as its back action and adds the page to the sitemap. A marketplace cross-link
+and any generic Companies enablement are deliberately deferred because the
+recovered catalog-only release policy permits only a narrowly bounded delta.
+
+### Two-candidate data flow
+
+```text
+clean base
+   |
+   +--> catalog-only commit/tag/archive
+   |       catalog + page + CSS + sitemap discovery
+   |       no copied/hosted manufacturer imagery
+   |       no forms, actions, Supabase, migration, provider or scheduler import
+   |       all live GET smoke is side-effect-free
+   |
+   +--> later intake commit/tag/archive
+           strict form -> Origin/Host/hostname/action Turnstile gate
+                       -> versioned HMAC + UUID/fingerprint
+                       -> service-role RPC -> forced-RLS private table
+                       -> provider remains independently disabled
+                       -> bounded cleanup and keyed withdrawal
+```
+
+### Release-control finding
+
+Recovered `AGENTS.md` requires production Worker release 142 to remain at 100%
+traffic. The protected broker workflow is triggerless (`on: []`), false-gated,
+has null production runner/container/provider pins, and contains no upload,
+traffic, rollback, tag or database mutation implementation. Local release
+control is evidence-only. A clean immutable archive can be built and reviewed,
+but no local command is allowed to substitute for the missing protected broker.
+Production release therefore remains NO-GO until external protected enforcement
+and a distinct approver are verified.
+
+### Research checkpoint
+
+The recovered implementation is usable only after the catalog/intake split and
+the four security corrections above. The user's current instruction explicitly
+approves implementing this bounded plan, creating immutable local candidates,
+and using protected deployment after every gate passes. It does not waive the
+repository's fail-closed release, privacy, Turnstile, credential or provider
+requirements.

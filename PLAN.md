@@ -263,3 +263,89 @@ explicitly forbids Google Cloud calls or mutations in this implementation run.
 - [DONE] Run focused and repository-wide verification: 200 Vitest files / 915
   tests, TypeScript, ESLint (one pre-existing `<img>` warning), production
   build, and `git diff --check` pass.
+
+## Goal 9 — Vistaraku recovery and completion plan (2026-09-15)
+
+Approval: the current delegated user instruction explicitly supersedes older
+stop/cancellation state and authorizes this bounded implementation plus a
+protected production deployment after every gate passes. The same instruction
+requires the recovered `AGENTS.md` release controls, privacy controls, and
+provider gates to remain fail-closed.
+
+### Approach
+
+Recover only Vistaraku-owned files and exact shared hunks from stash object
+`60726395b0eeeb9c10f6240653031b96f27db3a8`. First create a truly provider-free
+catalog candidate. Then add the private intake as a separate default-off source
+candidate after correcting Origin/Turnstile binding, notification-result error
+handling, HMAC versioning and reproducible concurrency evidence. Build and test
+only immutable Git archives. Never deploy the later intake candidate until its
+isolated staging, privacy, cleanup, Turnstile and credential gates pass.
+
+### Catalog candidate
+
+- Recover the 22-product immutable catalog, source-linked page and CSS.
+- Refresh the review date and correct stale delivery-copy claims.
+- Keep the page free of form, action, database, notification, privacy,
+  Turnstile and maintenance imports.
+- Keep manufacturer imagery on the linked source pages; do not copy, host or
+  embed it in the first candidate.
+- Add only the public sitemap path for discovery. Do not enable the generic
+  Companies feature or widen the constrained catalog-only delta.
+- Add a catalog test that asserts the provider-free module boundary.
+- Commit and annotate an immutable local candidate; build and inspect it from a
+  Git archive, not the working tree.
+
+### Private intake candidate
+
+- Recover distinct COD/inquiry schemas, forms, actions and contracts.
+- Cap Turnstile tokens at 2,048 characters; require Origin and Host; bind the
+  current hostname to a non-empty `TURNSTILE_HOSTNAMES` allowlist and exact
+  Siteverify hostname/action results.
+- Version sender HMACs explicitly and store/validate that version through the
+  database RPCs so future rotation cannot reinterpret retained records.
+- Check both thrown and resolved Supabase notification-result failures without
+  retrying a provider response whose outcome may be ambiguous.
+- Recover the isolated forced-RLS migration, keyed withdrawal and bounded
+  cleanup. Add a reproducible two-session lock harness and truthful evidence.
+- Keep intake, privacy approval, cleanup, email and WhatsApp false by default;
+  keep provider destinations/secrets blank or server-only.
+
+### Verification and release gates
+
+- [DONE] Verify the base contains no tracked Vistaraku `AGENTS.md` or
+  `GOALS.md`; do not recreate a partial global ledger or recover a home-level
+  instruction file outside the repository.
+- [DONE] Create and test the provider-free catalog source.
+- [DONE] Create immutable catalog commit/tag and a separate local evidence
+  manifest that explicitly is not a release authorization.
+- [DONE] Run clean install, focused/full tests, typecheck, scoped/full lint,
+  production build, candidate-source and artifact sentinels, and whitespace
+  checks from an immutable archive.
+- [BLOCKED] Re-read current production health/route and retain the exact rollback
+      Worker version through fresh authenticated provider evidence.
+- [BLOCKED] Use only the protected broker for a zero/limited-traffic catalog canary;
+      verify apex and `www` health, page, sitemap, assets and rollback.
+- [DEFERRED] Recover and correct the default-off private intake source in a
+  separately approved candidate.
+- [DEFERRED] Run exact migration/pgTAP plus reproducible two-session concurrency in an
+      isolated disposable database.
+- [DEFERRED] Obtain isolated staging credentials and prove migration ledger, forced
+      RLS/grants, rate/idempotency/withdrawal, cleanup and Turnstile valid,
+      missing, expired, replayed, wrong-host and wrong-action behavior.
+- [DEFERRED] Approve/test the privacy mailbox and provider-copy deletion procedure.
+- [DEFERRED] Treat email and WhatsApp as independent later candidates; never enable
+      either without separate credentials, consent, sender/template/webhook,
+      retention and rollback evidence.
+- [BLOCKED] Update a future complete goal ledger with evidence only; mark Goal 9 complete only after live
+      route evidence and all applicable gates are satisfied.
+
+### Rollback
+
+For catalog-only release failure, return traffic to the freshly verified prior
+Worker version; there is no database rollback. For any later intake incident,
+disable intake/cleanup/providers first, preserve authorized records, restore the
+prior Worker through the protected broker, and use only a reviewed forward SQL
+correction. Never rewrite migration history or retry an unknown provider send.
+
+Plan approved by the current user instruction. Proceed within this exact scope.
