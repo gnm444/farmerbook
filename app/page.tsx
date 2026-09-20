@@ -140,6 +140,18 @@ export default async function LandingPage() {
 
         <UnifiedMarketplace
           items={marketplaceItems}
+          plateAwareness={{
+            eyebrow: t("home.plateAwarenessEyebrow"),
+            title: t("home.plateAwarenessTitle"),
+            body: t("home.plateAwarenessBody"),
+            note: t("home.plateAwarenessNote"),
+            cta: t("home.plateAwarenessCta"),
+            evidence: t("home.plateAwarenessEvidence"),
+            evidenceHref: "https://www.fda.gov/food/environmental-contaminants-food/microplastics-and-nanoplastics-foods",
+            guidance: t("home.plateAwarenessGuidance"),
+            guidanceHref: "https://www.fssai.gov.in/upload/uploadfiles/files/Compendium_Packaging_Regulations_09_09_2022.pdf",
+            imageAlt: t("home.plateAwarenessImageAlt"),
+          }}
           labels={{
             eyebrow: t("home.marketplaceHubEyebrow"),
             title: t("home.marketplaceHubTitle"),
@@ -150,8 +162,10 @@ export default async function LandingPage() {
             allCategories: t("home.marketplaceAllCategories"),
             byProduct: t("home.marketplaceByProduct"),
             bySeller: t("home.marketplaceBySeller"),
+            byCategory: t("home.marketplaceByCategory"),
             resultCount: t("home.marketplaceResultCount"),
             sellerCount: t("home.marketplaceSellerCount"),
+            categoryCount: t("home.marketplaceCategoryCount"),
             noResultsTitle: t("home.marketplaceNoResultsTitle"),
             noResultsBody: t("home.marketplaceNoResultsBody"),
             browse: t("home.marketplaceBrowse"),

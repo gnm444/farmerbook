@@ -4517,15 +4517,60 @@ img {
   font-size: 0.84rem;
 }
 
+.unified-marketplace__active-category {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin: -2px 0 14px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--leaf-100);
+  color: var(--forest-900);
+  font-size: 0.8rem;
+}
+
+.unified-marketplace__active-category button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--forest-800);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.unified-marketplace__body-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.3fr);
+  grid-template-areas: "results plate";
+  gap: 20px;
+  align-items: start;
+}
+
+.unified-marketplace__results-column {
+  grid-area: results;
+  min-width: 0;
+}
+
 .unified-marketplace__grid,
-.unified-marketplace__seller-grid {
+.unified-marketplace__seller-grid,
+.unified-marketplace__category-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
+.unified-marketplace__body-layout .unified-marketplace__grid,
+.unified-marketplace__body-layout .unified-marketplace__seller-grid,
+.unified-marketplace__body-layout .unified-marketplace__category-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .unified-marketplace__tile,
-.unified-marketplace__seller-card {
+.unified-marketplace__seller-card,
+.unified-marketplace__category-card {
   min-width: 0;
   overflow: hidden;
   border: 1px solid rgba(45, 80, 22, 0.15);
@@ -4576,7 +4621,8 @@ img {
 }
 
 .unified-marketplace__tile h3,
-.unified-marketplace__seller-card h3 {
+.unified-marketplace__seller-card h3,
+.unified-marketplace__category-card h3 {
   margin: 0;
   color: var(--forest-900);
   font-family: "Playfair Display", "Noto Serif", Georgia, ui-serif, serif;
@@ -4635,7 +4681,8 @@ img {
   color: var(--amber-700);
 }
 
-.unified-marketplace__seller-card {
+.unified-marketplace__seller-card,
+.unified-marketplace__category-card {
   display: flex;
   gap: 14px;
   align-items: flex-start;
@@ -4653,29 +4700,34 @@ img {
   color: var(--forest-900);
 }
 
-.unified-marketplace__seller-card > div:last-child {
+.unified-marketplace__seller-card > div:last-child,
+.unified-marketplace__category-card > div:last-child {
   display: grid;
   gap: 7px;
   min-width: 0;
 }
 
-.unified-marketplace__seller-card .eyebrow {
+.unified-marketplace__seller-card .eyebrow,
+.unified-marketplace__category-card .eyebrow {
   margin: 0;
   font-size: 0.67rem;
 }
 
-.unified-marketplace__seller-card h3 {
+.unified-marketplace__seller-card h3,
+.unified-marketplace__category-card h3 {
   font-size: 1.22rem;
 }
 
-.unified-marketplace__seller-card p:not(.eyebrow) {
+.unified-marketplace__seller-card p:not(.eyebrow),
+.unified-marketplace__category-card p:not(.eyebrow) {
   margin: 0 0 6px;
   color: var(--muted);
   font-size: 0.84rem;
   line-height: 1.5;
 }
 
-.unified-marketplace__seller-card .button {
+.unified-marketplace__seller-card .button,
+.unified-marketplace__category-card .button {
   width: fit-content;
 }
 
@@ -4704,6 +4756,85 @@ img {
   line-height: 1.55;
 }
 
+.unified-marketplace__plate-awareness {
+  grid-area: plate;
+  position: sticky;
+  top: 92px;
+  overflow: hidden;
+  border: 1px solid rgba(45, 80, 22, 0.18);
+  border-radius: var(--radius-md);
+  background: var(--forest-900);
+  color: #fffdf6;
+  box-shadow: var(--shadow-md);
+}
+
+.unified-marketplace__plate-awareness > img {
+  display: block;
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  background: var(--leaf-100);
+}
+
+.unified-marketplace__plate-awareness > div {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+}
+
+.unified-marketplace__plate-awareness .eyebrow,
+.unified-marketplace__plate-awareness h3,
+.unified-marketplace__plate-awareness p,
+.unified-marketplace__plate-awareness small {
+  margin: 0;
+}
+
+.unified-marketplace__plate-awareness .eyebrow {
+  color: var(--amber-300);
+}
+
+.unified-marketplace__plate-awareness h3 {
+  color: #fffdf6;
+  font-family: "Playfair Display", "Noto Serif", Georgia, ui-serif, serif;
+  font-size: 1.38rem;
+  line-height: 1.15;
+}
+
+.unified-marketplace__plate-awareness p,
+.unified-marketplace__plate-awareness small {
+  color: rgba(255, 253, 246, 0.82);
+  line-height: 1.55;
+}
+
+.unified-marketplace__plate-awareness p {
+  font-size: 0.86rem;
+}
+
+.unified-marketplace__plate-awareness small {
+  font-size: 0.73rem;
+}
+
+.unified-marketplace__plate-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.unified-marketplace__plate-actions a {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  width: fit-content;
+  color: var(--amber-200);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.unified-marketplace__plate-actions a:hover {
+  color: #fffdf6;
+}
+
 @media (max-width: 900px) {
   .unified-marketplace__controls {
     grid-template-columns: 1fr 1fr;
@@ -4714,8 +4845,27 @@ img {
   }
 
   .unified-marketplace__grid,
-  .unified-marketplace__seller-grid {
+  .unified-marketplace__seller-grid,
+  .unified-marketplace__category-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .unified-marketplace__body-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "plate"
+      "results";
+  }
+
+  .unified-marketplace__plate-awareness {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(180px, 0.38fr) minmax(0, 1fr);
+  }
+
+  .unified-marketplace__plate-awareness > img {
+    height: 100%;
+    min-height: 250px;
   }
 }
 
@@ -4742,8 +4892,21 @@ img {
   }
 
   .unified-marketplace__grid,
-  .unified-marketplace__seller-grid {
+  .unified-marketplace__seller-grid,
+  .unified-marketplace__category-grid {
     grid-template-columns: 1fr;
+  }
+
+  .unified-marketplace__body-layout .unified-marketplace__grid,
+  .unified-marketplace__body-layout .unified-marketplace__seller-grid,
+  .unified-marketplace__body-layout .unified-marketplace__category-grid,
+  .unified-marketplace__plate-awareness {
+    grid-template-columns: 1fr;
+  }
+
+  .unified-marketplace__plate-awareness > img {
+    min-height: 0;
+    height: 190px;
   }
 }
 
