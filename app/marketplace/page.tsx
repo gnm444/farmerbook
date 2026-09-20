@@ -4,7 +4,6 @@ import { ArrowRight, Leaf, Store } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { loadPublicOffers } from "@/features/offers/queries";
-import { MarketBrowser } from "@/features/marketplace/market-browser";
 import { MarketplaceMatchAgent } from "@/features/marketplace/marketplace-match-agent";
 import { loadPublicListings } from "@/features/marketplace/queries";
 import { UnifiedMarketplace } from "@/features/marketplace/unified-marketplace";
@@ -47,7 +46,7 @@ export default async function MarketplacePage() {
               <h1>{t("heroTitle")}</h1>
               <p>{t("heroBody")}</p>
               <div className="hero-actions">
-                <a className="button" href="#available-produce">
+                <a className="button" href="#unified-marketplace">
                   {t("browseProduce")}
                 </a>
                 <Link className="button button--secondary" href="/signup">
@@ -125,7 +124,6 @@ export default async function MarketplacePage() {
               <p>{t("networkHelp")}</p>
             </div>
             <MarketplaceMatchAgent />
-            <MarketBrowser listings={listings} />
           </div>
         </section>
       </main>
