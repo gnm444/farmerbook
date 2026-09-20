@@ -56,6 +56,7 @@ export async function sendFeaturedFarmerQuestionNotification(
     serverToken?: string;
     fromEmail?: string;
     messageStream?: string;
+    ccEmail?: string | null;
     fetcher?: typeof fetch;
   } = {},
 ): Promise<FeaturedFarmerQuestionNotificationResult> {
@@ -84,7 +85,9 @@ export async function sendFeaturedFarmerQuestionNotification(
       body: JSON.stringify({
         From: `FarmerBook profile questions <${fromEmail}>`,
         To: input.recipientEmail,
-        Cc: FARMERBOOK_CONTACT_EMAIL,
+        ...(options.ccEmail === null
+          ? {}
+          : { Cc: options.ccEmail ?? FARMERBOOK_CONTACT_EMAIL }),
         ReplyTo: input.email,
         Subject: input.source === "store_order"
           ? `New FarmerBook store order request for ${input.subjectName}`

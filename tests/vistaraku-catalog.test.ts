@@ -7,6 +7,11 @@ import {
   VISTARAKU_PRODUCTS,
   findVistarakuProduct,
 } from "@/features/vistaraku/catalog";
+import {
+  VISTARAKU_STORE_PRODUCTS,
+  packPrice,
+  storePrice,
+} from "@/features/vistaraku/store-products";
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 
@@ -52,17 +57,30 @@ describe("Vistaraku reviewed catalog", () => {
     });
   });
 
-  it("keeps the catalog route public, responsive, and free of intake or image-provider imports", () => {
+  it("applies the requested 30% markup and keeps the storefront source-transparent", () => {
+    expect(VISTARAKU_STORE_PRODUCTS).toHaveLength(29);
+    const buffetPlate = VISTARAKU_STORE_PRODUCTS.find((product) => product.slug === "buffet-plate-12");
+    expect(buffetPlate).toBeDefined();
+    expect(storePrice(buffetPlate!)).toBe(8.97);
+    expect(packPrice(buffetPlate!)).toBe(224.25);
+
+    const glass = VISTARAKU_STORE_PRODUCTS.find((product) => product.slug === "cornstarch-glass-220");
+    expect(glass?.gstNote).toContain("12% GST");
+    expect(glass?.image).toBe("/images/vistaraku/glass.jpg");
+  });
+
+  it("keeps the store route public, responsive, and confirmation-first", () => {
     const page = read("app/companies/vistaraku/page.tsx");
+    const storefront = read("features/vistaraku/storefront.tsx");
     const css = read("features/vistaraku/vistaraku.module.css");
     const sitemap = read("app/sitemap.ts");
 
     expect(page).toContain('alternates: { canonical: "/companies/vistaraku" }');
-    expect(page).toContain("Private intake remains closed");
-    expect(page).toContain("FarmerBook does not copy or host product imagery");
+    expect(storefront).toContain("30% markup");
+    expect(storefront).toContain("Prices, tax, stock, MOQ, freight and delivery must be confirmed before payment");
     expect(sitemap).toContain('"/companies/vistaraku"');
-    expect(css).toContain(".storyCatalogGrid { display: grid;");
-    expect(css).toContain(".storyCatalogGrid { grid-template-columns: 1fr;");
+    expect(css).toContain(".storyBand { display: grid;");
+    expect(css).toContain(".storyBand { grid-template-columns: 1fr;");
     for (const forbiddenImport of [
       "@/features/vistaraku/actions",
       "@/features/vistaraku/configuration",
@@ -73,9 +91,7 @@ describe("Vistaraku reviewed catalog", () => {
     ]) {
       expect(page).not.toContain(forbiddenImport);
     }
-    expect(page.toLowerCase()).not.toContain("turnstile");
-    expect(page).toContain("no material has zero impact");
-    expect(page.toLowerCase()).not.toContain("disease prevention");
-    expect(page.toLowerCase()).not.toContain("carbon neutral");
+    expect(storefront.toLowerCase()).not.toContain("disease prevention");
+    expect(storefront.toLowerCase()).not.toContain("carbon neutral");
   });
 });

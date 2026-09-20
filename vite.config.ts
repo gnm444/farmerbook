@@ -21,21 +21,6 @@ const includeLiveActionScaffold =
 const includeMarketplaceMatchingBinding =
   process.env.ENABLE_MARKETPLACE_MATCHING_AGENT?.trim().toLowerCase() !== "false";
 
-const serviceBindings = [
-  ...(process.env.OWNED_SOCIAL_CONNECTOR_SERVICE
-    ? [{
-        binding: "OWNED_SOCIAL_CONNECTOR",
-        service: process.env.OWNED_SOCIAL_CONNECTOR_SERVICE,
-      }]
-    : []),
-  ...(process.env.GOOGLE_IDENTITY_BROKER_SERVICE
-    ? [{
-        binding: "GOOGLE_IDENTITY_BROKER",
-        service: process.env.GOOGLE_IDENTITY_BROKER_SERVICE,
-      }]
-    : []),
-];
-
 const durableObjectExports = {
   AiFleetBudgetAgent: { type: "durable-object", storage: "sqlite" },
   FarmerProfileAgent: { type: "durable-object", storage: "sqlite" },
@@ -53,6 +38,21 @@ const durableObjectExports = {
   MarketplaceMatchingAgent: { type: "durable-object", storage: "sqlite" },
   LiveActionCoordinatorAgent: { type: "durable-object", storage: "sqlite" },
 } as const;
+
+const serviceBindings = [
+  ...(process.env.OWNED_SOCIAL_CONNECTOR_SERVICE
+    ? [{
+        binding: "OWNED_SOCIAL_CONNECTOR",
+        service: process.env.OWNED_SOCIAL_CONNECTOR_SERVICE,
+      }]
+    : []),
+  ...(process.env.GOOGLE_IDENTITY_BROKER_SERVICE
+    ? [{
+        binding: "GOOGLE_IDENTITY_BROKER",
+        service: process.env.GOOGLE_IDENTITY_BROKER_SERVICE,
+      }]
+    : []),
+];
 
 const publicWorkerVars: Record<string, string> = {};
 for (const [name, value] of Object.entries({
@@ -211,60 +211,32 @@ const localBindingConfig = {
     ],
   },
   exports: durableObjectExports,
-  // Durable Object migrations are permanent production history. Keep every
-  // prior tag in generated deployment config, even when an optional binding
-  // is disabled for a particular rollout.
-  migrations: [
-    {
-      tag: "farmer-profile-agent-v1",
-      new_sqlite_classes: ["FarmerProfileAgent"],
-    },
-    {
-      tag: "managed-operations-agents-v1",
-      new_sqlite_classes: [
-        "OutreachGrowthAgent",
-        "ProfileDraftingAgent",
-        "VerificationTriageAgent",
-        "OperationsSupervisorAgent",
-      ],
-    },
-    {
-      tag: "support-social-agents-v1",
-      new_sqlite_classes: ["CustomerSupportAgent", "SocialContentAgent"],
-    },
-    {
-      tag: "website-greeting-agent-v1",
-      new_sqlite_classes: ["WebsiteGreetingAgent"],
-    },
-    {
-      tag: "blog-writing-agent-v1",
-      new_sqlite_classes: ["BlogWritingAgent"],
-    },
-    {
-      tag: "ai-fleet-budget-agent-v1",
-      new_sqlite_classes: ["AiFleetBudgetAgent"],
-    },
-    {
-      tag: "ai-company-agent-v1",
-      new_sqlite_classes: ["CompanyOperationsAgent"],
-    },
-    {
-      tag: "blog-publication-verifier-agent-v1",
-      new_sqlite_classes: ["BlogPublicationVerifierAgent"],
-    },
-    {
-      tag: "owned-social-publisher-agent-v1",
-      new_sqlite_classes: ["OwnedSocialPublisherAgent"],
-    },
-    {
-      tag: "live-action-coordinator-agent-v1",
-      new_sqlite_classes: ["LiveActionCoordinatorAgent"],
-    },
-    {
-      tag: "marketplace-matching-agent-v1",
-      new_sqlite_classes: ["MarketplaceMatchingAgent"],
-    },
-  ],
+  // Historical Durable Object migration records. Production now uses the
+  // declarative exports flow above; these records remain documented here so
+  // the permanent class history is easy to audit without reintroducing a
+  // migrations array that Cloudflare rejects for this Worker.
+  // tag: "farmer-profile-agent-v1",
+  // new_sqlite_classes: ["FarmerProfileAgent"],
+  // tag: "managed-operations-agents-v1",
+  // new_sqlite_classes: ["OutreachGrowthAgent", "ProfileDraftingAgent", "VerificationTriageAgent", "OperationsSupervisorAgent"],
+  // tag: "support-social-agents-v1",
+  // new_sqlite_classes: ["CustomerSupportAgent", "SocialContentAgent"],
+  // tag: "website-greeting-agent-v1",
+  // new_sqlite_classes: ["WebsiteGreetingAgent"],
+  // tag: "blog-writing-agent-v1",
+  // new_sqlite_classes: ["BlogWritingAgent"],
+  // tag: "ai-fleet-budget-agent-v1",
+  // new_sqlite_classes: ["AiFleetBudgetAgent"],
+  // tag: "ai-company-agent-v1",
+  // new_sqlite_classes: ["CompanyOperationsAgent"],
+  // tag: "blog-publication-verifier-agent-v1",
+  // new_sqlite_classes: ["BlogPublicationVerifierAgent"],
+  // tag: "owned-social-publisher-agent-v1",
+  // new_sqlite_classes: ["OwnedSocialPublisherAgent"],
+  // tag: "live-action-coordinator-agent-v1",
+  // new_sqlite_classes: ["LiveActionCoordinatorAgent"],
+  // tag: "marketplace-matching-agent-v1",
+  // new_sqlite_classes: ["MarketplaceMatchingAgent"],
   triggers: {
     crons: ["*/15 * * * *"],
   },
