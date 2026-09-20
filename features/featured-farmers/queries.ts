@@ -371,6 +371,12 @@ const curatedPublicationBySlug = new Map(
   curatedPublications.map((publication) => [publication.slug, publication]),
 );
 
+export function getCuratedPublishedFeaturedFarmerPublications(): readonly FeaturedFarmerPublication[] {
+  return curatedPublications.filter(
+    (publication) => publication.publication_status !== "preview",
+  );
+}
+
 function administrationAvailable(demo: boolean) {
   return (
     isFeatureEnabled("ENABLE_FEATURED_FARMER_PROFILES") &&

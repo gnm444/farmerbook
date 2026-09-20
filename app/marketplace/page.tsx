@@ -3,10 +3,13 @@ import Link from "next/link";
 import { ArrowRight, Leaf, Store } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
+import { loadPublicOffers } from "@/features/offers/queries";
 import { MarketBrowser } from "@/features/marketplace/market-browser";
 import { MarketplaceMatchAgent } from "@/features/marketplace/marketplace-match-agent";
 import { loadPublicListings } from "@/features/marketplace/queries";
-import { formatNumber, getServerTranslations } from "@/lib/i18n";
+import { UnifiedMarketplace } from "@/features/marketplace/unified-marketplace";
+import { buildUnifiedMarketplaceCatalog } from "@/features/marketplace/unified-catalog";
+import { formatNumber, getServerI18n, getServerTranslations } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Fresh produce marketplace",
@@ -15,11 +18,17 @@ export const metadata: Metadata = {
 };
 
 export default async function MarketplacePage() {
-  const [listings, i18n] = await Promise.all([
+  const [listings, i18n, { t: homeT }, offers] = await Promise.all([
     loadPublicListings(),
     getServerTranslations("market"),
+    getServerI18n(),
+    loadPublicOffers({ limit: 50 }).catch(() => []),
   ]);
   const { locale, t } = i18n;
+  const marketplaceItems = buildUnifiedMarketplaceCatalog({
+    produceListings: listings,
+    businessOffers: offers,
+  });
   const districtCount = new Set(
     listings.map((listing) => listing.seller?.district).filter(Boolean),
   ).size;
@@ -74,6 +83,37 @@ export default async function MarketplacePage() {
             </div>
           </div>
         </section>
+
+        <UnifiedMarketplace
+          items={marketplaceItems}
+          compact
+          labels={{
+            eyebrow: homeT("home.marketplaceHubEyebrow"),
+            title: homeT("home.marketplaceHubTitle"),
+            description: homeT("home.marketplaceHubBody"),
+            searchLabel: homeT("home.marketplaceSearchLabel"),
+            searchPlaceholder: homeT("home.marketplaceSearchPlaceholder"),
+            categoryLabel: homeT("home.marketplaceCategoryLabel"),
+            allCategories: homeT("home.marketplaceAllCategories"),
+            byProduct: homeT("home.marketplaceByProduct"),
+            bySeller: homeT("home.marketplaceBySeller"),
+            resultCount: homeT("home.marketplaceResultCount"),
+            sellerCount: homeT("home.marketplaceSellerCount"),
+            noResultsTitle: homeT("home.marketplaceNoResultsTitle"),
+            noResultsBody: homeT("home.marketplaceNoResultsBody"),
+            browse: homeT("home.marketplaceBrowse"),
+            orderEnquiry: homeT("home.marketplaceOrderEnquiry"),
+            priceOnRequest: homeT("home.marketplacePriceOnRequest"),
+            externalStore: homeT("home.marketplaceExternalStore"),
+            reportedCatalogue: homeT("home.marketplaceReportedCatalogue"),
+            liveListing: homeT("home.marketplaceLiveListing"),
+            liveOffer: homeT("home.marketplaceLiveOffer"),
+            farmerBookStore: homeT("home.marketplaceFarmerBookStore"),
+            partnerStore: homeT("home.marketplacePartnerStore"),
+            editorialCatalogue: homeT("home.marketplaceEditorialCatalogue"),
+            disclosure: homeT("home.marketplaceDisclosure"),
+          }}
+        />
 
         <section className="marketplace-content" id="available-produce">
           <div className="container">

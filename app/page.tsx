@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
+import { UnifiedMarketplace } from "@/features/marketplace/unified-marketplace";
+import { loadUnifiedMarketplaceCatalog } from "@/features/marketplace/unified-catalog-loader";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { getServerI18n } from "@/lib/i18n";
 
@@ -25,7 +27,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LandingPage() {
-  const { t } = await getServerI18n();
+  const [{ t }, marketplaceItems] = await Promise.all([
+    getServerI18n(),
+    loadUnifiedMarketplaceCatalog(),
+  ]);
   const companiesEnabled = isFeatureEnabled("ENABLE_AGRI_BUSINESSES");
 
   return (
@@ -132,6 +137,36 @@ export default async function LandingPage() {
             </div>
           </div>
         </section>
+
+        <UnifiedMarketplace
+          items={marketplaceItems}
+          labels={{
+            eyebrow: t("home.marketplaceHubEyebrow"),
+            title: t("home.marketplaceHubTitle"),
+            description: t("home.marketplaceHubBody"),
+            searchLabel: t("home.marketplaceSearchLabel"),
+            searchPlaceholder: t("home.marketplaceSearchPlaceholder"),
+            categoryLabel: t("home.marketplaceCategoryLabel"),
+            allCategories: t("home.marketplaceAllCategories"),
+            byProduct: t("home.marketplaceByProduct"),
+            bySeller: t("home.marketplaceBySeller"),
+            resultCount: t("home.marketplaceResultCount"),
+            sellerCount: t("home.marketplaceSellerCount"),
+            noResultsTitle: t("home.marketplaceNoResultsTitle"),
+            noResultsBody: t("home.marketplaceNoResultsBody"),
+            browse: t("home.marketplaceBrowse"),
+            orderEnquiry: t("home.marketplaceOrderEnquiry"),
+            priceOnRequest: t("home.marketplacePriceOnRequest"),
+            externalStore: t("home.marketplaceExternalStore"),
+            reportedCatalogue: t("home.marketplaceReportedCatalogue"),
+            liveListing: t("home.marketplaceLiveListing"),
+            liveOffer: t("home.marketplaceLiveOffer"),
+            farmerBookStore: t("home.marketplaceFarmerBookStore"),
+            partnerStore: t("home.marketplacePartnerStore"),
+            editorialCatalogue: t("home.marketplaceEditorialCatalogue"),
+            disclosure: t("home.marketplaceDisclosure"),
+          }}
+        />
 
         <section className="trust-strip" aria-label={t("home.principles")}>
           <div className="container trust-grid">
