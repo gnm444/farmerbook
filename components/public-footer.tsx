@@ -50,6 +50,16 @@ export async function PublicFooter() {
           <a href={`mailto:${FARMERBOOK_CONTACT_EMAIL}`}>{FARMERBOOK_CONTACT_EMAIL}</a>
           <a href={`tel:${FARMERBOOK_CONTACT_PHONE}`}>{FARMERBOOK_CONTACT_PHONE_DISPLAY}</a>
           <span>Customer greeting agent available 24/7</span>
+          <strong>Follow FarmerBook</strong>
+          <a href="https://www.instagram.com/farmerbook2026/" target="_blank" rel="noreferrer">
+            Instagram · @farmerbook2026
+          </a>
+          <a href="https://www.linkedin.com/company/139364019/" target="_blank" rel="noreferrer">
+            LinkedIn · FarmerBook
+          </a>
+          <a href="https://www.youtube.com/@farmerbookIndia" target="_blank" rel="noreferrer">
+            YouTube · @farmerbookIndia
+          </a>
         </address>
       </div>
       <div className="container footer-bottom">
