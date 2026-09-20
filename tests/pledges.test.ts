@@ -234,4 +234,9 @@ describe("plate pledge database boundary", () => {
     expect(client).not.toContain("demo confirmation");
     expect(client).toContain("We could not save your pledge");
   });
+
+  it("serves local campaign images directly without the unavailable optimizer", () => {
+    const client = readFileSync("app/pledge/pledge-page.tsx", "utf8");
+    expect(client.match(/\bunoptimized\b/gu)).toHaveLength(4);
+  });
 });

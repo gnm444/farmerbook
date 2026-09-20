@@ -742,6 +742,7 @@ export function PledgePage({ turnstileSiteKey }: PledgePageProps) {
                   src="/images/pledge-campaign/natural-leaf-plates-mobile-poster.png"
                   alt="Choose natural plates. Avoid single-use plastic. FarmerBook poster."
                   fill
+                  unoptimized
                   sizes="(max-width: 620px) 100vw, 33vw"
                 />
               </div>
@@ -756,6 +757,7 @@ export function PledgePage({ turnstileSiteKey }: PledgePageProps) {
                   src="/images/pledge-campaign/natural-leaf-plates-square-social.png"
                   alt="Natural leaf plates. Skip single-use plastic. FarmerBook social poster."
                   fill
+                  unoptimized
                   sizes="(max-width: 620px) 100vw, 33vw"
                 />
               </div>
@@ -770,6 +772,7 @@ export function PledgePage({ turnstileSiteKey }: PledgePageProps) {
                   src="/images/pledge-campaign/natural-leaf-plates-desktop-wallpaper.png"
                   alt="Serve with care. Avoid single-use plastic plates. FarmerBook desktop wallpaper."
                   fill
+                  unoptimized
                   sizes="(max-width: 620px) 100vw, 33vw"
                 />
               </div>
@@ -785,6 +788,7 @@ export function PledgePage({ turnstileSiteKey }: PledgePageProps) {
               alt="QR code to order Vistaraku natural leaf plates"
               width={150}
               height={150}
+              unoptimized
             />
             <div>
               <p className={styles.eyebrow}>Scan to order</p>
