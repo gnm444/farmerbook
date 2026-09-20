@@ -219,6 +219,7 @@ describe("UnifiedMarketplace", () => {
           title: "“Cancer plate?” Check the evidence.",
           body: "Do not call a plate cancer-causing without material-specific evidence.",
           note: "Natural leaf plates are not a cancer-prevention claim.",
+          pledgeCta: "Pledge against plastic plates",
           cta: "See Vistaraku leaf plates",
           evidence: "Read food-contact guidance",
           evidenceHref: "https://example.com/guidance",
@@ -233,6 +234,7 @@ describe("UnifiedMarketplace", () => {
     expect(calloutHeading).toBeInTheDocument();
     expect(calloutHeading.compareDocumentPosition(screen.getByRole("status")) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
     expect(screen.getByText("Natural leaf plates are not a cancer-prevention claim.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Pledge against plastic plates/ })).toHaveAttribute("href", "/pledge");
     expect(screen.getByRole("link", { name: /See Vistaraku leaf plates/ })).toHaveAttribute("href", "/companies/vistaraku#shop");
     expect(screen.getByRole("link", { name: /Read food-contact guidance/ })).toHaveAttribute("href", "https://example.com/guidance");
     expect(screen.getByRole("link", { name: /Read packaging rules/ })).toHaveAttribute("href", "https://example.com/rules");

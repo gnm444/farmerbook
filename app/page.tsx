@@ -145,6 +145,7 @@ export default async function LandingPage() {
             title: t("home.plateAwarenessTitle"),
             body: t("home.plateAwarenessBody"),
             note: t("home.plateAwarenessNote"),
+            pledgeCta: t("home.plateAwarenessPledgeCta"),
             cta: t("home.plateAwarenessCta"),
             evidence: t("home.plateAwarenessEvidence"),
             evidenceHref: "https://www.fda.gov/food/environmental-contaminants-food/microplastics-and-nanoplastics-foods",

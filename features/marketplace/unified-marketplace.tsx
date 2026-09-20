@@ -44,6 +44,7 @@ type Props = {
     title: string;
     body: string;
     note: string;
+    pledgeCta: string;
     cta: string;
     evidence: string;
     evidenceHref: string;
@@ -272,6 +273,7 @@ export function UnifiedMarketplace({ items, labels, id = "unified-marketplace", 
                 <p>{plateAwareness.body}</p>
                 <small>{plateAwareness.note}</small>
                 <div className="unified-marketplace__plate-actions">
+                  <Link href="/pledge">{plateAwareness.pledgeCta} <ArrowUpRight size={14} aria-hidden="true" /></Link>
                   <Link href="/companies/vistaraku#shop">{plateAwareness.cta} <ArrowUpRight size={14} aria-hidden="true" /></Link>
                   <a href={plateAwareness.evidenceHref} target="_blank" rel="noreferrer">{plateAwareness.evidence} <ExternalLink size={13} aria-hidden="true" /></a>
                   <a href={plateAwareness.guidanceHref} target="_blank" rel="noreferrer">{plateAwareness.guidance} <ExternalLink size={13} aria-hidden="true" /></a>

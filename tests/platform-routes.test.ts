@@ -45,6 +45,7 @@ describe("platform metadata and health routes", () => {
     expect(urls).toContain("/blog/calculated-transition-to-natural-farming");
     expect(urls).toContain("/license");
     expect(urls).toContain("/eco-products");
+    expect(urls).toContain("/pledge");
     expect(urls).not.toContain("/chat");
     expect(urls).not.toContain("/farm-visits");
     expect(urls).toContain("/featured-farmers/narayana-reddy");
@@ -90,6 +91,8 @@ describe("platform metadata and health routes", () => {
     expect(isPublicPath("/manifest.webmanifest")).toBe(true);
     expect(isPublicPath("/license")).toBe(true);
     expect(isPublicPath("/eco-products")).toBe(true);
+    expect(isPublicPath("/pledge")).toBe(true);
+    expect(isPublicPath("/api/pledges")).toBe(true);
     expect(isPublicPath("/join")).toBe(true);
     expect(isPublicPath("/partner-interest")).toBe(true);
     expect(isPublicPath("/farm-visits")).toBe(true);

@@ -33,6 +33,7 @@ export async function PublicFooter() {
           {farmVisitsEnabled ? <Link href="/farm-visits">{t("farmVisits")}</Link> : null}
           {companiesEnabled ? <Link href="/companies">{t("companiesOffers")}</Link> : null}
           <Link href="/eco-products" {...ecoSupplierFallbackLanguageProps(ecoLocale)}>{eco("eyebrow")}</Link>
+          <Link href="/pledge">Pledge against plastic plates</Link>
           <Link href="/#segments">{t("whoFor")}</Link>
           <Link href="/signup">{t("join")}</Link>
           {outreachEnabled ? <Link href="/join">{t("requestIntroduction")}</Link> : null}

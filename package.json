@@ -22,7 +22,7 @@
     "@supabase/supabase-js": "^2.111.0",
     "agents": "^0.20.1",
     "lucide-react": "^1.27.0",
-    "next": "16.3.0",
+    "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "^4.4.3"
@@ -40,7 +40,7 @@
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.26",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.3.0",
+    "eslint-config-next": "16.3.5",
     "jsdom": "^29.1.1",
     "react-server-dom-webpack": "19.2.8",
     "supabase": "2.113.0",
