@@ -106,12 +106,13 @@ export const kambhampatiSatyanarayanaPublication: FeaturedFarmerPublication = {
     deck:
       "ఏలూరు జిల్లా నూజివీడు మండలం పల్లెర్లమూడి గ్రామానికి చెందిన కంభంపాటి సత్యనారాయణ గారు చెరకు సాగు చేస్తూ, స్వంత క్రషర్ ద్వారా బెల్లం తయారు చేసి నేరుగా వినియోగదారులకు అందిస్తున్నారు.",
     whyFeatured:
-      "ఈ కథ రైతు పంటను పండించడమే కాకుండా, దానికి విలువను జోడించి, ప్రాసెస్ చేసి, సోషల్ మీడియా ద్వారా నేరుగా వినియోగదారులను చేరుకునే విధానాన్ని చూపిస్తుంది. కథనంలోని వివరాలు రైతు ఇంటర్వ్యూ మరియు YouTube auto-generated Telugu transcript ఆధారంగా మాత్రమే ప్రచురించబడుతున్నాయి.",
+      "ఈ ఐదు వీడియోల సమాహారం రైతు పంటను పండించడమే కాకుండా, అంతర పంటలు మరియు సహజ పద్ధతులను ఉపయోగించి సాగు చేయడం, పంటను ప్రాసెస్ చేసి విలువను జోడించడం, సోషల్ మీడియా మరియు ప్రత్యక్ష పంపిణీ ద్వారా వినియోగదారులను చేరుకోవడం ఎలా జరుగుతుందో చూపిస్తుంది. కథనంలోని వివరాలు రైతు ఇంటర్వ్యూలు, అందుబాటులో ఉన్న YouTube auto-generated Telugu captions మరియు వీడియో వివరణల ఆధారంగా source-attributedగా ప్రచురించబడుతున్నాయి.",
     categorySlugs: ["sugarcane", "jaggery", "integrated-farming"],
     limitations: [
       "ఇది రైతు ఇంటర్వ్యూలోని వివరాల ఆధారంగా రూపొందించిన FarmerBook editorial profile; FarmerBook సభ్యత్వం, గుర్తింపు ధృవీకరణ లేదా మార్కెట్ listing కాదు.",
       "సేంద్రియ సాగు, సహజ తయారీ, దిగుబడి, ధర, ఆదాయం మరియు విదేశాలకు పంపిణీకి సంబంధించిన వివరాలను FarmerBook స్వతంత్రంగా ధృవీకరించలేదు.",
       "వీడియో Telugu auto-generated transcript ఆధారంగా అనువదించి, సంక్షిప్తంగా రూపొందించబడింది; ఇది పూర్తి verbatim transcript కాదు.",
+      "ఐదు సంబంధిత వీడియోలను సమీక్షించాం. కొన్ని వీడియోలలో caption export అందుబాటులో లేకపోవడంతో, వాటి పబ్లిక్ వీడియో వివరణలు మరియు అందుబాటులో ఉన్న auto-caption metadataను మాత్రమే ఉపయోగించాం; auto-generated captionsలో గుర్తింపు పొరపాట్లు ఉండవచ్చు.",
       "మధుమేహం లేదా ఇతర ఆరోగ్య పరిస్థితులు ఉన్నవారు బెల్లం వినియోగంపై వైద్యుల సలహా తీసుకోవాలి.",
     ],
     editorialDisclosure:
@@ -179,6 +180,72 @@ export const kambhampatiSatyanarayanaPublication: FeaturedFarmerPublication = {
         displayValue: "1986 నుంచి",
         displayContext: "రైతు ఇంటర్వ్యూ ప్రకారం",
         sources: [source],
+      },
+      {
+        id: "4a000000-0000-4000-8000-000000000106",
+        key: "natural_rice_practice_since_2009",
+        type: "ecological_stewardship",
+        statement:
+          "ఇతర వీడియోలలో కంభంపాటి సత్యనారాయణ గారు 2009 నుంచి ప్రకృతి పద్ధతిలో వరి మరియు చెరకు సాగు చేస్తున్నట్లు వివరించారు.",
+        displayLabel: "ప్రకృతి వ్యవసాయం",
+        displayValue: "2009 నుంచి",
+        displayContext: "సంబంధిత వీడియోలలో రైతు వివరించిన ప్రకారం",
+        sources: [relatedVideoSources[1], relatedVideoSources[3]],
+      },
+      {
+        id: "4a000000-0000-4000-8000-000000000107",
+        key: "rice_green_manure_and_natural_protection",
+        type: "innovation",
+        statement:
+          "వరి సాగులో నవధాన్యాల పచ్చిరొట్టను నేలలో కలపడం, నీటి కాలువల దగ్గర ఆకులను ఉపయోగించడం మరియు అగ్నాస్త్రం వంటి సహజ ద్రావణాలను వినియోగించడం గురించి రైతు వివరించారు.",
+        displayLabel: "వరి సంరక్షణ పద్ధతులు",
+        displayValue: "పచ్చిరొట్ట + సహజ ద్రావణాలు",
+        displayContext: "Paadi Pantalu వీడియోలో రైతు వివరించిన ప్రకారం",
+        sources: [relatedVideoSources[1]],
+      },
+      {
+        id: "4a000000-0000-4000-8000-000000000108",
+        key: "jaggery_processing_employment",
+        type: "impact",
+        statement:
+          "సొంత చెరకుతో బెల్లం తయారు చేస్తూ సుమారు పది మంది కార్మికులకు పని కల్పిస్తున్నట్లు రైతు ఒక వీడియోలో తెలిపారు.",
+        displayLabel: "స్థానిక ఉపాధి",
+        displayValue: "సుమారు 10 మంది",
+        displayContext: "C NEWS VIJAYAWADA వీడియోలో రైతు తెలిపిన ప్రకారం",
+        sources: [relatedVideoSources[2]],
+      },
+      {
+        id: "4a000000-0000-4000-8000-000000000109",
+        key: "regional_direct_distribution",
+        type: "community",
+        statement:
+          "పరిసర మండలాలు, ఇతర జిల్లాలు మరియు తెలంగాణ ప్రాంతాలకు Professional, RTC లేదా Navata వంటి రవాణా మార్గాల ద్వారా బెల్లం పంపినట్లు రైతు వీడియోలో తెలిపారు.",
+        displayLabel: "ప్రత్యక్ష పంపిణీ",
+        displayValue: "ప్రాంతీయ రవాణా ద్వారా",
+        displayContext: "రైతు వీడియోలో తెలిపిన సమాచారం; స్వతంత్రంగా ధృవీకరించలేదు",
+        sources: [relatedVideoSources[2]],
+      },
+      {
+        id: "4a000000-0000-4000-8000-000000000110",
+        key: "jaggery_product_forms",
+        type: "innovation",
+        statement:
+          "ప్రకృతి వ్యవసాయ వీడియో వివరణలో బెల్లం, బెల్లం తేనె మరియు బెల్లం పొడి వంటి ఉత్పత్తి రూపాలను ప్రస్తావించారు.",
+        displayLabel: "బెల్లం ఉత్పత్తులు",
+        displayValue: "బెల్లం · తేనె · పొడి",
+        displayContext: "వీడియో వివరణలో ప్రస్తావించిన రూపాలు",
+        sources: [relatedVideoSources[3]],
+      },
+      {
+        id: "4a000000-0000-4000-8000-000000000111",
+        key: "sugarcane_intercropping_guidance",
+        type: "knowledge_sharing",
+        statement:
+          "చెరకులో అంతర పంటల సాగు మరియు బెల్లం తయారీపై సూచనలు ఇచ్చిన ప్రత్యేక వీడియో కూడా ఈ profileలో sourceగా చేర్చబడింది.",
+        displayLabel: "పంచుకున్న జ్ఞానం",
+        displayValue: "అంతర పంటలు + బెల్లం",
+        displayContext: "Paadi Pantalu Channel వీడియో ఆధారంగా",
+        sources: [relatedVideoSources[0]],
       },
       {
         id: "4a000000-0000-4000-8000-000000000102",
@@ -260,6 +327,28 @@ export const kambhampatiSatyanarayanaPublication: FeaturedFarmerPublication = {
         body:
           "ఈ కథలోని ముఖ్యమైన పాఠం పంటను పండించడం మాత్రమే కాదు—దానిని ప్రాసెస్ చేయడం, ఉత్పత్తికి విలువను జోడించడం, స్వంత బ్రాండ్‌గా పరిచయం చేయడం మరియు వినియోగదారులను నేరుగా చేరుకోవడం కూడా రైతు వ్యాపారంలో భాగమే. అయితే సేంద్రియ ధృవీకరణ, నాణ్యత, ధర, దిగుబడి మరియు ఎగుమతి సంబంధిత వాదనలను కొనుగోలు లేదా భాగస్వామ్యానికి ముందు స్వతంత్రంగా నిర్ధారించాలి.",
         claimKeys: ["natural_jaggery_value_addition", "direct_social_marketing"],
+      },
+      {
+        kind: "work",
+        heading: "వరి సాగులో పచ్చిరొట్ట మరియు సహజ సంరక్షణ",
+        body:
+          "Paadi Pantalu వీడియోలో రైతు 2009 నుంచి ప్రకృతి పద్ధతిలో వరి సాగు చేస్తున్నట్లు, పంటకు ముందు నవధాన్యాల పచ్చిరొట్టను పెంచి నేలలో కలిపినట్లు వివరించారు. వరుసలుగా నాటడం, పాత వరి రకాన్ని ఉపయోగించడం, నీటి కాలువల దగ్గర ఆకులను ఉంచడం మరియు అగ్నాస్త్రం వంటి సహజ ద్రావణాలను ఉపయోగించడం గురించి కూడా చెప్పారు. ఇవి రైతు వివరించిన పద్ధతులు మాత్రమే; ప్రతి ప్రాంతంలో ఫలితం ఒకేలా ఉంటుందని FarmerBook హామీ ఇవ్వదు.",
+        claimKeys: [
+          "natural_rice_practice_since_2009",
+          "rice_green_manure_and_natural_protection",
+          "sugarcane_intercropping_guidance",
+        ],
+      },
+      {
+        kind: "impact",
+        heading: "పంట నుంచి ఉత్పత్తి, ఉపాధి మరియు పంపిణీ వరకు",
+        body:
+          "C NEWS VIJAYAWADA వీడియో ప్రకారం, సత్యనారాయణ గారు 12–13 నెలల చెరకుతో స్వంతంగా బెల్లం తయారు చేసి, ఈ ప్రక్రియలో సుమారు పది మంది కార్మికులకు పని కల్పిస్తున్నట్లు తెలిపారు. అదే వీడియోలో పరిసర ప్రాంతాలు మరియు ఇతర జిల్లాలకు రవాణా మార్గాల ద్వారా పంపిణీ చేస్తున్నట్లు చెప్పారు. మరో ప్రకృతి వ్యవసాయ వీడియో వివరణలో బెల్లం, బెల్లం తేనె మరియు బెల్లం పొడి వంటి రూపాలు ప్రస్తావించబడ్డాయి. ఇవన్నీ మూల వీడియోలలోని నివేదికలు; FarmerBook స్వతంత్రంగా ధృవీకరించలేదు.",
+        claimKeys: [
+          "jaggery_processing_employment",
+          "regional_direct_distribution",
+          "jaggery_product_forms",
+        ],
       },
     ],
   },
