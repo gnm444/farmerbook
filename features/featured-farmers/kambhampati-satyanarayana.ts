@@ -23,6 +23,72 @@ const sourcePreview = {
   focalPoint: "center" as const,
 };
 
+const relatedVideoSources = [
+  {
+    id: "4a000000-0000-4000-8000-000000000002",
+    url: "https://www.youtube.com/watch?v=BNB1w8UJfmg",
+    publisher: "Paadi Pantalu Channel",
+    title:
+      "చెరుకులో అంతర పంటల సాగు మరియు బెల్లం తయారీ లో సూచనలు || శ్రీ కంభంపాటి సత్యనారాయణ",
+    publishedAt: null,
+    sourceType: "third-party Telugu YouTube feature",
+    quality: "third_party_coverage",
+    association: "third_party_coverage",
+  },
+  {
+    id: "4a000000-0000-4000-8000-000000000003",
+    url: "https://www.youtube.com/watch?v=fgwInrsj6pY",
+    publisher: "Paadi Pantalu Channel",
+    title:
+      "వరిలో వినూత్న సస్యరక్షణ విధానాలు || శ్రీ కంభంపాటి సత్యనారాయణ, పల్లెర్లమూడి, నూజివీడు, ఏలూరు జిల్లా",
+    publishedAt: null,
+    sourceType: "third-party Telugu YouTube feature",
+    quality: "third_party_coverage",
+    association: "third_party_coverage",
+  },
+  {
+    id: "4a000000-0000-4000-8000-000000000004",
+    url: "https://www.youtube.com/watch?v=Q6oVeD_I-4M",
+    publisher: "C NEWS VIJAYAWADA",
+    title:
+      "రైతు కంభంపాటి సత్యనారాయణ చేస్తున్న బెల్లం తయారీ విధానం",
+    publishedAt: null,
+    sourceType: "third-party Telugu YouTube feature",
+    quality: "third_party_coverage",
+    association: "third_party_coverage",
+  },
+  {
+    id: "4a000000-0000-4000-8000-000000000005",
+    url: "https://www.youtube.com/watch?v=z8TD--mzoxM",
+    publisher: "Andhra Pradesh Community Managed Natural Farming",
+    title:
+      "E434 | ప్రకృతి సాగులో తీపిని పంచుతున్న చెరకు సాగు | సత్యనారాయణ | ఏలూరు జిల్లా",
+    publishedAt: null,
+    sourceType: "third-party Telugu YouTube feature",
+    quality: "third_party_coverage",
+    association: "third_party_coverage",
+  },
+];
+
+const allVideoSources = [source, ...relatedVideoSources];
+
+const videoCoverage = allVideoSources.map((video) => {
+  const videoId = new URL(video.url).searchParams.get("v");
+  return {
+    url: video.url,
+    publisher: video.publisher,
+    title: video.title,
+    sourceType: "Telugu YouTube feature · FarmerBook editorial link",
+    thumbnail: videoId
+      ? {
+          assetUrl: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+          altText: `${video.title} — YouTube thumbnail`,
+          provider: "youtube_oembed" as const,
+        }
+      : undefined,
+  };
+});
+
 export const kambhampatiSatyanarayanaPublication: FeaturedFarmerPublication = {
   publication_id: "4a000000-0000-4000-8000-000000000012",
   slug: "kambhampati-satyanarayana-organic-jaggery",
@@ -71,20 +137,8 @@ export const kambhampatiSatyanarayanaPublication: FeaturedFarmerPublication = {
         url: "https://www.youtube.com/@Raitunestham",
       },
     ],
-    sources: [source],
-    coverage: [
-      {
-        url: source.url,
-        publisher: source.publisher,
-        title: source.title,
-        sourceType: "Telugu YouTube feature · FarmerBook editorial summary",
-        thumbnail: {
-          assetUrl: sourcePreview.assetUrl,
-          altText: sourcePreview.altText,
-          provider: "youtube_oembed",
-        },
-      },
-    ],
+    sources: allVideoSources,
+    coverage: videoCoverage,
     reportedProducts: [
       {
         name: "సేంద్రియ బెల్లం",
