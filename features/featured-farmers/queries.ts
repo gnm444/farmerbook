@@ -27,6 +27,7 @@ import { venuVenuMadhavPublication } from "./venu-v-v-venu-madhav";
 import { aahaaraVanamPublication } from "./aahaara-vanam";
 import { saiButchaRaoMallampalliPublication } from "./sai-butcha-rao-mallampalli";
 import { malyadriBeegalaPublication } from "./malyadri-beegala";
+import { kambhampatiSatyanarayanaPublication } from "./kambhampati-satyanarayana";
 import { buildFeaturedFarmerResearchQueries } from "./web-research";
 
 const researchPurposes = [
@@ -366,6 +367,7 @@ const curatedPublications: FeaturedFarmerPublication[] = [
   aahaaraVanamPublication,
   saiButchaRaoMallampalliPublication,
   malyadriBeegalaPublication,
+  kambhampatiSatyanarayanaPublication,
 ];
 const curatedPublicationBySlug = new Map(
   curatedPublications.map((publication) => [publication.slug, publication]),
