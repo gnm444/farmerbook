@@ -30,6 +30,7 @@ import { malyadriBeegalaPublication } from "./malyadri-beegala";
 import { kambhampatiSatyanarayanaPublication } from "./kambhampati-satyanarayana";
 import { kallamSrinivasReddyPublication } from "./organic-turmeric-farmer-coming-soon";
 import { prasadReddyUddamarriPublication } from "./prasad-reddy-uddamarri";
+import { sarvaniChundruSukalpaPublication } from "./sarvani-chundru-sukalpa";
 import { buildFeaturedFarmerResearchQueries } from "./web-research";
 
 const researchPurposes = [
@@ -372,6 +373,7 @@ const curatedPublications: FeaturedFarmerPublication[] = [
   kambhampatiSatyanarayanaPublication,
   kallamSrinivasReddyPublication,
   prasadReddyUddamarriPublication,
+  sarvaniChundruSukalpaPublication,
 ];
 const curatedPublicationBySlug = new Map(
   curatedPublications.map((publication) => [publication.slug, publication]),

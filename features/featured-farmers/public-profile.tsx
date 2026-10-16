@@ -86,6 +86,7 @@ export function FeaturedFarmerCard({
 }) {
   const m = featuredFarmerPublicMessages(locale);
   const { snapshot } = publication;
+  const isFeaturedProfessional = snapshot.categorySlugs.includes("featured-professionals");
   const cardImage = snapshot.media ?? snapshot.sourceHostedPreview;
   return (
     <article className="featured-public-card">
@@ -146,6 +147,8 @@ export function FeaturedFarmerCard({
               ? `${snapshot.socialLinks.length} social ${
                   snapshot.socialLinks.length === 1 ? "account" : "accounts"
                 }`
+              : isFeaturedProfessional
+              ? m.editorialProfile
               : m.archivalRecord}
           </span>
           <Link href={`/featured-farmers/${publication.slug}`}>
@@ -168,6 +171,7 @@ export function FeaturedFarmerStory({
 }) {
   const m = featuredFarmerPublicMessages(locale);
   const { snapshot } = publication;
+  const isFeaturedProfessional = snapshot.categorySlugs.includes("featured-professionals");
   const sourceNumber = new Map(
     snapshot.sources.map((source, index) => [source.url, index + 1]),
   );
@@ -590,7 +594,7 @@ export function FeaturedFarmerStory({
 
         <aside className="featured-story__aside">
           <section>
-            <p className="eyebrow">{m.focus}</p>
+            <p className="eyebrow">{isFeaturedProfessional ? m.professionalFocus : m.focus}</p>
             <div className="tag-row">
               {snapshot.categorySlugs.map((slug) => (
                 <span className="tag" key={slug}>
