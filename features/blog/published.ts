@@ -31,6 +31,10 @@ import {
   RESTORING_SACREDNESS_GANESH_CHATURTHI_SLUG,
   restoringSacrednessGaneshChaturthiPublication,
 } from "./publications/restoring-sacredness-ganesh-chaturthi";
+import {
+  NATURAL_FARMER_REAL_PATRIOT_SATIRE_SLUG,
+  naturalFarmerRealPatriotSatirePublication,
+} from "./publications/natural-farmer-real-patriot-satire";
 
 export {
   FOOD_TRACEABILITY_SLUG,
@@ -41,6 +45,7 @@ export {
   WEALTH_HEALTH_PARADOX_SLUG,
   AWARENESS_FARMING_SUPERPOWER_SLUG,
   RESTORING_SACREDNESS_GANESH_CHATURTHI_SLUG,
+  NATURAL_FARMER_REAL_PATRIOT_SATIRE_SLUG,
 };
 
 export const CALCULATED_TRANSITION_SLUG =
@@ -222,6 +227,7 @@ export const foundingBlogPublication: BlogPublication = {
 };
 
 export const STATIC_BLOG_PUBLICATIONS = [
+  naturalFarmerRealPatriotSatirePublication,
   awarenessFarmingSuperpowerPublication,
   wealthHealthParadoxPublication,
   moneyCharacterPublication,

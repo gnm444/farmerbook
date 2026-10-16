@@ -18,6 +18,7 @@ import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { UnifiedMarketplace } from "@/features/marketplace/unified-marketplace";
 import { loadUnifiedMarketplaceCatalog } from "@/features/marketplace/unified-catalog-loader";
+import { NATURAL_FARMER_REAL_PATRIOT_SATIRE_SLUG } from "@/features/blog/published";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { getServerI18n } from "@/lib/i18n";
 
@@ -94,6 +95,28 @@ export default async function LandingPage() {
                 <span>{t("home.staplesAndOils")}</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="section home-editorial" aria-labelledby="home-editorial-heading" lang="en-IN">
+          <div className="container home-editorial__card">
+            <div>
+              <p className="eyebrow">From the FarmerBook journal · Satire</p>
+              <h2 id="home-editorial-heading">
+                The Natural Farmer Is Utterly Selfish… Our Boozer Is the Real Patriot!
+              </h2>
+              <p>
+                Narasimha Gonapa turns the idea of “patriotic” drinking and “selfish” natural farming upside down in a sharply sarcastic essay about how we count public revenue.
+              </p>
+              <Link className="button" href={`/blog/${NATURAL_FARMER_REAL_PATRIOT_SATIRE_SLUG}`}>
+                Read the article →
+              </Link>
+            </div>
+            <aside className="home-editorial__byline" aria-label="Article byline">
+              <span>Opinion · Satire</span>
+              <strong>Narasimha Gonapa</strong>
+              <small>Natural farmer and FarmerBook volunteer</small>
+            </aside>
           </div>
         </section>
 

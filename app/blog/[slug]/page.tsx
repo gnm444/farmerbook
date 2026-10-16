@@ -88,7 +88,9 @@ export default async function BlogStoryPage({
         mainEntityOfPage: canonicalUrl,
         articleSection: blogCategoryLabel(publication.category, locale),
         wordCount: articleText.trim().split(/\s+/).length,
-        author: { "@id": publisherId },
+        author: publication.author === "FarmerBook Editorial"
+          ? { "@id": publisherId }
+          : { "@type": "Person", name: publication.author },
         publisher: { "@id": publisherId },
         image: publication.heroImage ? {
           "@type": "ImageObject",
