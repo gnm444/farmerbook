@@ -110,8 +110,11 @@ export function WorkshopAdminRoster() {
       return parsed;
     }).then((parsed) => {
       if (controller.signal.aborted) return;
-      if (parsed.count <= parsed.offset && parsed.offset > 0) {
-        setOffset(Math.max(0, parsed.offset - pageSize));
+      const lastValidOffset = parsed.count === 0
+        ? 0
+        : Math.floor((parsed.count - 1) / pageSize) * pageSize;
+      if (parsed.offset > lastValidOffset) {
+        setOffset(lastValidOffset);
         return;
       }
       setPage(parsed);

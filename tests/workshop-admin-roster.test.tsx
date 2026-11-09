@@ -160,5 +160,13 @@ describe("private workshop roster", () => {
     fireEvent.click(screen.getByRole("button", { name: "Yes, remove registration" }));
     await waitFor(() => expect(screen.getByText("Showing 1–25 of 25 registrations")).toBeVisible());
     expect(screen.queryByRole("heading", { name: "Farmer 26" })).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls
+      .filter(([, init]) => init.method === "GET")
+      .map(([url]) => url)).toEqual([
+      "/api/admin/workshops/hari-babu-2026/registrations?offset=0&limit=25",
+      "/api/admin/workshops/hari-babu-2026/registrations?offset=25&limit=25",
+      "/api/admin/workshops/hari-babu-2026/registrations?offset=25&limit=25",
+      "/api/admin/workshops/hari-babu-2026/registrations?offset=0&limit=25",
+    ]);
   });
 });
