@@ -38,7 +38,7 @@ describe("Hari Babu workshop page", () => {
     const html = renderToStaticMarkup(await HariBabuWorkshopPage());
     expect(html).toContain("lang=\"te-IN\"");
     expect(html).toContain("23 డిసెంబర్ 2026");
-    expect(html).toContain("తెలంగాణలో హరి బాబు గారి పొలం");
+    expect(html).toContain("శ్రీ హరి బాబు గారి వ్యవసాయ క్షేత్రం, మహేశ్వరం");
     expect(html).toContain("hari-babu-workshop-2026-telugu.png");
     expect(html).toContain("registration-qr.png");
     expect(html).toContain("download=\"\"");

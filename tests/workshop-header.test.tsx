@@ -30,7 +30,7 @@ describe("public workshop navigation", () => {
   it("links to the same route in the visitor's language", async () => {
     const html = renderToStaticMarkup(await PublicHeader());
     expect(html).toContain('href="/workshops/hari-babu-2026"');
-    expect(html).toContain("రైతుల వర్క్‌షాప్");
+    expect(html).toContain("ప్రకృతి రైతుల సమ్మేళనం");
   });
 
   it("hides the link while the workshop flag is off", async () => {

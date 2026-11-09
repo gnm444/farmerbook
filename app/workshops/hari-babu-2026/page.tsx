@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowDown, ArrowUpRight, CalendarDays, MapPin, MessageCircle, Sprout } from "lucide-react";
+import { ArrowDown, ArrowUpRight, CalendarDays, MapPin, MessageCircle, Sprout, Ticket, UsersRound, UtensilsCrossed } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { WorkshopRegistrationForm } from "@/features/workshops/workshop-registration-form";
@@ -82,6 +82,21 @@ export default async function HariBabuWorkshopPage() {
                   <MapPin size={22} aria-hidden="true" />
                   <dt>{copy.placeLabel}</dt>
                   <dd>{copy.placeValue}</dd>
+                </div>
+                <div>
+                  <Ticket size={22} aria-hidden="true" />
+                  <dt>{copy.entryLabel}</dt>
+                  <dd>{copy.entryValue}</dd>
+                </div>
+                <div>
+                  <UsersRound size={22} aria-hidden="true" />
+                  <dt>{copy.seatsLabel}</dt>
+                  <dd>{copy.seatsValue}</dd>
+                </div>
+                <div>
+                  <UtensilsCrossed size={22} aria-hidden="true" />
+                  <dt>{copy.lunchLabel}</dt>
+                  <dd>{copy.lunchValue}</dd>
                 </div>
               </dl>
             </div>
