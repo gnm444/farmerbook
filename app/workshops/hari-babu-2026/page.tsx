@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUpRight, CalendarDays, MapPin, MessageCircle, Sprout } 
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { WorkshopRegistrationForm } from "@/features/workshops/workshop-registration-form";
+import { isWorkshopRegistrationClosed } from "@/features/workshops/registration-contracts";
 import {
   getWorkshopCopy,
   HARI_BABU_WORKSHOP_PATH,
@@ -14,6 +15,8 @@ import {
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { getServerI18n } from "@/lib/i18n";
 import styles from "./workshop.module.css";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { locale } = await getServerI18n({ restoreProfile: false });
@@ -40,6 +43,7 @@ export default async function HariBabuWorkshopPage() {
   const { locale: workshopLocale, copy, usesEnglishFallback } = getWorkshopCopy(locale);
   const poster = HARI_BABU_WORKSHOP_POSTERS[workshopLocale];
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+  const registrationClosed = isWorkshopRegistrationClosed();
 
   return (
     <>
@@ -55,7 +59,9 @@ export default async function HariBabuWorkshopPage() {
               {usesEnglishFallback ? <p className={styles.fallback}>{copy.fallbackNotice}</p> : null}
 
               <div className={styles.heroActions}>
-                <a className="button" href="#register">{copy.interestAction}<ArrowDown size={17} aria-hidden="true" /></a>
+                {registrationClosed
+                  ? <span className={styles.closedAction}>{copy.closedAction}</span>
+                  : <a className="button" href="#register">{copy.interestAction}<ArrowDown size={17} aria-hidden="true" /></a>}
                 <Link className="button button--secondary" href="/featured-farmers/sukhavasi-hari-babu-natural-farming">
                   {copy.profileAction}<ArrowUpRight size={17} aria-hidden="true" />
                 </Link>
@@ -118,12 +124,18 @@ export default async function HariBabuWorkshopPage() {
           <div className={`container ${styles.registerGrid}`}>
             <div className={styles.registerCard}>
               <p className={styles.eyebrow}><MessageCircle size={18} aria-hidden="true" />{copy.registrationEyebrow}</p>
-              <h2 id="workshop-register-title">{copy.registrationTitle}</h2>
-              <p className={styles.registerIntro}>{copy.registrationIntro}</p>
-              <WorkshopRegistrationForm
-                copy={copy}
-                turnstileSiteKey={turnstileSiteKey}
-              />
+              <h2 id="workshop-register-title">{registrationClosed ? copy.closedTitle : copy.registrationTitle}</h2>
+              <p className={styles.registerIntro}>{registrationClosed ? copy.closedBody : copy.registrationIntro}</p>
+              {registrationClosed ? null : (
+                <WorkshopRegistrationForm
+                  copy={copy}
+                  turnstileSiteKey={turnstileSiteKey}
+                />
+              )}
+              <div className={styles.deletionHelp}>
+                <p>{copy.privacy}</p>
+                <p>{copy.earlyDeletion}{" "}<Link href="/data-deletion">{copy.deletionRequestLink}</Link>{" "}{copy.orEmail}{" "}<a href="mailto:ceo@farmerbook.in">ceo@farmerbook.in</a>.</p>
+              </div>
             </div>
             <aside className={styles.qrCard}>
               <div>

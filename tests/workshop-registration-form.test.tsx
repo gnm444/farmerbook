@@ -118,4 +118,37 @@ describe("workshop registration form", () => {
     expect(screen.getByRole("button", { name: copy.submit })).toBeDisabled();
     expect(fetchMock.mock.calls).toHaveLength(1);
   });
+
+  it("shows a localized closed state when the nonce GET is past the cutoff", async () => {
+    const telugu = getWorkshopCopy("te-IN").copy;
+    const fetchMock = vi.fn(async () => Response.json(
+      { error: "Workshop registration has closed." },
+      { status: 410 },
+    ));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<WorkshopRegistrationForm copy={telugu} turnstileSiteKey="site-key" />);
+    await waitFor(() => expect(screen.getByRole("heading", { name: telugu.closedTitle })).toBeVisible());
+    expect(screen.queryByRole("form")).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("replaces an open form with the Hindi closed state on a cutoff POST", async () => {
+    const hindi = getWorkshopCopy("hi-IN").copy;
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) =>
+      init.method === "GET"
+        ? Response.json(firstProof)
+        : Response.json({ error: "Workshop registration has closed." }, { status: 410 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<WorkshopRegistrationForm copy={hindi} turnstileSiteKey="site-key" />);
+    await waitFor(() => expect(turnstileCallback).toBeDefined());
+    await waitFor(() => expect(screen.getByRole("button", { name: hindi.submit })).toBeDisabled());
+    fireEvent.change(screen.getByLabelText(hindi.farmerName), { target: { value: "Ananya Rao" } });
+    fireEvent.change(screen.getByLabelText(hindi.phone), { target: { value: "9876543210" } });
+    act(() => turnstileCallback?.("token-1"));
+    fireEvent.submit(screen.getByRole("form", { name: hindi.registrationTitle }));
+    await waitFor(() => expect(screen.getByRole("heading", { name: hindi.closedTitle })).toBeVisible());
+    expect(screen.queryByRole("form")).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(1);
+  });
 });

@@ -5,10 +5,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   locale: "en-IN",
   enabled: vi.fn(() => true),
+  closed: vi.fn(() => false),
   notFound: vi.fn(() => { throw new Error("NOT_FOUND"); }),
 }));
 
 vi.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: mocks.enabled }));
+vi.mock("@/features/workshops/registration-contracts", () => ({
+  isWorkshopRegistrationClosed: mocks.closed,
+}));
 vi.mock("@/lib/i18n", () => ({
   getServerI18n: vi.fn(async () => ({ locale: mocks.locale })),
 }));
@@ -25,6 +29,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.locale = "en-IN";
   mocks.enabled.mockReturnValue(true);
+  mocks.closed.mockReturnValue(false);
 });
 
 describe("Hari Babu workshop page", () => {
@@ -47,6 +52,29 @@ describe("Hari Babu workshop page", () => {
       alternates: { canonical: "/workshops/hari-babu-2026" },
       openGraph: { images: ["/images/workshops/hari-babu-2026/hari-babu-workshop-2026-hindi.png"] },
     });
+  });
+
+  it("shows the localized close and private retention notice after the cutoff", async () => {
+    mocks.locale = "te-IN";
+    mocks.closed.mockReturnValue(true);
+    const html = renderToStaticMarkup(await HariBabuWorkshopPage());
+    expect(html).toContain("నమోదు ముగిసింది");
+    expect(html).toContain("24 మార్చి 2027");
+    expect(html).toContain('href="/data-deletion"');
+    expect(html).toContain('href="mailto:ceo@farmerbook.in"');
+    expect(html).not.toContain("Registration form");
+  });
+
+  it("states workshop-only use and the purge date in English and Hindi", async () => {
+    for (const [locale, expected] of [
+      ["en-IN", "automatically deleted on 24 March 2027"],
+      ["hi-IN", "24 मार्च 2027"],
+    ]) {
+      mocks.locale = locale;
+      const html = renderToStaticMarkup(await HariBabuWorkshopPage());
+      expect(html).toContain(expected);
+      expect(html).toContain('href="/data-deletion"');
+    }
   });
 
   it("hides the route when the release flag is disabled", async () => {

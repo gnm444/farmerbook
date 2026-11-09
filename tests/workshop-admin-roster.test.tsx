@@ -82,4 +82,83 @@ describe("private workshop roster", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(screen.getByText("No workshop registrations have been received yet.")).toBeVisible());
   });
+
+  it("requires inline confirmation, deletes by JSON ID, and refreshes count and list", async () => {
+    let total = 2;
+    const fetchMock = vi.fn(async (url: string, init: RequestInit) => {
+      if (init.method === "DELETE") {
+        total = 1;
+        return Response.json({ status: "deleted" });
+      }
+      return Response.json({
+        count: total,
+        offset: 0,
+        registrations: total === 2 ? [registration(1), registration(2)] : [registration(2)],
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<WorkshopAdminRoster />);
+    await waitFor(() => expect(screen.getByText("Showing 1–2 of 2 registrations")).toBeVisible());
+    fireEvent.click(screen.getAllByRole("button", { name: "Remove registration" })[0]);
+    expect(screen.getByRole("group", { name: "Confirm removal for Farmer 1" })).toBeVisible();
+    expect(fetchMock.mock.calls.filter(([, init]) => init.method === "DELETE")).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Keep registration" }));
+    expect(fetchMock.mock.calls.filter(([, init]) => init.method === "DELETE")).toHaveLength(0);
+    fireEvent.click(screen.getAllByRole("button", { name: "Remove registration" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Yes, remove registration" }));
+    await waitFor(() => expect(screen.getByText("Showing 1–1 of 1 registrations")).toBeVisible());
+    expect(screen.queryByRole("heading", { name: "Farmer 1" })).not.toBeInTheDocument();
+    const deleteCall = fetchMock.mock.calls.find(([, init]) => init.method === "DELETE");
+    expect(deleteCall?.[0]).toBe("/api/admin/workshops/hari-babu-2026/registrations");
+    expect(deleteCall?.[1]).toMatchObject({
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "content-type": "application/json" },
+    });
+    expect(JSON.parse(String(deleteCall?.[1].body))).toEqual({ submissionId: registration(1).submissionId });
+    expect(fetchMock.mock.calls.every(([url]) => !url.includes("Farmer") && !url.includes("+919"))).toBe(true);
+  });
+
+  it("keeps the confirmation visible when deletion is not confirmed", async () => {
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) =>
+      init.method === "DELETE"
+        ? Response.json({ error: "secret diagnostic" }, { status: 503 })
+        : Response.json({ count: 1, offset: 0, registrations: [registration(1)] }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<WorkshopAdminRoster />);
+    await waitFor(() => expect(screen.getByText("Showing 1–1 of 1 registrations")).toBeVisible());
+    fireEvent.click(screen.getByRole("button", { name: "Remove registration" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, remove registration" }));
+    await waitFor(() => expect(screen.getByText(/Removal could not be confirmed/)).toBeVisible());
+    expect(screen.getByRole("heading", { name: "Farmer 1" })).toBeVisible();
+    expect(screen.queryByText("secret diagnostic")).not.toBeInTheDocument();
+  });
+
+  it("returns to the preceding page after removing its only final record", async () => {
+    let total = 26;
+    const fetchMock = vi.fn(async (url: string, init: RequestInit) => {
+      if (init.method === "DELETE") {
+        total = 25;
+        return Response.json({ status: "deleted" });
+      }
+      const finalPage = url.includes("offset=25");
+      return Response.json({
+        count: total,
+        offset: finalPage ? 25 : 0,
+        registrations: finalPage
+          ? total === 26 ? [registration(26)] : []
+          : Array.from({ length: 25 }, (_, index) => registration(index + 1)),
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<WorkshopAdminRoster />);
+    await waitFor(() => expect(screen.getByText("Showing 1–25 of 26 registrations")).toBeVisible());
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() => expect(screen.getByText("Showing 26–26 of 26 registrations")).toBeVisible());
+    fireEvent.click(screen.getByRole("button", { name: "Remove registration" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, remove registration" }));
+    await waitFor(() => expect(screen.getByText("Showing 1–25 of 25 registrations")).toBeVisible());
+    expect(screen.queryByRole("heading", { name: "Farmer 26" })).not.toBeInTheDocument();
+  });
 });

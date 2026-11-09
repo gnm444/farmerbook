@@ -30,14 +30,15 @@ const english = {
   placeLabel: "Location",
   placeValue: "Hari Babu's farm, Telangana. The exact location will follow.",
   interestAction: "Share your interest",
+  closedAction: "Registration closed",
   profileAction: "About Sukhavasi Hari Babu",
   posterTitle: "Share the workshop poster",
   posterBody: "Download the poster in your selected language.",
   posterAlt: "National Farmers' Day natural farmers' workshop poster",
   downloadPoster: "Download poster",
-  qrTitle: "Open the registration page",
+  qrTitle: "Open the workshop page",
   qrBody: "Scan this QR code to open this workshop page on another device.",
-  qrAlt: "QR code linking to the FarmerBook Hari Babu workshop registration page",
+  qrAlt: "QR code linking to the FarmerBook Hari Babu workshop page",
   purposeEyebrow: "What we will work on",
   purposeTitle: "Start with farmers' questions",
   purposeIntro:
@@ -52,6 +53,9 @@ const english = {
   registrationTitle: "Tell us you are interested",
   registrationIntro:
     "Share the details needed for workshop coordination. The organizers will contact you with the exact time and location.",
+  closedTitle: "Registration is closed",
+  closedBody:
+    "Registration for the 23 December 2026 workshop closed at midnight India time on 24 December 2026.",
   farmerName: "Your name",
   phone: "Mobile number",
   phoneHelp: "Enter a 10-digit Indian mobile number, with or without +91. Spaces and hyphens are fine.",
@@ -72,7 +76,10 @@ const english = {
   consent:
     "I agree that FarmerBook.in and the workshop organizers may use the details I provide to coordinate this workshop and contact me about it. My responses will not be shown publicly.",
   privacy:
-    "Your contact details and answers are for workshop coordination. They are not displayed on this page.",
+    "Your details are used only to coordinate this workshop and will be automatically deleted on 24 March 2027 (India time).",
+  earlyDeletion: "For earlier deletion, use the",
+  deletionRequestLink: "data deletion request page",
+  orEmail: "or email",
   spamProtection: "Spam protection",
   website: "Website",
   loadingForm: "Preparing the secure form…",
@@ -117,14 +124,15 @@ const telugu: WorkshopCopy = {
   placeLabel: "ప్రదేశం",
   placeValue: "తెలంగాణలో హరి బాబు గారి పొలం. ఖచ్చితమైన ప్రదేశాన్ని తరువాత తెలియజేస్తారు.",
   interestAction: "మీ ఆసక్తిని తెలియజేయండి",
+  closedAction: "నమోదు ముగిసింది",
   profileAction: "సుఖవాసి హరి బాబు గురించి",
   posterTitle: "వర్క్‌షాప్ పోస్టర్‌ను పంచుకోండి",
   posterBody: "మీరు ఎంచుకున్న భాషలో పోస్టర్‌ను డౌన్‌లోడ్ చేసుకోండి.",
   posterAlt: "జాతీయ రైతు దినోత్సవ సహజ రైతుల వర్క్‌షాప్ పోస్టర్",
   downloadPoster: "పోస్టర్ డౌన్‌లోడ్ చేయండి",
-  qrTitle: "నమోదు పేజీని తెరవండి",
+  qrTitle: "వర్క్‌షాప్ పేజీని తెరవండి",
   qrBody: "మరో పరికరంలో ఈ వర్క్‌షాప్ పేజీని తెరవడానికి QR కోడ్‌ను స్కాన్ చేయండి.",
-  qrAlt: "ఫార్మర్‌బుక్ హరి బాబు వర్క్‌షాప్ నమోదు పేజీకి లింక్ చేసే QR కోడ్",
+  qrAlt: "ఫార్మర్‌బుక్ హరి బాబు వర్క్‌షాప్ పేజీకి లింక్ చేసే QR కోడ్",
   purposeEyebrow: "మనం చర్చించేవి",
   purposeTitle: "రైతుల ప్రశ్నలతో ప్రారంభిద్దాం",
   purposeIntro:
@@ -139,6 +147,9 @@ const telugu: WorkshopCopy = {
   registrationTitle: "మీ ఆసక్తిని తెలియజేయండి",
   registrationIntro:
     "వర్క్‌షాప్ సమన్వయానికి అవసరమైన వివరాలను ఇవ్వండి. ఖచ్చితమైన సమయం, ప్రదేశాన్ని నిర్వాహకులు మీకు తెలియజేస్తారు.",
+  closedTitle: "నమోదు ముగిసింది",
+  closedBody:
+    "23 డిసెంబర్ 2026 వర్క్‌షాప్ నమోదు 24 డిసెంబర్ 2026న భారత కాలమానం ప్రకారం అర్ధరాత్రికి ముగిసింది.",
   farmerName: "మీ పేరు",
   phone: "మొబైల్ నంబర్",
   phoneHelp: "10 అంకెల భారతీయ మొబైల్ నంబర్‌ను +91తో లేదా లేకుండా నమోదు చేయండి. ఖాళీలు, హైఫన్‌లు ఉపయోగించవచ్చు.",
@@ -159,7 +170,10 @@ const telugu: WorkshopCopy = {
   consent:
     "ఈ వర్క్‌షాప్ సమన్వయం కోసం, దీనికి సంబంధించి నన్ను సంప్రదించడానికి నేను ఇచ్చిన వివరాలను ఫార్మర్‌బుక్.ఇన్ మరియు వర్క్‌షాప్ నిర్వాహకులు ఉపయోగించవచ్చని అంగీకరిస్తున్నాను. నా సమాధానాలు బహిరంగంగా చూపబడవు.",
   privacy:
-    "మీ సంప్రదింపు వివరాలు, సమాధానాలు వర్క్‌షాప్ సమన్వయం కోసమే. అవి ఈ పేజీలో చూపబడవు.",
+    "మీ వివరాలు ఈ వర్క్‌షాప్ సమన్వయానికి మాత్రమే ఉపయోగించబడతాయి. 24 మార్చి 2027న (భారత కాలమానం) స్వయంచాలకంగా తొలగించబడతాయి.",
+  earlyDeletion: "అంతకుముందు తొలగింపుకు",
+  deletionRequestLink: "డేటా తొలగింపు అభ్యర్థన పేజీని",
+  orEmail: "ఉపయోగించండి లేదా ఇమెయిల్ చేయండి",
   spamProtection: "స్పామ్ రక్షణ",
   website: "వెబ్‌సైట్",
   loadingForm: "సురక్షిత ఫారమ్ సిద్ధమవుతోంది…",
@@ -200,14 +214,15 @@ const hindi: WorkshopCopy = {
   placeLabel: "स्थान",
   placeValue: "तेलंगाना में हरि बाबू का खेत। सटीक स्थान बाद में बताया जाएगा।",
   interestAction: "अपनी रुचि साझा करें",
+  closedAction: "पंजीकरण बंद है",
   profileAction: "सुखवासी हरि बाबू के बारे में",
   posterTitle: "कार्यशाला का पोस्टर साझा करें",
   posterBody: "अपनी चुनी हुई भाषा में पोस्टर डाउनलोड करें।",
   posterAlt: "राष्ट्रीय किसान दिवस प्राकृतिक किसान कार्यशाला का पोस्टर",
   downloadPoster: "पोस्टर डाउनलोड करें",
-  qrTitle: "पंजीकरण पेज खोलें",
+  qrTitle: "कार्यशाला पेज खोलें",
   qrBody: "दूसरे उपकरण पर यह कार्यशाला पेज खोलने के लिए QR कोड स्कैन करें।",
-  qrAlt: "FarmerBook की हरि बाबू कार्यशाला के पंजीकरण पेज का QR कोड",
+  qrAlt: "FarmerBook की हरि बाबू कार्यशाला के पेज का QR कोड",
   purposeEyebrow: "बातचीत के विषय",
   purposeTitle: "किसानों के सवालों से शुरुआत",
   purposeIntro:
@@ -222,6 +237,9 @@ const hindi: WorkshopCopy = {
   registrationTitle: "अपनी रुचि बताएँ",
   registrationIntro:
     "कार्यशाला के समन्वय के लिए आवश्यक विवरण दें। आयोजक आपसे संपर्क करके सटीक समय और स्थान बताएँगे।",
+  closedTitle: "पंजीकरण बंद है",
+  closedBody:
+    "23 दिसंबर 2026 की कार्यशाला का पंजीकरण 24 दिसंबर 2026 को भारतीय समयानुसार रात 12 बजे बंद हो गया।",
   farmerName: "आपका नाम",
   phone: "मोबाइल नंबर",
   phoneHelp: "+91 के साथ या बिना 10 अंकों का भारतीय मोबाइल नंबर दर्ज करें। स्पेस और हाइफ़न भी लिख सकते हैं।",
@@ -242,7 +260,10 @@ const hindi: WorkshopCopy = {
   consent:
     "मैं सहमत हूँ कि FarmerBook.in और कार्यशाला के आयोजक मेरे दिए विवरण का उपयोग इस कार्यशाला के समन्वय और मुझसे इसके बारे में संपर्क करने के लिए कर सकते हैं। मेरे उत्तर सार्वजनिक रूप से नहीं दिखाए जाएँगे।",
   privacy:
-    "आपके संपर्क विवरण और उत्तर केवल कार्यशाला समन्वय के लिए हैं। वे इस पेज पर नहीं दिखाए जाते।",
+    "आपके विवरण का उपयोग केवल इस कार्यशाला के समन्वय के लिए होगा। वे 24 मार्च 2027 (भारतीय समय) को अपने आप हटा दिए जाएँगे।",
+  earlyDeletion: "समय से पहले हटाने के लिए",
+  deletionRequestLink: "डेटा हटाने के अनुरोध वाले पेज का",
+  orEmail: "उपयोग करें या ईमेल करें",
   spamProtection: "स्पैम से सुरक्षा",
   website: "वेबसाइट",
   loadingForm: "सुरक्षित फ़ॉर्म तैयार हो रहा है…",

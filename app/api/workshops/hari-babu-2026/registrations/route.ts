@@ -4,6 +4,7 @@ import { verifyTurnstileToken } from "@/features/outreach/turnstile";
 import {
   HARI_BABU_WORKSHOP_CONSENT_VERSION,
   HARI_BABU_WORKSHOP_TURNSTILE_ACTION,
+  isWorkshopRegistrationClosed,
   privateRegistrationFromInput,
   workshopRegistrationInputSchema,
 } from "@/features/workshops/registration-contracts";
@@ -91,6 +92,9 @@ export async function GET() {
   if (!isFeatureEnabled("ENABLE_HARI_BABU_WORKSHOP")) {
     return jsonResponse({ error: "Workshop registration is unavailable." }, 404);
   }
+  if (isWorkshopRegistrationClosed()) {
+    return jsonResponse({ error: "Workshop registration has closed." }, 410);
+  }
   if (!workshopTurnstileConfigured()) {
     return jsonResponse({ error: "Registration protection is unavailable." }, 503);
   }
@@ -108,6 +112,9 @@ export async function GET() {
 export async function POST(request: Request) {
   if (!isFeatureEnabled("ENABLE_HARI_BABU_WORKSHOP")) {
     return jsonResponse({ error: "Workshop registration is unavailable." }, 404);
+  }
+  if (isWorkshopRegistrationClosed()) {
+    return jsonResponse({ error: "Workshop registration has closed." }, 410);
   }
   if (!sameOrigin(request)) {
     return jsonResponse({ error: "The request origin could not be verified." }, 403);
@@ -163,6 +170,9 @@ export async function POST(request: Request) {
     }
     if (result.status === "conflict") {
       return jsonResponse({ error: "Reload the form and try again." }, 409);
+    }
+    if (result.status === "closed") {
+      return jsonResponse({ error: "Workshop registration has closed." }, 410);
     }
     // A duplicate and a new registration are indistinguishable to the public.
     // The caller does not learn whether a phone number already exists.

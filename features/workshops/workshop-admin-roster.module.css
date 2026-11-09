@@ -169,6 +169,73 @@
   white-space: pre-wrap;
 }
 
+.deleteTrigger {
+  margin-top: 18px;
+  border: 0;
+  padding: 3px 0;
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.deleteTrigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.deleteConfirm {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  border: 1px solid #d8aaa4;
+  border-radius: 13px;
+  padding: 17px;
+  background: #fff6f3;
+}
+
+.deleteConfirm p {
+  margin: 0;
+  color: #6d261e;
+  line-height: 1.5;
+}
+
+.deleteConfirm .deleteError {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.deleteButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.deleteDanger {
+  min-height: 44px;
+  border: 1px solid #9c2c20;
+  border-radius: 999px;
+  padding: 10px 17px;
+  background: #9c2c20;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.deleteDanger:hover {
+  background: #7e2018;
+}
+
+.deleteDanger:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .pagination {
   display: flex;
   align-items: center;

@@ -146,6 +146,17 @@
   min-height: 48px;
 }
 
+.closedAction {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 11px 20px;
+  color: var(--muted);
+  font-weight: 750;
+}
+
 .details {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -436,6 +447,27 @@
   line-height: 1.5;
 }
 
+.deletionHelp {
+  display: grid;
+  gap: 7px;
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.deletionHelp p {
+  margin: 0;
+}
+
+.deletionHelp a {
+  color: var(--leaf-700);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
 .proofError,
 .error {
   margin: 0;
@@ -476,6 +508,24 @@
   padding: 26px;
   background: #f0faec;
   color: var(--forest-950);
+}
+
+.closed {
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 24px;
+  background: var(--cream);
+  color: var(--forest-950);
+}
+
+.closed h3 {
+  margin: 0 0 7px;
+  font-size: 1.35rem;
+}
+
+.closed p {
+  margin: 0;
+  line-height: 1.55;
 }
 
 .success svg {

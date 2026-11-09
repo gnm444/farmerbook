@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { PolicyLayout } from "@/components/policy-layout";
+import { workshopPrivacyCopy } from "@/features/workshops/workshop-privacy";
 import { getServerTranslations } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> { const { t } = await getServerTranslations("legal"); return { title: t("privacyTitle") }; }
 
 export default async function PrivacyPage() {
-  const { t } = await getServerTranslations("legal");
+  const { t, locale } = await getServerTranslations("legal");
+  const workshop = workshopPrivacyCopy(locale);
   return (
     <PolicyLayout
       eyebrow={t("privacyEyebrow")}
@@ -19,6 +21,11 @@ export default async function PrivacyPage() {
       <h2>{t("privacyRetentionTitle")}</h2><p>{t("privacyRetentionBody1")}</p><p>{t("privacyRetentionBody2")}</p><p>{t("privacyRetentionBody3")}</p>
       <h2>{t("privacyVisibilityTitle")}</h2><p>{t("privacyVisibilityBody")}</p>
       <h2>{t("privacyDeletionTitle")}</h2><p>{t("privacyDeletionBody")}</p>
+      <section lang={workshop.locale}>
+        <h2>{workshop.copy.title}</h2>
+        <p>{workshop.copy.privacy}</p>
+        <p>{workshop.copy.request} <a href="/data-deletion">{workshop.copy.requestLink}</a></p>
+      </section>
     </PolicyLayout>
   );
 }

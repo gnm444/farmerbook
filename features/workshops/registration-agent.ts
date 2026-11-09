@@ -2,6 +2,9 @@ import { Agent, type AgentContext } from "agents";
 import { z } from "zod";
 import {
   HARI_BABU_WORKSHOP_CONSENT_VERSION,
+  HARI_BABU_WORKSHOP_PURGE_AT_UTC,
+  isWorkshopRegistrationClosed,
+  isWorkshopRetentionExpired,
 } from "./registration-contracts";
 
 const registrationWriteSchema = z.strictObject({
@@ -51,20 +54,60 @@ export class WorkshopRegistrationAgent extends Agent<
       ON workshop_rate_events (ip_hash, occurred_at_ms)`;
   }
 
+  private pruneRateEvents(now = Date.now()) {
+    const dayAgo = now - 86_400_000;
+    void this.sql`DELETE FROM workshop_rate_events
+      WHERE occurred_at_ms < ${dayAgo}`;
+  }
+
+  private purgeExpiredRows(now = Date.now()) {
+    if (!isWorkshopRetentionExpired(now)) return false;
+    // Delete both the encrypted record and its deduplication hash. Rate events
+    // are erased as well; the scheduled callback then destroys Agent storage.
+    void this.sql`DELETE FROM workshop_registrations`;
+    void this.sql`DELETE FROM workshop_rate_events`;
+    return true;
+  }
+
   async onStart() {
     this.setupStorage();
+    if (this.purgeExpiredRows()) return;
+    this.pruneRateEvents();
+    // Agent schedules share the SDK's internal alarm. Never override alarm().
+    await this.schedule(
+      new Date(HARI_BABU_WORKSHOP_PURGE_AT_UTC),
+      "purgeAtRetentionDeadline",
+      undefined,
+      { idempotent: true },
+    );
+    await this.scheduleEvery(3_600, "pruneExpiredRateEvents");
+  }
+
+  pruneExpiredRateEvents() {
+    this.setupStorage();
+    if (!this.purgeExpiredRows()) this.pruneRateEvents();
+  }
+
+  async purgeAtRetentionDeadline() {
+    this.setupStorage();
+    if (!this.purgeExpiredRows()) return;
+    // The SDK safely tears down SQLite state and its schedules from a
+    // scheduled callback. A lazy read guard also protects late alarms.
+    await this.destroy();
   }
 
   register(rawInput: unknown):
     | { status: "registered" | "already_registered" }
-    | { status: "conflict" | "rate_limited" } {
+    | { status: "conflict" | "rate_limited" | "closed" } {
     this.setupStorage();
+    if (this.purgeExpiredRows() || isWorkshopRegistrationClosed()) {
+      return { status: "closed" };
+    }
     const input = registrationWriteSchema.parse(rawInput);
     const now = Date.now();
     const minuteAgo = now - 60_000;
     const dayAgo = now - 86_400_000;
-    void this.sql`DELETE FROM workshop_rate_events
-      WHERE occurred_at_ms < ${dayAgo}`;
+    this.pruneRateEvents(now);
     const minuteCount = this.sql<CountRow>`SELECT COUNT(*) AS count
       FROM workshop_rate_events
       WHERE ip_hash = ${input.ipHash} AND occurred_at_ms >= ${minuteAgo}`[0]?.count ?? 0;
@@ -101,6 +144,8 @@ export class WorkshopRegistrationAgent extends Agent<
     this.setupStorage();
     const offset = z.number().int().min(0).max(100_000).parse(rawOffset);
     const limit = z.number().int().min(1).max(100).parse(rawLimit);
+    if (this.purgeExpiredRows()) return { count: 0, rows: [] as WorkshopEncryptedRow[] };
+    this.pruneRateEvents();
     const count = this.sql<CountRow>`SELECT COUNT(*) AS count
       FROM workshop_registrations`[0]?.count ?? 0;
     const rows = this.sql<WorkshopEncryptedRow>`SELECT
@@ -109,5 +154,15 @@ export class WorkshopRegistrationAgent extends Agent<
       ORDER BY created_at ASC, submission_id ASC
       LIMIT ${limit} OFFSET ${offset}`;
     return { count, rows };
+  }
+
+  deleteRegistration(rawSubmissionId: unknown) {
+    this.setupStorage();
+    const submissionId = z.uuid().parse(rawSubmissionId);
+    if (this.purgeExpiredRows()) return { status: "deleted" as const };
+    this.pruneRateEvents();
+    void this.sql`DELETE FROM workshop_registrations
+      WHERE submission_id = ${submissionId}`;
+    return { status: "deleted" as const };
   }
 }

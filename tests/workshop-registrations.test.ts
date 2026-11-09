@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   register: vi.fn(),
   list: vi.fn(),
+  deleteRegistration: vi.fn(),
   runtime: vi.fn(),
   verifyTurnstile: vi.fn(),
   getUser: vi.fn(),
@@ -26,7 +27,10 @@ import {
   GET as issueNonce,
   POST as register,
 } from "@/app/api/workshops/hari-babu-2026/registrations/route";
-import { GET as listRegistrations } from "@/app/api/admin/workshops/hari-babu-2026/registrations/route";
+import {
+  DELETE as deleteRegistration,
+  GET as listRegistrations,
+} from "@/app/api/admin/workshops/hari-babu-2026/registrations/route";
 import {
   createWorkshopNonce,
   decryptWorkshopRegistration,
@@ -34,7 +38,10 @@ import {
   verifyWorkshopNonce,
   workshopValueHash,
 } from "@/features/workshops/registration-crypto";
-import { workshopRegistrationInputSchema } from "@/features/workshops/registration-contracts";
+import {
+  HARI_BABU_WORKSHOP_CLOSE_AT_UTC,
+  workshopRegistrationInputSchema,
+} from "@/features/workshops/registration-contracts";
 import { isPublicPath } from "@/proxy";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
@@ -80,6 +87,19 @@ function registrationRequest(body: unknown, headers: Record<string, string> = {}
   });
 }
 
+function deletionRequest(body: unknown, headers: Record<string, string> = {}) {
+  return new Request("https://farmerbook.in/api/admin/workshops/hari-babu-2026/registrations", {
+    method: "DELETE",
+    headers: {
+      "content-type": "application/json",
+      origin: "https://farmerbook.in",
+      "sec-fetch-site": "same-origin",
+      ...headers,
+    },
+    body: typeof body === "string" ? body : JSON.stringify(body),
+  });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubEnv("ENABLE_HARI_BABU_WORKSHOP", "true");
@@ -89,10 +109,15 @@ beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "test-key");
   mocks.runtime.mockResolvedValue({
-    agent: { register: mocks.register, list: mocks.list },
+    agent: {
+      register: mocks.register,
+      list: mocks.list,
+      deleteRegistration: mocks.deleteRegistration,
+    },
     secret,
   });
   mocks.register.mockResolvedValue({ status: "registered" });
+  mocks.deleteRegistration.mockResolvedValue({ status: "deleted" });
   mocks.verifyTurnstile.mockResolvedValue(true);
   mocks.getUser.mockResolvedValue({
     data: { user: { id: "admin-id", app_metadata: { role: "admin" } } },
@@ -164,6 +189,23 @@ describe("public workshop registration API", () => {
     expect((await issueNonce()).status).toBe(404);
   });
 
+  it("closes nonce issuance and submissions at the exact India midnight cutoff", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(HARI_BABU_WORKSHOP_CLOSE_AT_UTC));
+      const nonce = await issueNonce();
+      const submission = await register(registrationRequest(await validBody()));
+      expect(nonce.status).toBe(410);
+      expect(submission.status).toBe(410);
+      await expect(nonce.json()).resolves.toEqual({ error: "Workshop registration has closed." });
+      await expect(submission.json()).resolves.toEqual({ error: "Workshop registration has closed." });
+      expect(mocks.runtime).not.toHaveBeenCalled();
+      expect(mocks.register).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("rejects cross-origin, oversized, unverified, and expired submissions", async () => {
     const valid = await validBody();
     expect((await register(registrationRequest(valid, { origin: "https://other.example" }))).status).toBe(403);
@@ -203,6 +245,13 @@ describe("public workshop registration API", () => {
     expect(duplicate.headers.get("cache-control")).toBe(created.headers.get("cache-control"));
     mocks.register.mockResolvedValueOnce({ status: "rate_limited" });
     expect((await register(registrationRequest(await validBody()))).status).toBe(429);
+  });
+
+  it("rejects a submission if the Agent sees the close deadline during verification", async () => {
+    mocks.register.mockResolvedValueOnce({ status: "closed" });
+    const response = await register(registrationRequest(await validBody()));
+    expect(response.status).toBe(410);
+    await expect(response.json()).resolves.toEqual({ error: "Workshop registration has closed." });
   });
 
   it("silently ignores the honeypot without changing the public success shape", async () => {
@@ -261,5 +310,38 @@ describe("private workshop roster API", () => {
       count: 1,
       registrations: [{ farmerName: person.farmerName, phone: person.phone }],
     });
+  });
+
+  it("requires same-origin and a real admin before individual deletion", async () => {
+    expect((await deleteRegistration(deletionRequest({ submissionId }, {
+      origin: "https://other.example",
+    }))).status).toBe(403);
+    expect(mocks.deleteRegistration).not.toHaveBeenCalled();
+
+    vi.stubEnv("NEXT_PUBLIC_DEMO_MODE", "true");
+    expect((await deleteRegistration(deletionRequest({ submissionId }))).status).toBe(503);
+    vi.stubEnv("NEXT_PUBLIC_DEMO_MODE", "false");
+    mocks.getUser.mockResolvedValueOnce({
+      data: { user: { id: "member-id", app_metadata: { role: "member" } } },
+      error: null,
+    });
+    expect((await deleteRegistration(deletionRequest({ submissionId }))).status).toBe(403);
+    expect(mocks.deleteRegistration).not.toHaveBeenCalled();
+  });
+
+  it("validates a small UUID body and returns no PII on idempotent removal", async () => {
+    expect((await deleteRegistration(deletionRequest({ submissionId: "bad" }))).status).toBe(400);
+    expect((await deleteRegistration(deletionRequest({ submissionId, extra: true }))).status).toBe(400);
+    expect((await deleteRegistration(deletionRequest(`{"padding":"${"x".repeat(300)}"}`))).status).toBe(400);
+    expect(mocks.deleteRegistration).not.toHaveBeenCalled();
+
+    const first = await deleteRegistration(deletionRequest({ submissionId }));
+    const repeated = await deleteRegistration(deletionRequest({ submissionId }));
+    expect(first.status).toBe(200);
+    expect(repeated.status).toBe(200);
+    await expect(first.json()).resolves.toEqual({ status: "deleted" });
+    await expect(repeated.json()).resolves.toEqual({ status: "deleted" });
+    expect(mocks.deleteRegistration).toHaveBeenCalledTimes(2);
+    expect(mocks.deleteRegistration).toHaveBeenCalledWith(submissionId);
   });
 });

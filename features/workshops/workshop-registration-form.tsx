@@ -61,6 +61,7 @@ export function WorkshopRegistrationForm({
   const [turnstileScriptFailed, setTurnstileScriptFailed] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [registered, setRegistered] = useState(false);
+  const [closed, setClosed] = useState(false);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const widgetContainer = useRef<HTMLDivElement>(null);
@@ -74,6 +75,10 @@ export function WorkshopRegistrationForm({
         cache: "no-store",
         signal,
       });
+      if (response.status === 410) {
+        if (!signal?.aborted) setClosed(true);
+        return false;
+      }
       if (!response.ok) throw new Error("PROOF_UNAVAILABLE");
       const data: unknown = await response.json();
       if (
@@ -170,6 +175,11 @@ export function WorkshopRegistrationForm({
           body: JSON.stringify(payload),
         });
         const data: unknown = await response.json().catch(() => null);
+        if (response.status === 410) {
+          setClosed(true);
+          resetTurnstile();
+          return;
+        }
         if (
           response.ok &&
           data &&
@@ -201,6 +211,15 @@ export function WorkshopRegistrationForm({
       }
       resetTurnstile();
     });
+  }
+
+  if (closed) {
+    return (
+      <div className={styles.closed} role="status">
+        <h3>{copy.closedTitle}</h3>
+        <p>{copy.closedBody}</p>
+      </div>
+    );
   }
 
   if (registered) {
@@ -308,7 +327,6 @@ export function WorkshopRegistrationForm({
       <button className={`button ${styles.submit}`} type="submit" disabled={isPending || !proof || !turnstileToken}>
         {isPending ? copy.submitting : copy.submit}<ArrowRight size={18} aria-hidden="true" />
       </button>
-      <p className={styles.privacy}>{copy.privacy}</p>
     </form>
   );
 }

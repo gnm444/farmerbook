@@ -6,6 +6,17 @@ export const HARI_BABU_WORKSHOP_SLUG = "hari-babu-2026";
 export const HARI_BABU_WORKSHOP_CONSENT_VERSION = "hari-babu-2026-v1";
 export const HARI_BABU_WORKSHOP_TURNSTILE_ACTION =
   "hari_babu_workshop_registration";
+// Dec 24 2026 and Mar 24 2027, both at 00:00 India Standard Time.
+export const HARI_BABU_WORKSHOP_CLOSE_AT_UTC = "2026-12-23T18:30:00.000Z";
+export const HARI_BABU_WORKSHOP_PURGE_AT_UTC = "2027-03-23T18:30:00.000Z";
+
+export function isWorkshopRegistrationClosed(now = Date.now()) {
+  return now >= Date.parse(HARI_BABU_WORKSHOP_CLOSE_AT_UTC);
+}
+
+export function isWorkshopRetentionExpired(now = Date.now()) {
+  return now >= Date.parse(HARI_BABU_WORKSHOP_PURGE_AT_UTC);
+}
 
 const controlCharacters = /[\u0000-\u001f\u007f]/u;
 const multilineControlCharacters = /[\u0000-\u0009\u000b-\u001f\u007f]/u;

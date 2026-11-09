@@ -91,6 +91,9 @@ export function WorkshopAdminRoster() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [page, setPage] = useState<RosterPage | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -107,6 +110,10 @@ export function WorkshopAdminRoster() {
       return parsed;
     }).then((parsed) => {
       if (controller.signal.aborted) return;
+      if (parsed.count <= parsed.offset && parsed.offset > 0) {
+        setOffset(Math.max(0, parsed.offset - pageSize));
+        return;
+      }
       setPage(parsed);
       setLoading(false);
       setError(false);
@@ -120,6 +127,8 @@ export function WorkshopAdminRoster() {
   }, [offset, refresh]);
 
   function changePage(nextOffset: number) {
+    setConfirmDeleteId(null);
+    setDeleteError(false);
     setLoading(true);
     setError(false);
     setPage(null);
@@ -130,6 +139,33 @@ export function WorkshopAdminRoster() {
     setLoading(true);
     setError(false);
     setRefresh((value) => value + 1);
+  }
+
+  async function deleteRegistration(submissionId: string) {
+    if (pendingDeleteId || confirmDeleteId !== submissionId) return;
+    setPendingDeleteId(submissionId);
+    setDeleteError(false);
+    try {
+      const response = await fetch(rosterEndpoint, {
+        method: "DELETE",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ submissionId }),
+      });
+      const data: unknown = await response.json().catch(() => null);
+      if (!response.ok || !isRecord(data) || data.status !== "deleted") {
+        throw new Error("DELETE_UNCONFIRMED");
+      }
+      setConfirmDeleteId(null);
+      setPage(null);
+      setLoading(true);
+      setRefresh((value) => value + 1);
+    } catch {
+      setDeleteError(true);
+    } finally {
+      setPendingDeleteId(null);
+    }
   }
 
   const shown = page?.registrations.length ?? 0;
@@ -185,6 +221,26 @@ export function WorkshopAdminRoster() {
                     <Detail label="Registration ID" value={row.submissionId} />
                   </dl>
                 </details>
+                {confirmDeleteId === row.submissionId ? (
+                  <div className={styles.deleteConfirm} role="group" aria-label={`Confirm removal for ${row.farmerName}`}>
+                    <p>Remove {row.farmerName}&apos;s registration and private answers? This cannot be undone.</p>
+                    {deleteError ? <p className={styles.deleteError} role="alert">Removal could not be confirmed. Please retry or leave this registration in place.</p> : null}
+                    <div className={styles.deleteButtons}>
+                      <button type="button" className="button button--secondary" disabled={pendingDeleteId !== null} onClick={() => {
+                        setConfirmDeleteId(null);
+                        setDeleteError(false);
+                      }}>Keep registration</button>
+                      <button type="button" className={styles.deleteDanger} disabled={pendingDeleteId !== null} onClick={() => void deleteRegistration(row.submissionId)}>
+                        {pendingDeleteId === row.submissionId ? "Removing…" : "Yes, remove registration"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" className={styles.deleteTrigger} disabled={pendingDeleteId !== null} onClick={() => {
+                    setConfirmDeleteId(row.submissionId);
+                    setDeleteError(false);
+                  }}>Remove registration</button>
+                )}
               </article>
             ))}
           </div>
