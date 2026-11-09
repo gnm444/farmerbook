@@ -19,8 +19,14 @@ import { PublicHeader } from "@/components/public-header";
 import { UnifiedMarketplace } from "@/features/marketplace/unified-marketplace";
 import { loadUnifiedMarketplaceCatalog } from "@/features/marketplace/unified-catalog-loader";
 import { NATURAL_FARMER_REAL_PATRIOT_SATIRE_SLUG } from "@/features/blog/published";
+import {
+  getWorkshopCopy,
+  HARI_BABU_WORKSHOP_PATH,
+  HARI_BABU_WORKSHOP_POSTERS,
+} from "@/features/workshops/workshop-copy";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { getServerI18n } from "@/lib/i18n";
+import workshopStyles from "./workshops/hari-babu-2026/workshop.module.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerI18n();
@@ -28,11 +34,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LandingPage() {
-  const [{ t }, marketplaceItems] = await Promise.all([
+  const [{ t, locale }, marketplaceItems] = await Promise.all([
     getServerI18n(),
     loadUnifiedMarketplaceCatalog(),
   ]);
   const companiesEnabled = isFeatureEnabled("ENABLE_AGRI_BUSINESSES");
+  const workshopEnabled = isFeatureEnabled("ENABLE_HARI_BABU_WORKSHOP");
+  const { copy: workshopCopy, locale: workshopLocale } = getWorkshopCopy(locale);
 
   return (
     <>
@@ -97,6 +105,27 @@ export default async function LandingPage() {
             </div>
           </div>
         </section>
+
+        {workshopEnabled ? (
+          <section className={workshopStyles.homePromo} aria-labelledby="home-workshop-heading" lang={workshopLocale}>
+            <div className={`container ${workshopStyles.homePromoInner}`}>
+              <div>
+                <p className={workshopStyles.eyebrow}>{workshopCopy.homeEyebrow}</p>
+                <h2 id="home-workshop-heading">{workshopCopy.homeTitle}</h2>
+                <p>{workshopCopy.homeBody}</p>
+                <Link className="button" href={HARI_BABU_WORKSHOP_PATH}>{workshopCopy.homeAction} →</Link>
+              </div>
+              <img
+                className={workshopStyles.homePromoPoster}
+                src={HARI_BABU_WORKSHOP_POSTERS[workshopLocale]}
+                alt={workshopCopy.posterAlt}
+                width={1122}
+                height={1402}
+                loading="lazy"
+              />
+            </div>
+          </section>
+        ) : null}
 
         <section className="section home-editorial" aria-labelledby="home-editorial-heading" lang="en-IN">
           <div className="container home-editorial__card">

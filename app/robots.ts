@@ -17,9 +17,12 @@ export default function robots(): MetadataRoute.Robots {
         "/join",
         "/partner-interest",
         ...(isFeatureEnabled("ENABLE_FARM_VISITS") ? ["/farm-visits"] : []),
+        ...(isFeatureEnabled("ENABLE_HARI_BABU_WORKSHOP")
+          ? ["/workshops/hari-babu-2026"] : []),
       ],
       disallow: [
         "/admin/",
+        "/api/admin/",
         "/business/",
         "/company/",
         "/discover/",

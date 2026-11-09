@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { SUPPORTED_LOCALES } from "@/lib/i18n/locales";
 
+export const BLOG_TOPICS = ["farming", "food", "life", "philosophy", "work"] as const;
+export const ORGANIC_INTELLIGENCE_COLLECTION = "organic-intelligence" as const;
+export type BlogTopic = (typeof BLOG_TOPICS)[number];
+export type BlogCollection = typeof ORGANIC_INTELLIGENCE_COLLECTION;
+
 export const blogSectionSchema = z.object({
   heading: z.string().trim().min(2).max(180),
   paragraphs: z.array(z.string().trim().min(2).max(2_400)).min(1).max(6),
@@ -54,12 +59,39 @@ export const blogPublicationSchema = z.object({
   updatedAt: z.iso.datetime(),
   readingMinutes: z.number().int().min(1).max(30),
   editorialNote: z.string().trim().min(20).max(1_000),
-  sources: z.array(blogSourceSchema).min(1).max(12),
+  sources: z.array(blogSourceSchema).max(12),
+  // An AI-assisted adaptation of the author's private posts can have no public
+  // citation. Factual claims still need editorial review before publication.
+  sourceProvenance: z.enum(["private_author_post"]).optional(),
+  collection: z.literal(ORGANIC_INTELLIGENCE_COLLECTION).optional(),
+  topics: z.array(z.enum(BLOG_TOPICS)).min(1).max(3).optional(),
+  languageStatus: z.object({
+    english: z.literal("ai_assisted_adaptation"),
+    telugu: z.literal("ai_assisted_adaptation"),
+  }).optional(),
   heroImage: blogHeroImageSchema.optional(),
   supportingImage: blogHeroImageSchema.optional(),
   infographic: blogInfographicSchema.optional(),
   english: localizedBlogContentSchema,
   telugu: localizedBlogContentSchema.optional(),
+}).superRefine((publication, context) => {
+  if (publication.sources.length === 0
+    && (publication.sourceProvenance !== "private_author_post"
+      || publication.author !== "Narasimha Gonapa")) {
+    context.addIssue({
+      code: "custom",
+      path: ["sources"],
+      message: "A public citation is required unless this is an author-attributed private post",
+    });
+  }
+  if ((publication.collection || publication.languageStatus)
+    && publication.sourceProvenance !== "private_author_post") {
+    context.addIssue({
+      code: "custom",
+      path: ["sourceProvenance"],
+      message: "This collection and language status require private author provenance",
+    });
+  }
 });
 
 export const blogTranslationRequestSchema = z.object({
@@ -135,7 +167,11 @@ export type BlogPublication = z.infer<typeof blogPublicationSchema>;
 
 export type BlogTranslationResult = {
   content: LocalizedBlogContent;
-  source: "reviewed_original" | "ai_assisted_translation" | "english_fallback";
+  source:
+    | "reviewed_original"
+    | "ai_assisted_editorial_adaptation"
+    | "ai_assisted_translation"
+    | "english_fallback";
   model: string | null;
 };
 

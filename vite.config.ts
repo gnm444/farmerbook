@@ -33,6 +33,7 @@ const durableObjectExports = {
   WebsiteGreetingAgent: { type: "durable-object", storage: "sqlite" },
   BlogWritingAgent: { type: "durable-object", storage: "sqlite" },
   BlogPublicationVerifierAgent: { type: "durable-object", storage: "sqlite" },
+  WorkshopRegistrationAgent: { type: "durable-object", storage: "sqlite" },
   OwnedSocialPublisherAgent: { type: "durable-object", storage: "sqlite" },
   CompanyOperationsAgent: { type: "durable-object", storage: "sqlite" },
   MarketplaceMatchingAgent: { type: "durable-object", storage: "sqlite" },
@@ -87,6 +88,7 @@ for (const [name, value] of Object.entries({
   ENABLE_SOURCED_FARMER_RESEARCH:
     process.env.ENABLE_SOURCED_FARMER_RESEARCH,
   ENABLE_FARM_VISITS: process.env.ENABLE_FARM_VISITS,
+  ENABLE_HARI_BABU_WORKSHOP: process.env.ENABLE_HARI_BABU_WORKSHOP,
   BRAVE_SEARCH_STORAGE_RIGHTS_CONFIRMED:
     process.env.BRAVE_SEARCH_STORAGE_RIGHTS_CONFIRMED,
   NEXT_PUBLIC_TURNSTILE_SITE_KEY:
@@ -191,6 +193,10 @@ const localBindingConfig = {
       {
         name: "BLOG_PUBLICATION_VERIFIER_AGENT",
         class_name: "BlogPublicationVerifierAgent",
+      },
+      {
+        name: "WORKSHOP_REGISTRATION_AGENT",
+        class_name: "WorkshopRegistrationAgent",
       },
       {
         name: "OWNED_SOCIAL_PUBLISHER_AGENT",

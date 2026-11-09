@@ -33,6 +33,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ? ["/join", "/partner-interest"]
       : []),
     ...(isFeatureEnabled("ENABLE_FARM_VISITS") ? ["/farm-visits"] : []),
+    ...(isFeatureEnabled("ENABLE_HARI_BABU_WORKSHOP")
+      ? ["/workshops/hari-babu-2026"] : []),
     "/featured-farmers",
   ];
   return [

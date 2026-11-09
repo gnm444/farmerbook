@@ -16,6 +16,7 @@ import type { CompanyOperationsAgent } from "@/features/company-agents/agent";
 import type { MarketplaceMatchingAgent } from "@/features/marketplace/matching-agent";
 import type { LiveActionCoordinatorAgent } from "@/features/action-control/coordinator-agent";
 import type { LiveActionWorkflowInput } from "@/features/action-control/contracts";
+import type { WorkshopRegistrationAgent } from "@/features/workshops/registration-agent";
 import type { GoogleIdentityBrokerBinding } from "@/features/website-greeter/google-provider.server";
 
 export interface WorkersAiBinding {
@@ -50,6 +51,8 @@ export type FarmerBookBindings = {
   GOOGLE_IDENTITY_BROKER?: GoogleIdentityBrokerBinding;
   BLOG_WRITING_AGENT?: DurableObjectNamespace<BlogWritingAgent>;
   BLOG_PUBLICATION_VERIFIER_AGENT?: DurableObjectNamespace<BlogPublicationVerifierAgent>;
+  WORKSHOP_REGISTRATION_AGENT?: DurableObjectNamespace<WorkshopRegistrationAgent>;
+  WORKSHOP_REGISTRATION_SECRET?: string;
   BLOG_AUTONOMOUS_PUBLISHING?: string;
   OWNED_SOCIAL_PUBLISHER_AGENT?: DurableObjectNamespace<OwnedSocialPublisherAgent>;
   OWNED_SOCIAL_PUBLISHING?: string;

@@ -71,7 +71,7 @@ describe("managed FarmerBook Blog Writing Agent", () => {
   });
 
   it("exposes public collection and citation-rich article routes", () => {
-    expect(blogPage).toContain('href={`/blog/${publication.slug}`}');
+    expect(blogPage).toContain('href={"/blog/" + publication.slug}');
     expect(storyPage).toContain('"@type": "Article"');
     expect(storyPage).toContain("publication.sources.map");
     expect(CALCULATED_TRANSITION_SLUG).toBe(

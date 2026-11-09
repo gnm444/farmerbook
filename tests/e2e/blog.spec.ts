@@ -8,7 +8,7 @@ test("public farming blog publishes the reviewed transition article", async ({ p
   const collection = await page.goto("/blog");
   expect(collection?.status()).toBe(200);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Evidence-aware ideas for the field" }),
+    page.getByRole("heading", { level: 1, name: "FarmerBook articles and field notes" }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /safe.*habit can carry the biggest risk/i }).first(),

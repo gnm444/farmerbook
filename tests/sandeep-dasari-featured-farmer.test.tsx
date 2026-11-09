@@ -52,8 +52,12 @@ describe("Sandeep Dasari Featured Farmer profile", () => {
       "aahaara-vanam-shanthi-srinath",
       "sai-butcha-rao-mallampalli",
       "malyadri-beegala-five-layer-food-forest",
+      "kambhampati-satyanarayana-organic-jaggery",
+      "kallam-srinivas-reddy",
+      "prasad-reddy-uddamarri-natural-farming",
+      "sarvani-chundru-sukalpa-ecostore",
     ]);
-    expect(new Set(publications.map((item) => item.slug)).size).toBe(11);
+    expect(new Set(publications.map((item) => item.slug)).size).toBe(15);
     await expect(
       loadFeaturedFarmerPublication("sandeep-dasari-avani-van-farms"),
     ).resolves.toBe(sandeepDasariPublication);

@@ -99,6 +99,7 @@ export function evaluateAutonomousPublication(input: {
   const publication = parsed.data;
   if (publication.category !== input.brief.category
     || publication.author !== "FarmerBook Blog Writing Agent"
+    || publication.sourceProvenance
     || publication.telugu
     || !publication.slug.startsWith(`${input.brief.key}-${input.runKey}-`)
     || !exactSourceScope(publication, input.brief)) {

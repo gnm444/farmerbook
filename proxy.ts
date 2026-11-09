@@ -39,6 +39,8 @@ const publicPrefixes = [
   "/license",
   "/eco-products",
   "/farm-visits",
+  "/workshops",
+  "/api/workshops",
 ];
 
 export function isPublicPath(pathname: string) {

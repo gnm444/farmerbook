@@ -1,4 +1,5 @@
-import type { BlogPublication } from "./contracts";
+import { blogPublicationSchema, type BlogPublication } from "./contracts";
+import organicIntelligencePublicationData from "./publications/organic-intelligence-2026-11-09.json";
 import {
   FOOD_TRACEABILITY_SLUG,
   foodTraceabilityPublication,
@@ -227,6 +228,8 @@ export const foundingBlogPublication: BlogPublication = {
 };
 
 export const STATIC_BLOG_PUBLICATIONS = [
+  ...organicIntelligencePublicationData.map((article) =>
+    blogPublicationSchema.parse(article)),
   naturalFarmerRealPatriotSatirePublication,
   awarenessFarmingSuperpowerPublication,
   wealthHealthParadoxPublication,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ProductHeader } from "@/components/product-header";
 import { requireAdmin } from "@/features/auth/require-admin";
 import { OperationsConsole } from "@/features/customer-operations/operations-console";
@@ -21,6 +22,9 @@ export default async function CustomerOperationsPage() {
         eyebrow="Administrator · supervised operations"
         title="Support and social review"
         description="Review every AI-prepared reply and owned-channel social draft. Approval makes social copy ready to copy; FarmerBook does not distribute it from this queue."
+        action={isFeatureEnabled("ENABLE_HARI_BABU_WORKSHOP")
+          ? <Link className="button button--secondary" href="/admin/workshops">Workshop registrations</Link>
+          : undefined}
       />
       <OperationsConsole
         {...dashboard}

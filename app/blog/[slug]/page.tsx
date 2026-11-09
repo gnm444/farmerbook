@@ -6,10 +6,12 @@ import { AlertTriangle, ArrowLeft, BookOpenCheck, Clock3, ExternalLink } from "l
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import {
-  blogCategoryLabel,
+  blogEditorialNote,
+  blogTopicLabel,
   blogUi,
   translationNotice,
 } from "@/features/blog/presentation";
+import { blogTopics } from "@/features/blog/discovery";
 import { blogPublicationFingerprint } from "@/features/blog/autonomous-publication-policy";
 import { loadLocalizedBlogPublication } from "@/features/blog/queries";
 import { getSiteUrl } from "@/lib/env";
@@ -86,7 +88,7 @@ export default async function BlogStoryPage({
         dateModified: publication.updatedAt,
         inLanguage: publication.locale,
         mainEntityOfPage: canonicalUrl,
-        articleSection: blogCategoryLabel(publication.category, locale),
+        articleSection: blogTopicLabel(blogTopics(publication)[0], locale),
         wordCount: articleText.trim().split(/\s+/).length,
         author: publication.author === "FarmerBook Editorial"
           ? { "@id": publisherId }
@@ -102,7 +104,9 @@ export default async function BlogStoryPage({
             ? "AI-generated editorial illustration created for FarmerBook"
             : "Rights-approved original FarmerBook media",
         } : undefined,
-        citation: publication.sources.map((source) => source.url),
+        citation: publication.sources.length
+          ? publication.sources.map((source) => source.url)
+          : undefined,
         publishingPrinciples: new URL("/community-rules", getSiteUrl()).toString(),
       },
       {
@@ -132,7 +136,7 @@ export default async function BlogStoryPage({
         >
           <Link className="blog-story__back" href="/blog"><ArrowLeft size={16} aria-hidden="true" /> {ui.backToBlog}</Link>
           <header className="blog-story__hero">
-            <p className="eyebrow">{blogCategoryLabel(publication.category, locale)}</p>
+            <p className="eyebrow">{blogTopicLabel(blogTopics(publication)[0], locale)}</p>
             <h1>{publication.content.title}</h1>
             <p className="blog-story__dek">{publication.content.dek}</p>
             {publication.heroImage ? (
@@ -157,7 +161,11 @@ export default async function BlogStoryPage({
             </div>
             <div className={`blog-story__translation blog-story__translation--${publication.translationSource}`}>
               <BookOpenCheck size={17} aria-hidden="true" />
-              <span>{translationNotice(publication.translationSource, locale)}</span>
+              <span>{translationNotice(
+                publication.translationSource,
+                locale,
+                publication.sourceProvenance,
+              )}</span>
             </div>
           </header>
 
@@ -219,22 +227,24 @@ export default async function BlogStoryPage({
             </div>
 
             <aside className="blog-story__rail">
-              <section>
-                <h2>{ui.sources}</h2>
-                <ol>
-                  {publication.sources.map((source) => (
-                    <li key={source.url}>
-                      <a href={source.url} target="_blank" rel="noreferrer">
-                        <span>{source.title} <ExternalLink size={13} aria-hidden="true" /></span>
-                        <small>{source.publisher}</small>
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </section>
+              {publication.sources.length ? (
+                <section>
+                  <h2>{ui.sources}</h2>
+                  <ol>
+                    {publication.sources.map((source) => (
+                      <li key={source.url}>
+                        <a href={source.url} target="_blank" rel="noreferrer">
+                          <span>{source.title} <ExternalLink size={13} aria-hidden="true" /></span>
+                          <small>{source.publisher}</small>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
               <section>
                 <h2>{ui.editorial}</h2>
-                <p>{publication.editorialNote}</p>
+                <p>{blogEditorialNote(publication, locale)}</p>
               </section>
             </aside>
           </div>

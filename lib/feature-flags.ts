@@ -16,6 +16,7 @@ export const featureFlagNames = [
   "ENABLE_PRIVATE_FARMER_CONTACTS",
   "ENABLE_SOURCED_FARMER_RESEARCH",
   "ENABLE_FARM_VISITS",
+  "ENABLE_HARI_BABU_WORKSHOP",
 ] as const;
 
 export type FeatureFlagName = (typeof featureFlagNames)[number];

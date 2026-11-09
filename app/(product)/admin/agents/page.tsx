@@ -8,6 +8,7 @@ import { ManagedAgentConsole } from "@/features/managed-agents/managed-agent-con
 import { loadManagedAgentDashboard } from "@/features/managed-agents/queries";
 import { CompanyCommandCenter } from "@/features/company-agents/company-command-center";
 import { loadCompanyCommandCenter } from "@/features/company-agents/queries";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export const metadata: Metadata = { title: "Managed operations agents" };
 
@@ -24,7 +25,7 @@ export default async function ManagedAgentsPage() {
         eyebrow="Administrator · managed operations"
         title="FarmerBook agent fleet"
         description="Fifteen aggregate-only company roles plan toward the six-month growth objectives, while six purpose-limited workers handle consented operations. Every role has an independent schedule and no unrestricted identity."
-        action={<div className="report-actions"><Link className="button button--secondary" href="/admin/agents/guide">How to use the 15 Agents</Link><Link className="button button--secondary" href="/admin/agents/actions">Execution controls</Link><Link className="button button--secondary" href="/admin/blog">Blog Writing Agent</Link><Link className="button button--secondary" href="/admin/operations">Support & social review</Link><Link className="button button--secondary" href="/admin/sourced-farmers">Sourced farmer research</Link><Link className="button button--secondary" href="/admin/farmer-database">Private Farmer database</Link><Link className="button button--secondary" href="/admin/outreach">Open outreach evidence</Link></div>}
+        action={<div className="report-actions"><Link className="button button--secondary" href="/admin/agents/guide">How to use the 15 Agents</Link><Link className="button button--secondary" href="/admin/agents/actions">Execution controls</Link><Link className="button button--secondary" href="/admin/blog">Blog Writing Agent</Link><Link className="button button--secondary" href="/admin/operations">Support & social review</Link>{isFeatureEnabled("ENABLE_HARI_BABU_WORKSHOP") ? <Link className="button button--secondary" href="/admin/workshops">Workshop registrations</Link> : null}<Link className="button button--secondary" href="/admin/sourced-farmers">Sourced farmer research</Link><Link className="button button--secondary" href="/admin/farmer-database">Private Farmer database</Link><Link className="button button--secondary" href="/admin/outreach">Open outreach evidence</Link></div>}
       />
       <AiBudgetPanel dashboard={aiBudget} />
       <CompanyCommandCenter {...company} />

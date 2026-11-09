@@ -19,6 +19,7 @@ export { AiFleetBudgetAgent } from "../features/ai-budget/agent";
 export { WebsiteGreetingAgent } from "../features/website-greeter/agent";
 export { BlogWritingAgent } from "../features/blog/agent";
 export { BlogPublicationVerifierAgent } from "../features/blog/publication-verifier-agent";
+export { WorkshopRegistrationAgent } from "../features/workshops/registration-agent";
 export { OwnedSocialPublisherAgent } from "../features/social-publisher/agent";
 export { CompanyOperationsAgent } from "../features/company-agents/agent";
 export { MarketplaceMatchingAgent } from "../features/marketplace/matching-agent";
